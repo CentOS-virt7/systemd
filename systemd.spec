@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        37
-Release:        3%{?dist}
+Release:        3.1%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -36,7 +36,6 @@ Requires:       libudev >= 160
 Requires:       initscripts >= 9.28
 Requires:       filesystem >= 2.4.40
 Conflicts:      selinux-policy < 3.9.16-12.fc15
-Requires:       kernel >= 2.6.35.2-9.fc14
 Requires:       nss-myhostname
 Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.tar.bz2
 # Adds support for the %%{_unitdir} macro
@@ -367,6 +366,9 @@ fi
 %{_bindir}/systemd-sysv-convert
 
 %changelog
+* Thu Dec 01 2011 Daniel Mach <dmach@redhat.com> - 37-3.1
+- Remove dependecy on kernel because it breaks i686, ppc and s390 build roots.
+
 * Wed Nov 02 2011 Michal Schmidt <mschmidt@redhat.com> - 37-3
 - Fix remote-fs-pre.target and its ordering.
 - Resolves: #749940
