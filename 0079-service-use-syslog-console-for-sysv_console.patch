@@ -1,0 +1,28 @@
+From d18d8b40a2c65a551d2954cea701631a5db323e7 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Fri, 16 Dec 2011 17:38:01 +0100
+Subject: [PATCH] service: use 'syslog+console' for sysv_console
+
+The default output to 'tty' for SysV service was making it hard to debug
+problems because error messages were missing from syslog.
+(cherry picked from commit 18d01523c88d59293d5bd1c199d41ce587e4856e)
+---
+ src/service.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/src/service.c b/src/service.c
+index 175a729..d229301 100644
+--- a/src/service.c
++++ b/src/service.c
+@@ -833,7 +833,7 @@ static int service_load_sysv_path(Service *s, const char *path) {
+         s->restart = SERVICE_RESTART_NO;
+ 
+         if (s->meta.manager->sysv_console)
+-                s->exec_context.std_output = EXEC_OUTPUT_TTY;
++                s->exec_context.std_output = EXEC_OUTPUT_SYSLOG_AND_CONSOLE;
+ 
+         s->exec_context.kill_mode = KILL_PROCESS;
+ 
+-- 
+1.7.7.5
+

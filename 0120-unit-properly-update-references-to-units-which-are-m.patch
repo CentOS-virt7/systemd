@@ -1,0 +1,1514 @@
+From a1f378075e7ff6f07031ab1d2f653110f7d0e1f2 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 6 Jan 2012 23:08:54 +0100
+Subject: [PATCH] unit: properly update references to units which are merged
+
+When we merge units that some kind of object points to, those pointers
+might become invalidated, and needs to be updated. Introduce a UnitRef
+struct which links up all the unit references, to ensure corrected
+references.
+
+At the same time, drop configured_sockets in the Service object, and
+replace it by proper UNIT_TRIGGERS resp. UNIT_TRIGGERED_BY dependencies,
+which allow us to simplify a lot of code.
+(cherry picked from commit 57020a3abff20f176e9f0cbb982d7977119d6f08)
+---
+ src/automount.c     |   21 +++++---
+ src/automount.h     |    3 +-
+ src/dbus-path.c     |    2 +-
+ src/dbus-service.c  |    2 -
+ src/dbus-timer.c    |    2 +-
+ src/dbus-unit.h     |    2 +
+ src/load-fragment.c |   58 ++++++++++----------
+ src/mount.c         |   20 +++----
+ src/path.c          |   93 +++++++++++++++-----------------
+ src/path.h          |   14 +++---
+ src/service.c       |  147 ++++++++++-----------------------------------------
+ src/service.h       |    6 ++-
+ src/socket.c        |   88 +++++++++++++++----------------
+ src/socket.h        |    9 ++--
+ src/timer.c         |   57 ++++++++-----------
+ src/timer.h         |    2 +-
+ src/unit.c          |   39 ++++++++++++-
+ src/unit.h          |   22 ++++++++
+ 18 files changed, 268 insertions(+), 319 deletions(-)
+
+diff --git a/src/automount.c b/src/automount.c
+index 29b807d..85558e5 100644
+--- a/src/automount.c
++++ b/src/automount.c
+@@ -105,7 +105,7 @@ static void automount_done(Unit *u) {
+         assert(a);
+ 
+         unmount_autofs(a);
+-        a->mount = NULL;
++        unit_ref_unset(&a->mount);
+ 
+         free(a->where);
+         a->where = NULL;
+@@ -205,6 +205,7 @@ static int automount_load(Unit *u) {
+                 return r;
+ 
+         if (u->meta.load_state == UNIT_LOADED) {
++                Unit *x;
+ 
+                 if (!a->where)
+                         if (!(a->where = unit_name_to_path(u->meta.id)))
+@@ -215,10 +216,14 @@ static int automount_load(Unit *u) {
+                 if ((r = automount_add_mount_links(a)) < 0)
+                         return r;
+ 
+-                if ((r = unit_load_related_unit(u, ".mount", (Unit**) &a->mount)) < 0)
++                r = unit_load_related_unit(u, ".mount", &x);
++                if (r < 0)
+                         return r;
+ 
+-                if ((r = unit_add_dependency(u, UNIT_BEFORE, UNIT(a->mount), true)) < 0)
++                unit_ref_set(&a->mount, x);
++
++                r = unit_add_two_dependencies(u, UNIT_BEFORE, UNIT_TRIGGERS, UNIT_DEREF(a->mount), true);
++                if (r < 0)
+                         return r;
+ 
+                 if (a->meta.default_dependencies)
+@@ -569,7 +574,7 @@ static void automount_enter_runnning(Automount *a) {
+         DBusError error;
+ 
+         assert(a);
+-        assert(a->mount);
++        assert(UNIT_DEREF(a->mount));
+ 
+         dbus_error_init(&error);
+ 
+@@ -591,7 +596,7 @@ static void automount_enter_runnning(Automount *a) {
+ 
+         if (!S_ISDIR(st.st_mode) || st.st_dev != a->dev_id)
+                 log_info("%s's automount point already active?", a->meta.id);
+-        else if ((r = manager_add_job(a->meta.manager, JOB_START, UNIT(a->mount), JOB_REPLACE, true, &error, NULL)) < 0) {
++        else if ((r = manager_add_job(a->meta.manager, JOB_START, UNIT_DEREF(a->mount), JOB_REPLACE, true, &error, NULL)) < 0) {
+                 log_warning("%s failed to queue mount startup job: %s", a->meta.id, bus_error(&error, r));
+                 goto fail;
+         }
+@@ -616,7 +621,7 @@ static int automount_start(Unit *u) {
+                 return -EEXIST;
+         }
+ 
+-        if (a->mount->meta.load_state != UNIT_LOADED)
++        if (UNIT_DEREF(a->mount)->meta.load_state != UNIT_LOADED)
+                 return -ENOENT;
+ 
+         a->failure = false;
+@@ -738,10 +743,10 @@ static bool automount_check_gc(Unit *u) {
+ 
+         assert(a);
+ 
+-        if (!a->mount)
++        if (!UNIT_DEREF(a->mount))
+                 return false;
+ 
+-        return UNIT_VTABLE(UNIT(a->mount))->check_gc(UNIT(a->mount));
++        return UNIT_VTABLE(UNIT_DEREF(a->mount))->check_gc(UNIT_DEREF(a->mount));
+ }
+ 
+ static void automount_fd_event(Unit *u, int fd, uint32_t events, Watch *w) {
+diff --git a/src/automount.h b/src/automount.h
+index 1a6cc98..c6326ed 100644
+--- a/src/automount.h
++++ b/src/automount.h
+@@ -42,14 +42,13 @@ struct Automount {
+ 
+         char *where;
+ 
+-        Mount *mount;
++        UnitRef mount;
+ 
+         int pipe_fd;
+         mode_t directory_mode;
+         Watch pipe_watch;
+         dev_t dev_id;
+ 
+-
+         Set *tokens;
+ 
+         bool failure:1;
+diff --git a/src/dbus-path.c b/src/dbus-path.c
+index 1523879..f67b5a2 100644
+--- a/src/dbus-path.c
++++ b/src/dbus-path.c
+@@ -86,7 +86,7 @@ static int bus_path_append_unit(DBusMessageIter *i, const char *property, void *
+         assert(property);
+         assert(u);
+ 
+-        t = u->path.unit ? u->path.unit->meta.id : "";
++        t = UNIT_DEREF(u->path.unit) ? UNIT_DEREF(u->path.unit)->meta.id : "";
+ 
+         return dbus_message_iter_append_basic(i, DBUS_TYPE_STRING, &t) ? 0 : -ENOMEM;
+ }
+diff --git a/src/dbus-service.c b/src/dbus-service.c
+index 3486623..373e3f5 100644
+--- a/src/dbus-service.c
++++ b/src/dbus-service.c
+@@ -59,7 +59,6 @@
+         "  <property name=\"BusName\" type=\"s\" access=\"read\"/>\n"   \
+         "  <property name=\"StatusText\" type=\"s\" access=\"read\"/>\n" \
+         "  <property name=\"FsckPassNo\" type=\"i\" access=\"read\"/>\n" \
+-        "  <property name=\"Sockets\" type=\"as\" access=\"read\"/>\n" \
+         BUS_SERVICE_SYSV_INTERFACE_FRAGMENT                              \
+        " </interface>\n"
+ 
+@@ -120,7 +119,6 @@ DBusHandlerResult bus_service_message_handler(Unit *u, DBusConnection *connectio
+                 { "org.freedesktop.systemd1.Service", "ControlPID",             bus_property_append_pid,    "u", &u->service.control_pid               },
+                 { "org.freedesktop.systemd1.Service", "BusName",                bus_property_append_string, "s", u->service.bus_name                   },
+                 { "org.freedesktop.systemd1.Service", "StatusText",             bus_property_append_string, "s", u->service.status_text                },
+-                { "org.freedesktop.systemd1.Service", "Sockets",                bus_unit_append_dependencies, "as", u->service.configured_sockets         },
+ #ifdef HAVE_SYSV_COMPAT
+                 { "org.freedesktop.systemd1.Service", "SysVRunLevels",          bus_property_append_string, "s", u->service.sysv_runlevels             },
+                 { "org.freedesktop.systemd1.Service", "SysVStartPriority",      bus_property_append_int,    "i", &u->service.sysv_start_priority       },
+diff --git a/src/dbus-timer.c b/src/dbus-timer.c
+index abcbe6f..07d425e 100644
+--- a/src/dbus-timer.c
++++ b/src/dbus-timer.c
+@@ -107,7 +107,7 @@ static int bus_timer_append_unit(DBusMessageIter *i, const char *property, void
+         assert(property);
+         assert(u);
+ 
+-        t = u->timer.unit ? u->timer.unit->meta.id : "";
++        t = UNIT_DEREF(u->timer.unit) ? UNIT_DEREF(u->timer.unit)->meta.id : "";
+ 
+         return dbus_message_iter_append_basic(i, DBUS_TYPE_STRING, &t) ? 0 : -ENOMEM;
+ }
+diff --git a/src/dbus-unit.h b/src/dbus-unit.h
+index 9fed6d7..20d5506 100644
+--- a/src/dbus-unit.h
++++ b/src/dbus-unit.h
+@@ -141,6 +141,8 @@
+         { "org.freedesktop.systemd1.Unit", "Before",               bus_unit_append_dependencies,   "as",   u->meta.dependencies[UNIT_BEFORE] }, \
+         { "org.freedesktop.systemd1.Unit", "After",                bus_unit_append_dependencies,   "as",   u->meta.dependencies[UNIT_AFTER]  }, \
+         { "org.freedesktop.systemd1.Unit", "OnFailure",            bus_unit_append_dependencies,   "as",   u->meta.dependencies[UNIT_ON_FAILURE] }, \
++        { "org.freedesktop.systemd1.Unit", "Triggers",             bus_unit_append_dependencies,   "as",   u->meta.dependencies[UNIT_TRIGGERS] }, \
++        { "org.freedesktop.systemd1.Unit", "TriggeredBy",          bus_unit_append_dependencies,   "as",   u->meta.dependencies[UNIT_TRIGGERED_BY] }, \
+         { "org.freedesktop.systemd1.Unit", "Description",          bus_unit_append_description,    "s",    u                                 }, \
+         { "org.freedesktop.systemd1.Unit", "LoadState",            bus_unit_append_load_state,     "s",    &u->meta.load_state               }, \
+         { "org.freedesktop.systemd1.Unit", "ActiveState",          bus_unit_append_active_state,   "s",    u                                 }, \
+diff --git a/src/load-fragment.c b/src/load-fragment.c
+index 12079c6..1903190 100644
+--- a/src/load-fragment.c
++++ b/src/load-fragment.c
+@@ -84,7 +84,8 @@ int config_parse_unit_deps(
+                 char *t, *k;
+                 int r;
+ 
+-                if (!(t = strndup(w, l)))
++                t = strndup(w, l);
++                if (!t)
+                         return -ENOMEM;
+ 
+                 k = unit_name_printf(u, t);
+@@ -94,12 +95,8 @@ int config_parse_unit_deps(
+                         return -ENOMEM;
+ 
+                 r = unit_add_dependency_by_name(u, d, k, NULL, true);
+-
+-                if (r < 0) {
+-                        log_error("Failed to add dependency on %s, ignoring: %s", k, strerror(-r));
+-                        free(k);
+-                        return 0;
+-                }
++                if (r < 0)
++                        log_error("[%s:%u] Failed to add dependency on %s, ignoring: %s", filename, line, k, strerror(-r));
+ 
+                 free(k);
+         }
+@@ -1265,6 +1262,7 @@ int config_parse_timer_unit(
+         Timer *t = data;
+         int r;
+         DBusError error;
++        Unit *u;
+ 
+         assert(filename);
+         assert(lvalue);
+@@ -1278,12 +1276,15 @@ int config_parse_timer_unit(
+                 return 0;
+         }
+ 
+-        if ((r = manager_load_unit(t->meta.manager, rvalue, NULL, NULL, &t->unit)) < 0) {
++        r = manager_load_unit(t->meta.manager, rvalue, NULL, NULL, &u);
++        if (r < 0) {
+                 log_error("[%s:%u] Failed to load unit %s, ignoring: %s", filename, line, rvalue, bus_error(&error, r));
+                 dbus_error_free(&error);
+                 return 0;
+         }
+ 
++        unit_ref_set(&t->unit, u);
++
+         return 0;
+ }
+ 
+@@ -1347,6 +1348,7 @@ int config_parse_path_unit(
+         Path *t = data;
+         int r;
+         DBusError error;
++        Unit *u;
+ 
+         assert(filename);
+         assert(lvalue);
+@@ -1360,12 +1362,14 @@ int config_parse_path_unit(
+                 return 0;
+         }
+ 
+-        if ((r = manager_load_unit(t->meta.manager, rvalue, NULL, &error, &t->unit)) < 0) {
++        if ((r = manager_load_unit(t->meta.manager, rvalue, NULL, &error, &u)) < 0) {
+                 log_error("[%s:%u] Failed to load unit %s, ignoring: %s", filename, line, rvalue, bus_error(&error, r));
+                 dbus_error_free(&error);
+                 return 0;
+         }
+ 
++        unit_ref_set(&t->unit, u);
++
+         return 0;
+ }
+ 
+@@ -1416,7 +1420,6 @@ int config_parse_service_sockets(
+ 
+         Service *s = data;
+         int r;
+-        DBusError error;
+         char *state, *w;
+         size_t l;
+ 
+@@ -1425,35 +1428,34 @@ int config_parse_service_sockets(
+         assert(rvalue);
+         assert(data);
+ 
+-        dbus_error_init(&error);
+-
+         FOREACH_WORD_QUOTED(w, l, rvalue, state) {
+-                char *t;
+-                Unit *sock;
++                char *t, *k;
+ 
+-                if (!(t = strndup(w, l)))
++                t = strndup(w, l);
++                if (!t)
+                         return -ENOMEM;
+ 
+-                if (!endswith(t, ".socket")) {
+-                        log_error("[%s:%u] Unit must be of type socket, ignoring: %s", filename, line, rvalue);
+-                        free(t);
+-                        continue;
+-                }
+-
+-                r = manager_load_unit(s->meta.manager, t, NULL, &error, &sock);
++                k = unit_name_printf(UNIT(s), t);
+                 free(t);
+ 
+-                if (r < 0) {
+-                        log_error("[%s:%u] Failed to load unit %s, ignoring: %s", filename, line, rvalue, bus_error(&error, r));
+-                        dbus_error_free(&error);
++                if (!k)
++                        return -ENOMEM;
++
++                if (!endswith(k, ".socket")) {
++                        log_error("[%s:%u] Unit must be of type socket, ignoring: %s", filename, line, rvalue);
++                        free(k);
+                         continue;
+                 }
+ 
+-                if ((r = set_ensure_allocated(&s->configured_sockets, trivial_hash_func, trivial_compare_func)) < 0)
+-                        return r;
++                r = unit_add_two_dependencies_by_name(UNIT(s), UNIT_WANTS, UNIT_AFTER, k, NULL, true);
++                if (r < 0)
++                        log_error("[%s:%u] Failed to add dependency on %s, ignoring: %s", filename, line, k, strerror(-r));
+ 
+-                if ((r = set_put(s->configured_sockets, sock)) < 0)
++                r = unit_add_dependency_by_name(UNIT(s), UNIT_TRIGGERED_BY, k, NULL, true);
++                if (r < 0)
+                         return r;
++
++                free(k);
+         }
+ 
+         return 0;
+diff --git a/src/mount.c b/src/mount.c
+index 47422cc..f72c50a 100644
+--- a/src/mount.c
++++ b/src/mount.c
+@@ -108,21 +108,12 @@ static void mount_parameters_done(MountParameters *p) {
+ 
+ static void mount_done(Unit *u) {
+         Mount *m = MOUNT(u);
+-        Meta *other;
+ 
+         assert(m);
+ 
+         free(m->where);
+         m->where = NULL;
+ 
+-        /* Try to detach us from the automount unit if there is any */
+-        LIST_FOREACH(units_by_type, other, m->meta.manager->units_by_type[UNIT_AUTOMOUNT]) {
+-                Automount *a = (Automount*) other;
+-
+-                if (a->mount == m)
+-                        a->mount = NULL;
+-        }
+-
+         mount_parameters_done(&m->parameters_etc_fstab);
+         mount_parameters_done(&m->parameters_proc_self_mountinfo);
+         mount_parameters_done(&m->parameters_fragment);
+@@ -647,13 +638,18 @@ static int mount_load(Unit *u) {
+ static int mount_notify_automount(Mount *m, int status) {
+         Unit *p;
+         int r;
++        Iterator i;
+ 
+         assert(m);
+ 
+-        if ((r = unit_get_related_unit(UNIT(m), ".automount", &p)) < 0)
+-                return r == -ENOENT ? 0 : r;
++        SET_FOREACH(p, m->meta.dependencies[UNIT_TRIGGERED_BY], i)
++                if (p->meta.type == UNIT_AUTOMOUNT) {
++                         r = automount_send_ready(AUTOMOUNT(p), status);
++                         if (r < 0)
++                                 return r;
++                }
+ 
+-        return automount_send_ready(AUTOMOUNT(p), status);
++        return 0;
+ }
+ 
+ static void mount_set_state(Mount *m, MountState state) {
+diff --git a/src/path.c b/src/path.c
+index 3fee247..957af05 100644
+--- a/src/path.c
++++ b/src/path.c
+@@ -39,7 +39,8 @@ static const UnitActiveState state_translation_table[_PATH_STATE_MAX] = {
+         [PATH_FAILED] = UNIT_FAILED
+ };
+ 
+-int pathspec_watch(PathSpec *s, Unit *u) {
++int path_spec_watch(PathSpec *s, Unit *u) {
++
+         static const int flags_table[_PATH_TYPE_MAX] = {
+                 [PATH_EXISTS] = IN_DELETE_SELF|IN_MOVE_SELF|IN_ATTRIB,
+                 [PATH_EXISTS_GLOB] = IN_DELETE_SELF|IN_MOVE_SELF|IN_ATTRIB,
+@@ -55,7 +56,7 @@ int pathspec_watch(PathSpec *s, Unit *u) {
+         assert(u);
+         assert(s);
+ 
+-        pathspec_unwatch(s, u);
++        path_spec_unwatch(s, u);
+ 
+         if (!(k = strdup(s->path)))
+                 return -ENOMEM;
+@@ -96,11 +97,11 @@ int pathspec_watch(PathSpec *s, Unit *u) {
+ fail:
+         free(k);
+ 
+-        pathspec_unwatch(s, u);
++        path_spec_unwatch(s, u);
+         return r;
+ }
+ 
+-void pathspec_unwatch(PathSpec *s, Unit *u) {
++void path_spec_unwatch(PathSpec *s, Unit *u) {
+ 
+         if (s->inotify_fd < 0)
+                 return;
+@@ -111,7 +112,7 @@ void pathspec_unwatch(PathSpec *s, Unit *u) {
+         s->inotify_fd = -1;
+ }
+ 
+-int pathspec_fd_event(PathSpec *s, uint32_t events) {
++int path_spec_fd_event(PathSpec *s, uint32_t events) {
+         uint8_t *buf = NULL;
+         struct inotify_event *e;
+         ssize_t k;
+@@ -164,7 +165,7 @@ out:
+         return r;
+ }
+ 
+-static bool pathspec_check_good(PathSpec *s, bool initial) {
++static bool path_spec_check_good(PathSpec *s, bool initial) {
+         bool good = false;
+ 
+         switch (s->type) {
+@@ -202,11 +203,11 @@ static bool pathspec_check_good(PathSpec *s, bool initial) {
+         return good;
+ }
+ 
+-static bool pathspec_startswith(PathSpec *s, const char *what) {
++static bool path_spec_startswith(PathSpec *s, const char *what) {
+         return path_startswith(s->path, what);
+ }
+ 
+-static void pathspec_mkdir(PathSpec *s, mode_t mode) {
++static void path_spec_mkdir(PathSpec *s, mode_t mode) {
+         int r;
+ 
+         if (s->type == PATH_EXISTS || s->type == PATH_EXISTS_GLOB)
+@@ -216,7 +217,7 @@ static void pathspec_mkdir(PathSpec *s, mode_t mode) {
+                 log_warning("mkdir(%s) failed: %s", s->path, strerror(-r));
+ }
+ 
+-static void pathspec_dump(PathSpec *s, FILE *f, const char *prefix) {
++static void path_spec_dump(PathSpec *s, FILE *f, const char *prefix) {
+         fprintf(f,
+                 "%s%s: %s\n",
+                 prefix,
+@@ -224,8 +225,10 @@ static void pathspec_dump(PathSpec *s, FILE *f, const char *prefix) {
+                 s->path);
+ }
+ 
+-void pathspec_done(PathSpec *s) {
++void path_spec_done(PathSpec *s) {
++        assert(s);
+         assert(s->inotify_fd == -1);
++
+         free(s->path);
+ }
+ 
+@@ -244,10 +247,12 @@ static void path_done(Unit *u) {
+ 
+         assert(p);
+ 
++        unit_ref_unset(&p->unit);
++
+         while ((s = p->specs)) {
+-                pathspec_unwatch(s, u);
++                path_spec_unwatch(s, u);
+                 LIST_REMOVE(PathSpec, spec, p->specs, s);
+-                pathspec_done(s);
++                path_spec_done(s);
+                 free(s);
+         }
+ }
+@@ -265,7 +270,7 @@ int path_add_one_mount_link(Path *p, Mount *m) {
+ 
+         LIST_FOREACH(spec, s, p->specs) {
+ 
+-                if (!pathspec_startswith(s, m->where))
++                if (!path_spec_startswith(s, m->where))
+                         continue;
+ 
+                 if ((r = unit_add_two_dependencies(UNIT(p), UNIT_AFTER, UNIT_REQUIRES, UNIT(m), true)) < 0)
+@@ -330,11 +335,18 @@ static int path_load(Unit *u) {
+ 
+         if (u->meta.load_state == UNIT_LOADED) {
+ 
+-                if (!p->unit)
+-                        if ((r = unit_load_related_unit(u, ".service", &p->unit)))
++                if (!UNIT_DEREF(p->unit)) {
++                        Unit *x;
++
++                        r = unit_load_related_unit(u, ".service", &x);
++                        if (r < 0)
+                                 return r;
+ 
+-                if ((r = unit_add_dependency(u, UNIT_BEFORE, p->unit, true)) < 0)
++                        unit_ref_set(&p->unit, x);
++                }
++
++                r = unit_add_two_dependencies(u, UNIT_BEFORE, UNIT_TRIGGERS, UNIT_DEREF(p->unit), true);
++                if (r < 0)
+                         return r;
+ 
+                 if ((r = path_add_mount_links(p)) < 0)
+@@ -361,12 +373,12 @@ static void path_dump(Unit *u, FILE *f, const char *prefix) {
+                 "%sMakeDirectory: %s\n"
+                 "%sDirectoryMode: %04o\n",
+                 prefix, path_state_to_string(p->state),
+-                prefix, p->unit->meta.id,
++                prefix, UNIT_DEREF(p->unit)->meta.id,
+                 prefix, yes_no(p->make_directory),
+                 prefix, p->directory_mode);
+ 
+         LIST_FOREACH(spec, s, p->specs)
+-                pathspec_dump(s, f, prefix);
++                path_spec_dump(s, f, prefix);
+ }
+ 
+ static void path_unwatch(Path *p) {
+@@ -375,7 +387,7 @@ static void path_unwatch(Path *p) {
+         assert(p);
+ 
+         LIST_FOREACH(spec, s, p->specs)
+-                pathspec_unwatch(s, UNIT(p));
++                path_spec_unwatch(s, UNIT(p));
+ }
+ 
+ static int path_watch(Path *p) {
+@@ -385,7 +397,7 @@ static int path_watch(Path *p) {
+         assert(p);
+ 
+         LIST_FOREACH(spec, s, p->specs)
+-                if ((r = pathspec_watch(s, UNIT(p))) < 0)
++                if ((r = path_spec_watch(s, UNIT(p))) < 0)
+                         return r;
+ 
+         return 0;
+@@ -451,7 +463,7 @@ static void path_enter_running(Path *p) {
+         if (p->meta.job && p->meta.job->type == JOB_STOP)
+                 return;
+ 
+-        if ((r = manager_add_job(p->meta.manager, JOB_START, p->unit, JOB_REPLACE, true, &error, NULL)) < 0)
++        if ((r = manager_add_job(p->meta.manager, JOB_START, UNIT_DEREF(p->unit), JOB_REPLACE, true, &error, NULL)) < 0)
+                 goto fail;
+ 
+         p->inotify_triggered = false;
+@@ -476,7 +488,7 @@ static bool path_check_good(Path *p, bool initial) {
+         assert(p);
+ 
+         LIST_FOREACH(spec, s, p->specs) {
+-                good = pathspec_check_good(s, initial);
++                good = path_spec_check_good(s, initial);
+ 
+                 if (good)
+                         break;
+@@ -526,7 +538,7 @@ static void path_mkdir(Path *p) {
+                 return;
+ 
+         LIST_FOREACH(spec, s, p->specs)
+-                pathspec_mkdir(s, p->directory_mode);
++                path_spec_mkdir(s, p->directory_mode);
+ }
+ 
+ static int path_start(Unit *u) {
+@@ -535,7 +547,7 @@ static int path_start(Unit *u) {
+         assert(p);
+         assert(p->state == PATH_DEAD || p->state == PATH_FAILED);
+ 
+-        if (p->unit->meta.load_state != UNIT_LOADED)
++        if (UNIT_DEREF(p->unit)->meta.load_state != UNIT_LOADED)
+                 return -ENOENT;
+ 
+         path_mkdir(p);
+@@ -616,7 +628,7 @@ static void path_fd_event(Unit *u, int fd, uint32_t events, Watch *w) {
+         /* log_debug("inotify wakeup on %s.", u->meta.id); */
+ 
+         LIST_FOREACH(spec, s, p->specs)
+-                if (pathspec_owns_inotify_fd(s, fd))
++                if (path_spec_owns_inotify_fd(s, fd))
+                         break;
+ 
+         if (!s) {
+@@ -624,7 +636,7 @@ static void path_fd_event(Unit *u, int fd, uint32_t events, Watch *w) {
+                 goto fail;
+         }
+ 
+-        changed = pathspec_fd_event(s, events);
++        changed = path_spec_fd_event(s, events);
+         if (changed < 0)
+                 goto fail;
+ 
+@@ -645,36 +657,22 @@ fail:
+ }
+ 
+ void path_unit_notify(Unit *u, UnitActiveState new_state) {
+-        char *n;
+-        int r;
+         Iterator i;
++        Unit *k;
+ 
+         if (u->meta.type == UNIT_PATH)
+                 return;
+ 
+-        SET_FOREACH(n, u->meta.names, i) {
+-                char *k;
+-                Unit *t;
++        SET_FOREACH(k, u->meta.dependencies[UNIT_TRIGGERED_BY], i) {
+                 Path *p;
+ 
+-                if (!(k = unit_name_change_suffix(n, ".path"))) {
+-                        r = -ENOMEM;
+-                        goto fail;
+-                }
+-
+-                t = manager_get_unit(u->meta.manager, k);
+-                free(k);
+-
+-                if (!t)
++                if (k->meta.type != UNIT_PATH)
+                         continue;
+ 
+-                if (t->meta.load_state != UNIT_LOADED)
++                if (k->meta.load_state != UNIT_LOADED)
+                         continue;
+ 
+-                p = PATH(t);
+-
+-                if (p->unit != u)
+-                        continue;
++                p = PATH(k);
+ 
+                 if (p->state == PATH_RUNNING && new_state == UNIT_INACTIVE) {
+                         log_debug("%s got notified about unit deactivation.", p->meta.id);
+@@ -685,11 +683,6 @@ void path_unit_notify(Unit *u, UnitActiveState new_state) {
+                         path_enter_waiting(p, false, p->inotify_triggered);
+                 }
+         }
+-
+-        return;
+-
+-fail:
+-        log_error("Failed find path unit: %s", strerror(-r));
+ }
+ 
+ static void path_reset_failed(Unit *u) {
+diff --git a/src/path.h b/src/path.h
+index 1d78fe4..8b3c0bc 100644
+--- a/src/path.h
++++ b/src/path.h
+@@ -58,14 +58,14 @@ typedef struct PathSpec {
+         int primary_wd;
+ 
+         bool previous_exists;
+-
+ } PathSpec;
+ 
+-int  pathspec_watch(PathSpec *s, Unit *u);
+-void pathspec_unwatch(PathSpec *s, Unit *u);
+-int  pathspec_fd_event(PathSpec *s, uint32_t events);
+-void pathspec_done(PathSpec *s);
+-static inline bool pathspec_owns_inotify_fd(PathSpec *s, int fd) {
++int path_spec_watch(PathSpec *s, Unit *u);
++void path_spec_unwatch(PathSpec *s, Unit *u);
++int path_spec_fd_event(PathSpec *s, uint32_t events);
++void path_spec_done(PathSpec *s);
++
++static inline bool path_spec_owns_inotify_fd(PathSpec *s, int fd) {
+         return s->inotify_fd == fd;
+ }
+ 
+@@ -74,7 +74,7 @@ struct Path {
+ 
+         LIST_HEAD(PathSpec, specs);
+ 
+-        Unit *unit;
++        UnitRef unit;
+ 
+         PathState state, deserialized_state;
+ 
+diff --git a/src/service.c b/src/service.c
+index 65a45e1..81a2954 100644
+--- a/src/service.c
++++ b/src/service.c
+@@ -187,11 +187,11 @@ static void service_close_socket_fd(Service *s) {
+ static void service_connection_unref(Service *s) {
+         assert(s);
+ 
+-        if (!s->accept_socket)
++        if (!UNIT_DEREF(s->accept_socket))
+                 return;
+ 
+-        socket_connection_unref(s->accept_socket);
+-        s->accept_socket = NULL;
++        socket_connection_unref(SOCKET(UNIT_DEREF(s->accept_socket)));
++        unit_ref_unset(&s->accept_socket);
+ }
+ 
+ static void service_done(Unit *u) {
+@@ -232,7 +232,7 @@ static void service_done(Unit *u) {
+         service_close_socket_fd(s);
+         service_connection_unref(s);
+ 
+-        set_free(s->configured_sockets);
++        unit_ref_unset(&s->accept_socket);
+ 
+         unit_unwatch_timer(u, &s->timer_watch);
+ }
+@@ -1100,22 +1100,6 @@ static int service_add_default_dependencies(Service *s) {
+         return unit_add_two_dependencies_by_name(UNIT(s), UNIT_BEFORE, UNIT_CONFLICTS, SPECIAL_SHUTDOWN_TARGET, NULL, true);
+ }
+ 
+-static int service_add_socket_dependencies(Service *s) {
+-        Iterator i;
+-        Unit *u;
+-        int r;
+-
+-        /* Make sure we pull in all explicitly configured sockets */
+-
+-        SET_FOREACH(u, s->configured_sockets, i) {
+-                r = unit_add_two_dependencies(UNIT(s), UNIT_AFTER, UNIT_REQUIRES, u, true);
+-                if (r < 0)
+-                        return r;
+-        }
+-
+-        return 0;
+-}
+-
+ static void service_fix_output(Service *s) {
+         assert(s);
+ 
+@@ -1189,12 +1173,6 @@ static int service_load(Unit *u) {
+                         if ((r = unit_add_two_dependencies_by_name(u, UNIT_AFTER, UNIT_REQUIRES, SPECIAL_DBUS_SOCKET, NULL, true)) < 0)
+                                 return r;
+ 
+-                if (!set_isempty(s->configured_sockets)) {
+-                        r = service_add_socket_dependencies(s);
+-                        if (r < 0)
+-                                return r;
+-                }
+-
+                 if (s->meta.default_dependencies)
+                         if ((r = service_add_default_dependencies(s)) < 0)
+                                 return r;
+@@ -1385,86 +1363,22 @@ static int service_search_main_pid(Service *s) {
+         return 0;
+ }
+ 
+-static int service_get_sockets(Service *s, Set **_set) {
+-        Set *set;
++static void service_notify_sockets_dead(Service *s) {
+         Iterator i;
+-        char *t;
+-        int r;
+-
+-        assert(s);
+-        assert(_set);
+-
+-        if (s->socket_fd >= 0)
+-                return 0;
+-
+-        if (!set_isempty(s->configured_sockets))
+-                return 0;
+-
+-        /* Collects all Socket objects that belong to this
+-         * service. Note that a service might have multiple sockets
+-         * via multiple names. */
+-
+-        if (!(set = set_new(NULL, NULL)))
+-                return -ENOMEM;
+-
+-        SET_FOREACH(t, s->meta.names, i) {
+-                char *k;
+-                Unit *p;
+-
+-                /* Look for all socket objects that go by any of our
+-                 * units and collect their fds */
+-
+-                if (!(k = unit_name_change_suffix(t, ".socket"))) {
+-                        r = -ENOMEM;
+-                        goto fail;
+-                }
+-
+-                p = manager_get_unit(s->meta.manager, k);
+-                free(k);
+-
+-                if (!p)
+-                        continue;
+-
+-                if ((r = set_put(set, p)) < 0)
+-                        goto fail;
+-        }
+-
+-        *_set = set;
+-        return 0;
+-
+-fail:
+-        set_free(set);
+-        return r;
+-}
+-
+-static int service_notify_sockets_dead(Service *s) {
+-        Iterator i;
+-        Set *set, *free_set = NULL;
+-        Socket *sock;
+-        int r;
++        Unit *u;
+ 
+         assert(s);
+ 
+         /* Notifies all our sockets when we die */
+ 
+         if (s->socket_fd >= 0)
+-                return 0;
+-
+-        if (!set_isempty(s->configured_sockets))
+-                set = s->configured_sockets;
+-        else {
+-                if ((r = service_get_sockets(s, &free_set)) < 0)
+-                        return r;
+-
+-                set = free_set;
+-        }
+-
+-        SET_FOREACH(sock, set, i)
+-                socket_notify_service_dead(sock);
++                return;
+ 
+-        set_free(free_set);
++        SET_FOREACH(u, s->meta.dependencies[UNIT_TRIGGERED_BY], i)
++                if (u->meta.type == UNIT_SOCKET)
++                        socket_notify_service_dead(SOCKET(u));
+ 
+-        return 0;
++        return;
+ }
+ 
+ static void service_unwatch_pid_file(Service *s) {
+@@ -1472,8 +1386,8 @@ static void service_unwatch_pid_file(Service *s) {
+                 return;
+ 
+         log_debug("Stopping watch for %s's PID file %s", s->meta.id, s->pid_file_pathspec->path);
+-        pathspec_unwatch(s->pid_file_pathspec, UNIT(s));
+-        pathspec_done(s->pid_file_pathspec);
++        path_spec_unwatch(s->pid_file_pathspec, UNIT(s));
++        path_spec_done(s->pid_file_pathspec);
+         free(s->pid_file_pathspec);
+         s->pid_file_pathspec = NULL;
+ }
+@@ -1636,8 +1550,7 @@ static int service_collect_fds(Service *s, int **fds, unsigned *n_fds) {
+         int r;
+         int *rfds = NULL;
+         unsigned rn_fds = 0;
+-        Set *set, *free_set = NULL;
+-        Socket *sock;
++        Unit *u;
+ 
+         assert(s);
+         assert(fds);
+@@ -1646,18 +1559,15 @@ static int service_collect_fds(Service *s, int **fds, unsigned *n_fds) {
+         if (s->socket_fd >= 0)
+                 return 0;
+ 
+-        if (!set_isempty(s->configured_sockets))
+-                set = s->configured_sockets;
+-        else {
+-                if ((r = service_get_sockets(s, &free_set)) < 0)
+-                        return r;
+-
+-                set = free_set;
+-        }
+-
+-        SET_FOREACH(sock, set, i) {
++        SET_FOREACH(u, s->meta.dependencies[UNIT_TRIGGERED_BY], i) {
+                 int *cfds;
+                 unsigned cn_fds;
++                Socket *sock;
++
++                if (u->meta.type != UNIT_SOCKET)
++                        continue;
++
++                sock = SOCKET(u);
+ 
+                 if ((r = socket_collect_fds(sock, &cfds, &cn_fds)) < 0)
+                         goto fail;
+@@ -1690,12 +1600,9 @@ static int service_collect_fds(Service *s, int **fds, unsigned *n_fds) {
+         *fds = rfds;
+         *n_fds = rn_fds;
+ 
+-        set_free(free_set);
+-
+         return 0;
+ 
+ fail:
+-        set_free(set);
+         free(rfds);
+ 
+         return r;
+@@ -2651,7 +2558,7 @@ static int service_watch_pid_file(Service *s) {
+         int r;
+ 
+         log_debug("Setting watch for %s's PID file %s", s->meta.id, s->pid_file_pathspec->path);
+-        r = pathspec_watch(s->pid_file_pathspec, UNIT(s));
++        r = path_spec_watch(s->pid_file_pathspec, UNIT(s));
+         if (r < 0)
+                 goto fail;
+ 
+@@ -2701,11 +2608,11 @@ static void service_fd_event(Unit *u, int fd, uint32_t events, Watch *w) {
+         assert(fd >= 0);
+         assert(s->state == SERVICE_START || s->state == SERVICE_START_POST);
+         assert(s->pid_file_pathspec);
+-        assert(pathspec_owns_inotify_fd(s->pid_file_pathspec, fd));
++        assert(path_spec_owns_inotify_fd(s->pid_file_pathspec, fd));
+ 
+         log_debug("inotify event for %s", u->meta.id);
+ 
+-        if (pathspec_fd_event(s->pid_file_pathspec, events) < 0)
++        if (path_spec_fd_event(s->pid_file_pathspec, events) < 0)
+                 goto fail;
+ 
+         if (service_retry_pid_file(s) == 0)
+@@ -3450,6 +3357,7 @@ static void service_bus_query_pid_done(
+ }
+ 
+ int service_set_socket_fd(Service *s, int fd, Socket *sock) {
++
+         assert(s);
+         assert(fd >= 0);
+ 
+@@ -3468,9 +3376,10 @@ int service_set_socket_fd(Service *s, int fd, Socket *sock) {
+ 
+         s->socket_fd = fd;
+         s->got_socket_fd = true;
+-        s->accept_socket = sock;
+ 
+-        return 0;
++        unit_ref_set(&s->accept_socket, UNIT(sock));
++
++        return unit_add_two_dependencies(UNIT(sock), UNIT_BEFORE, UNIT_TRIGGERS, UNIT(s), false);
+ }
+ 
+ static void service_reset_failed(Unit *u) {
+diff --git a/src/service.h b/src/service.h
+index 2102826..8f67ad5 100644
+--- a/src/service.h
++++ b/src/service.h
+@@ -27,6 +27,7 @@ typedef struct Service Service;
+ #include "unit.h"
+ #include "path.h"
+ #include "ratelimit.h"
++#include "service.h"
+ 
+ typedef enum ServiceState {
+         SERVICE_DEAD,
+@@ -154,8 +155,7 @@ struct Service {
+ 
+         RateLimit ratelimit;
+ 
+-        struct Socket *accept_socket;
+-        Set *configured_sockets;
++        UnitRef accept_socket;
+ 
+         Watch timer_watch;
+         PathSpec *pid_file_pathspec;
+@@ -165,6 +165,8 @@ struct Service {
+ 
+ extern const UnitVTable service_vtable;
+ 
++struct Socket;
++
+ int service_set_socket_fd(Service *s, int fd, struct Socket *socket);
+ 
+ const char* service_state_to_string(ServiceState i);
+diff --git a/src/socket.c b/src/socket.c
+index 1f5e067..7034436 100644
+--- a/src/socket.c
++++ b/src/socket.c
+@@ -98,7 +98,6 @@ static void socket_unwatch_control_pid(Socket *s) {
+ static void socket_done(Unit *u) {
+         Socket *s = SOCKET(u);
+         SocketPort *p;
+-        Meta *i;
+ 
+         assert(s);
+ 
+@@ -120,7 +119,7 @@ static void socket_done(Unit *u) {
+ 
+         socket_unwatch_control_pid(s);
+ 
+-        s->service = NULL;
++        unit_ref_unset(&s->service);
+ 
+         free(s->tcp_congestion);
+         s->tcp_congestion = NULL;
+@@ -129,16 +128,6 @@ static void socket_done(Unit *u) {
+         s->bind_to_device = NULL;
+ 
+         unit_unwatch_timer(u, &s->timer_watch);
+-
+-        /* Make sure no service instance refers to us anymore. */
+-        LIST_FOREACH(units_by_type, i, u->meta.manager->units_by_type[UNIT_SERVICE]) {
+-                Service *service = (Service *) i;
+-
+-                if (service->accept_socket == s)
+-                        service->accept_socket = NULL;
+-
+-                set_remove(service->configured_sockets, s);
+-        }
+ }
+ 
+ static int socket_instantiate_service(Socket *s) {
+@@ -153,7 +142,7 @@ static int socket_instantiate_service(Socket *s) {
+          * here. For Accept=no this is mostly a NOP since the service
+          * is figured out at load time anyway. */
+ 
+-        if (s->service)
++        if (UNIT_DEREF(s->service))
+                 return 0;
+ 
+         assert(s->accept);
+@@ -181,8 +170,9 @@ static int socket_instantiate_service(Socket *s) {
+ #endif
+ 
+         u->meta.no_gc = true;
+-        s->service = SERVICE(u);
+-        return 0;
++        unit_ref_set(&s->service, u);
++
++        return unit_add_two_dependencies(UNIT(s), UNIT_BEFORE, UNIT_TRIGGERS, u, false);
+ }
+ 
+ static bool have_non_accept_socket(Socket *s) {
+@@ -226,7 +216,7 @@ static int socket_verify(Socket *s) {
+                 return -EINVAL;
+         }
+ 
+-        if (s->accept && s->service) {
++        if (s->accept && UNIT_DEREF(s->service)) {
+                 log_error("Explicit service configuration for accepting sockets not supported on %s. Refusing.", s->meta.id);
+                 return -EINVAL;
+         }
+@@ -349,11 +339,18 @@ static int socket_load(Unit *u) {
+ 
+                 if (have_non_accept_socket(s)) {
+ 
+-                        if (!s->service)
+-                                if ((r = unit_load_related_unit(u, ".service", (Unit**) &s->service)) < 0)
++                        if (!UNIT_DEREF(s->service)) {
++                                Unit *x;
++
++                                r = unit_load_related_unit(u, ".service", &x);
++                                if (r < 0)
+                                         return r;
+ 
+-                        if ((r = unit_add_dependency(u, UNIT_BEFORE, UNIT(s->service), true)) < 0)
++                                unit_ref_set(&s->service, x);
++                        }
++
++                        r = unit_add_two_dependencies(u, UNIT_BEFORE, UNIT_TRIGGERS, UNIT_DEREF(s->service), true);
++                        if (r < 0)
+                                 return r;
+                 }
+ 
+@@ -912,8 +909,9 @@ static int socket_open_fds(Socket *s) {
+                                 if ((r = socket_instantiate_service(s)) < 0)
+                                         return r;
+ 
+-                                if (s->service && s->service->exec_command[SERVICE_EXEC_START]) {
+-                                        r = label_get_create_label_from_exe(s->service->exec_command[SERVICE_EXEC_START]->path, &label);
++                                if (UNIT_DEREF(s->service) &&
++                                    SERVICE(UNIT_DEREF(s->service))->exec_command[SERVICE_EXEC_START]) {
++                                        r = label_get_create_label_from_exe(SERVICE(UNIT_DEREF(s->service))->exec_command[SERVICE_EXEC_START]->path, &label);
+ 
+                                         if (r < 0) {
+                                                 if (r != -EPERM)
+@@ -1380,26 +1378,20 @@ static void socket_enter_running(Socket *s, int cfd) {
+         }
+ 
+         if (cfd < 0) {
++                Iterator i;
++                Unit *u;
+                 bool pending = false;
+-                Meta *i;
+ 
+                 /* If there's already a start pending don't bother to
+                  * do anything */
+-                LIST_FOREACH(units_by_type, i, s->meta.manager->units_by_type[UNIT_SERVICE]) {
+-                        Service *service = (Service *) i;
+-
+-                        if (!set_get(service->configured_sockets, s))
+-                                continue;
+-
+-                        if (!unit_pending_active(UNIT(service)))
+-                                continue;
+-
+-                        pending = true;
+-                        break;
+-                }
++                SET_FOREACH(u, s->meta.dependencies[UNIT_TRIGGERS], i)
++                        if (unit_pending_active(u)) {
++                                pending = true;
++                                break;
++                        }
+ 
+                 if (!pending)
+-                        if ((r = manager_add_job(s->meta.manager, JOB_START, UNIT(s->service), JOB_REPLACE, true, &error, NULL)) < 0)
++                        if ((r = manager_add_job(s->meta.manager, JOB_START, UNIT_DEREF(s->service), JOB_REPLACE, true, &error, NULL)) < 0)
+                                 goto fail;
+ 
+                 socket_set_state(s, SOCKET_RUNNING);
+@@ -1434,13 +1426,13 @@ static void socket_enter_running(Socket *s, int cfd) {
+                         goto fail;
+                 }
+ 
+-                if ((r = unit_add_name(UNIT(s->service), name)) < 0) {
++                if ((r = unit_add_name(UNIT_DEREF(s->service), name)) < 0) {
+                         free(name);
+                         goto fail;
+                 }
+ 
+-                service = s->service;
+-                s->service = NULL;
++                service = SERVICE(UNIT_DEREF(s->service));
++                unit_ref_unset(&s->service);
+                 s->n_accepted ++;
+ 
+                 service->meta.no_gc = false;
+@@ -1523,23 +1515,27 @@ static int socket_start(Unit *u) {
+                 return 0;
+ 
+         /* Cannot run this without the service being around */
+-        if (s->service) {
+-                if (s->service->meta.load_state != UNIT_LOADED) {
+-                        log_error("Socket service %s not loaded, refusing.", s->service->meta.id);
++        if (UNIT_DEREF(s->service)) {
++                Service *service;
++
++                service = SERVICE(UNIT_DEREF(s->service));
++
++                if (service->meta.load_state != UNIT_LOADED) {
++                        log_error("Socket service %s not loaded, refusing.", service->meta.id);
+                         return -ENOENT;
+                 }
+ 
+                 /* If the service is already active we cannot start the
+                  * socket */
+-                if (s->service->state != SERVICE_DEAD &&
+-                    s->service->state != SERVICE_FAILED &&
+-                    s->service->state != SERVICE_AUTO_RESTART) {
+-                        log_error("Socket service %s already active, refusing.", s->service->meta.id);
++                if (service->state != SERVICE_DEAD &&
++                    service->state != SERVICE_FAILED &&
++                    service->state != SERVICE_AUTO_RESTART) {
++                        log_error("Socket service %s already active, refusing.", service->meta.id);
+                         return -EBUSY;
+                 }
+ 
+ #ifdef HAVE_SYSV_COMPAT
+-                if (s->service->sysv_path) {
++                if (service->sysv_path) {
+                         log_error("Using SysV services for socket activation is not supported. Refusing.");
+                         return -ENOENT;
+                 }
+diff --git a/src/socket.h b/src/socket.h
+index fbd29da..4fc2cbe 100644
+--- a/src/socket.h
++++ b/src/socket.h
+@@ -28,6 +28,7 @@ typedef struct Socket Socket;
+ #include "unit.h"
+ #include "socket-util.h"
+ #include "mount.h"
++#include "service.h"
+ 
+ typedef enum SocketState {
+         SOCKET_DEAD,
+@@ -93,7 +94,7 @@ struct Socket {
+         /* For Accept=no sockets refers to the one service we'll
+         activate. For Accept=yes sockets is either NULL, or filled
+         when the next service we spawn. */
+-        Service *service;
++        UnitRef service;
+ 
+         SocketState state, deserialized_state;
+ 
+@@ -103,9 +104,6 @@ struct Socket {
+         SocketExecCommand control_command_id;
+         pid_t control_pid;
+ 
+-        /* Only for INET6 sockets: issue IPV6_V6ONLY sockopt */
+-        SocketAddressBindIPv6Only bind_ipv6_only;
+-
+         mode_t directory_mode;
+         mode_t socket_mode;
+ 
+@@ -130,6 +128,9 @@ struct Socket {
+         char *tcp_congestion;
+         long mq_maxmsg;
+         long mq_msgsize;
++
++        /* Only for INET6 sockets: issue IPV6_V6ONLY sockopt */
++        SocketAddressBindIPv6Only bind_ipv6_only;
+ };
+ 
+ /* Called from the service code when collecting fds */
+diff --git a/src/timer.c b/src/timer.c
+index e6f207f..c732076 100644
+--- a/src/timer.c
++++ b/src/timer.c
+@@ -57,6 +57,8 @@ static void timer_done(Unit *u) {
+         }
+ 
+         unit_unwatch_timer(u, &t->timer_watch);
++
++        unit_ref_unset(&t->unit);
+ }
+ 
+ static int timer_verify(Timer *t) {
+@@ -101,11 +103,18 @@ static int timer_load(Unit *u) {
+ 
+         if (u->meta.load_state == UNIT_LOADED) {
+ 
+-                if (!t->unit)
+-                        if ((r = unit_load_related_unit(u, ".service", &t->unit)))
++                if (!UNIT_DEREF(t->unit)) {
++                        Unit *x;
++
++                        r = unit_load_related_unit(u, ".service", &x);
++                        if (r < 0)
+                                 return r;
+ 
+-                if ((r = unit_add_dependency(u, UNIT_BEFORE, t->unit, true)) < 0)
++                        unit_ref_set(&t->unit, x);
++                }
++
++                r = unit_add_two_dependencies(u, UNIT_BEFORE, UNIT_TRIGGERS, UNIT_DEREF(t->unit), true);
++                if (r < 0)
+                         return r;
+ 
+                 if (t->meta.default_dependencies)
+@@ -126,7 +135,7 @@ static void timer_dump(Unit *u, FILE *f, const char *prefix) {
+                 "%sTimer State: %s\n"
+                 "%sUnit: %s\n",
+                 prefix, timer_state_to_string(t->state),
+-                prefix, t->unit->meta.id);
++                prefix, UNIT_DEREF(t->unit)->meta.id);
+ 
+         LIST_FOREACH(value, v, t->values)
+                 fprintf(f,
+@@ -216,18 +225,18 @@ static void timer_enter_waiting(Timer *t, bool initial) {
+ 
+                 case TIMER_UNIT_ACTIVE:
+ 
+-                        if (t->unit->meta.inactive_exit_timestamp.monotonic <= 0)
++                        if (UNIT_DEREF(t->unit)->meta.inactive_exit_timestamp.monotonic <= 0)
+                                 continue;
+ 
+-                        base = t->unit->meta.inactive_exit_timestamp.monotonic;
++                        base = UNIT_DEREF(t->unit)->meta.inactive_exit_timestamp.monotonic;
+                         break;
+ 
+                 case TIMER_UNIT_INACTIVE:
+ 
+-                        if (t->unit->meta.inactive_enter_timestamp.monotonic <= 0)
++                        if (UNIT_DEREF(t->unit)->meta.inactive_enter_timestamp.monotonic <= 0)
+                                 continue;
+ 
+-                        base = t->unit->meta.inactive_enter_timestamp.monotonic;
++                        base = UNIT_DEREF(t->unit)->meta.inactive_enter_timestamp.monotonic;
+                         break;
+ 
+                 default:
+@@ -278,7 +287,7 @@ static void timer_enter_running(Timer *t) {
+         if (t->meta.job && t->meta.job->type == JOB_STOP)
+                 return;
+ 
+-        if ((r = manager_add_job(t->meta.manager, JOB_START, t->unit, JOB_REPLACE, true, &error, NULL)) < 0)
++        if ((r = manager_add_job(t->meta.manager, JOB_START, UNIT_DEREF(t->unit), JOB_REPLACE, true, &error, NULL)) < 0)
+                 goto fail;
+ 
+         timer_set_state(t, TIMER_RUNNING);
+@@ -297,7 +306,7 @@ static int timer_start(Unit *u) {
+         assert(t);
+         assert(t->state == TIMER_DEAD || t->state == TIMER_FAILED);
+ 
+-        if (t->unit->meta.load_state != UNIT_LOADED)
++        if (UNIT_DEREF(t->unit)->meta.load_state != UNIT_LOADED)
+                 return -ENOENT;
+ 
+         t->failure = false;
+@@ -374,37 +383,24 @@ static void timer_timer_event(Unit *u, uint64_t elapsed, Watch *w) {
+ }
+ 
+ void timer_unit_notify(Unit *u, UnitActiveState new_state) {
+-        char *n;
+         int r;
+         Iterator i;
++        Unit *k;
+ 
+         if (u->meta.type == UNIT_TIMER)
+                 return;
+ 
+-        SET_FOREACH(n, u->meta.names, i) {
+-                char *k;
+-                Unit *p;
++        SET_FOREACH(k, u->meta.dependencies[UNIT_TRIGGERED_BY], i) {
+                 Timer *t;
+                 TimerValue *v;
+ 
+-                if (!(k = unit_name_change_suffix(n, ".timer"))) {
+-                        r = -ENOMEM;
+-                        goto fail;
+-                }
+-
+-                p = manager_get_unit(u->meta.manager, k);
+-                free(k);
+-
+-                if (!p)
++                if (k->meta.type != UNIT_TIMER)
+                         continue;
+ 
+-                if (p->meta.load_state != UNIT_LOADED)
++                if (k->meta.load_state != UNIT_LOADED)
+                         continue;
+ 
+-                t = TIMER(p);
+-
+-                if (t->unit != u)
+-                        continue;
++                t = TIMER(k);
+ 
+                 /* Reenable all timers that depend on unit state */
+                 LIST_FOREACH(value, v, t->values)
+@@ -438,11 +434,6 @@ void timer_unit_notify(Unit *u, UnitActiveState new_state) {
+                         assert_not_reached("Unknown timer state");
+                 }
+         }
+-
+-        return;
+-
+-fail:
+-        log_error("Failed find timer unit: %s", strerror(-r));
+ }
+ 
+ static void timer_reset_failed(Unit *u) {
+diff --git a/src/timer.h b/src/timer.h
+index 6295605..ad55cf7 100644
+--- a/src/timer.h
++++ b/src/timer.h
+@@ -63,7 +63,7 @@ struct Timer {
+         usec_t next_elapse;
+ 
+         TimerState state, deserialized_state;
+-        Unit *unit;
++        UnitRef unit;
+ 
+         Watch timer_watch;
+ 
+diff --git a/src/unit.c b/src/unit.c
+index 3191071..7ce783e 100644
+--- a/src/unit.c
++++ b/src/unit.c
+@@ -377,12 +377,15 @@ void unit_free(Unit *u) {
+ 
+         free(u->meta.description);
+         free(u->meta.fragment_path);
++        free(u->meta.instance);
+ 
+         set_free_free(u->meta.names);
+ 
+         condition_free_list(u->meta.conditions);
+ 
+-        free(u->meta.instance);
++        while (u->meta.refs)
++                unit_ref_unset(u->meta.refs);
++
+         free(u);
+ }
+ 
+@@ -498,6 +501,10 @@ int unit_merge(Unit *u, Unit *other) {
+         /* Merge names */
+         merge_names(u, other);
+ 
++        /* Redirect all references */
++        while (other->meta.refs)
++                unit_ref_set(other->meta.refs, u);
++
+         /* Merge dependencies */
+         for (d = 0; d < _UNIT_DEPENDENCY_MAX; d++)
+                 merge_dependencies(u, other, d);
+@@ -1526,7 +1533,9 @@ int unit_add_dependency(Unit *u, UnitDependency d, Unit *other, bool add_referen
+                 [UNIT_AFTER] = UNIT_BEFORE,
+                 [UNIT_ON_FAILURE] = _UNIT_DEPENDENCY_INVALID,
+                 [UNIT_REFERENCES] = UNIT_REFERENCED_BY,
+-                [UNIT_REFERENCED_BY] = UNIT_REFERENCES
++                [UNIT_REFERENCED_BY] = UNIT_REFERENCES,
++                [UNIT_TRIGGERS] = UNIT_TRIGGERED_BY,
++                [UNIT_TRIGGERED_BY] = UNIT_TRIGGERS
+         };
+         int r, q = 0, v = 0, w = 0;
+ 
+@@ -2588,6 +2597,28 @@ UnitFileState unit_get_unit_file_state(Unit *u) {
+         return u->meta.unit_file_state;
+ }
+ 
++Unit* unit_ref_set(UnitRef *ref, Unit *u) {
++        assert(ref);
++        assert(u);
++
++        if (ref->unit)
++                unit_ref_unset(ref);
++
++        ref->unit = u;
++        LIST_PREPEND(UnitRef, refs, u->meta.refs, ref);
++        return u;
++}
++
++void unit_ref_unset(UnitRef *ref) {
++        assert(ref);
++
++        if (!ref->unit)
++                return;
++
++        LIST_REMOVE(UnitRef, refs, ref->unit->meta.refs, ref);
++        ref->unit = NULL;
++}
++
+ static const char* const unit_load_state_table[_UNIT_LOAD_STATE_MAX] = {
+         [UNIT_STUB] = "stub",
+         [UNIT_LOADED] = "loaded",
+@@ -2626,7 +2657,9 @@ static const char* const unit_dependency_table[_UNIT_DEPENDENCY_MAX] = {
+         [UNIT_AFTER] = "After",
+         [UNIT_REFERENCES] = "References",
+         [UNIT_REFERENCED_BY] = "ReferencedBy",
+-        [UNIT_ON_FAILURE] = "OnFailure"
++        [UNIT_ON_FAILURE] = "OnFailure",
++        [UNIT_TRIGGERS] = "Triggers",
++        [UNIT_TRIGGERED_BY] = "TriggeredBy"
+ };
+ 
+ DEFINE_STRING_TABLE_LOOKUP(unit_dependency, UnitDependency);
+diff --git a/src/unit.h b/src/unit.h
+index b32c1a7..4d83309 100644
+--- a/src/unit.h
++++ b/src/unit.h
+@@ -32,6 +32,7 @@ typedef enum UnitType UnitType;
+ typedef enum UnitLoadState UnitLoadState;
+ typedef enum UnitActiveState UnitActiveState;
+ typedef enum UnitDependency UnitDependency;
++typedef struct UnitRef UnitRef;
+ 
+ #include "set.h"
+ #include "util.h"
+@@ -119,6 +120,10 @@ enum UnitDependency {
+         /* On Failure */
+         UNIT_ON_FAILURE,
+ 
++        /* Triggers (i.e. a socket triggers a service) */
++        UNIT_TRIGGERS,
++        UNIT_TRIGGERED_BY,
++
+         /* Reference information for GC logic */
+         UNIT_REFERENCES,              /* Inverse of 'references' is 'referenced_by' */
+         UNIT_REFERENCED_BY,
+@@ -156,6 +161,9 @@ struct Meta {
+ 
+         usec_t job_timeout;
+ 
++        /* References to this */
++        LIST_HEAD(UnitRef, refs);
++
+         /* Conditions to check */
+         LIST_HEAD(Condition, conditions);
+ 
+@@ -237,6 +245,15 @@ struct Meta {
+         bool in_audit:1;
+ };
+ 
++struct UnitRef {
++        /* Keeps tracks of references to a unit. This is useful so
++         * that we can merge two units if necessary and correct all
++         * references to them */
++
++        Unit* unit;
++        LIST_FIELDS(UnitRef, refs);
++};
++
+ #include "service.h"
+ #include "timer.h"
+ #include "socket.h"
+@@ -536,6 +553,11 @@ bool unit_condition_test(Unit *u);
+ 
+ UnitFileState unit_get_unit_file_state(Unit *u);
+ 
++Unit* unit_ref_set(UnitRef *ref, Unit *u);
++void unit_ref_unset(UnitRef *ref);
++
++#define UNIT_DEREF(ref) ((ref).unit)
++
+ const char *unit_load_state_to_string(UnitLoadState i);
+ UnitLoadState unit_load_state_from_string(const char *s);
+ 
+-- 
+1.7.7.5
+

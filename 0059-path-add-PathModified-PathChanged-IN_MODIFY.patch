@@ -1,0 +1,90 @@
+From 30fb4092d987ff81f39177461f6472e2fff225a1 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Sat, 3 Dec 2011 10:22:26 +0100
+Subject: [PATCH] path: add PathModified (= PathChanged + IN_MODIFY) (cherry
+ picked from commit
+ e92238567b9fc83ef77e359588d7b005ecae3d70)
+
+---
+ man/systemd.path.xml |   17 ++++++++++-------
+ src/path.c           |    2 ++
+ src/path.h           |    1 +
+ 3 files changed, 13 insertions(+), 7 deletions(-)
+
+diff --git a/man/systemd.path.xml b/man/systemd.path.xml
+index 10d8f73..5b1ff75 100644
+--- a/man/systemd.path.xml
++++ b/man/systemd.path.xml
+@@ -113,6 +113,7 @@
+                                 <term><varname>PathExists=</varname></term>
+                                 <term><varname>PathExistsGlob=</varname></term>
+                                 <term><varname>PathChanged=</varname></term>
++                                <term><varname>PathModified=</varname></term>
+                                 <term><varname>DirectoryNotEmpty=</varname></term>
+ 
+                                 <listitem><para>Defines paths to
+@@ -129,8 +130,14 @@
+                                 specified. <varname>PathChanged=</varname>
+                                 may be used to watch a file or
+                                 directory and activate the configured
+-                                unit whenever it changes or is
+-                                modified. <varname>DirectoryNotEmpty=</varname>
++                                unit whenever it changes. It is not activated
++                                on every write to the watched file but it is
++                                activated if the file which was open for writing
++                                gets closed. <varname>PathModified=</varname>
++                                is similar, but additionally it is activated
++                                also on simple writes to the watched file.
++
++                                <varname>DirectoryNotEmpty=</varname>
+                                 may be used to watch a directory and
+                                 activate the configured unit whenever
+                                 it contains at least one file.</para>
+@@ -154,11 +161,7 @@
+                                 activated, then the configured unit is
+                                 immediately activated as
+                                 well. Something similar does not apply
+-                                to
+-                                <varname>PathChanged=</varname>. The
+-                                latter is not activated on simple
+-                                writes but only if files with were
+-                                opened for writing are closed.
++                                to <varname>PathChanged=</varname>.
+                                 </para></listitem>
+                         </varlistentry>
+                         <varlistentry>
+diff --git a/src/path.c b/src/path.c
+index db6f873..1e5d825 100644
+--- a/src/path.c
++++ b/src/path.c
+@@ -44,6 +44,7 @@ int pathspec_watch(PathSpec *s, Unit *u) {
+                 [PATH_EXISTS] = IN_DELETE_SELF|IN_MOVE_SELF|IN_ATTRIB,
+                 [PATH_EXISTS_GLOB] = IN_DELETE_SELF|IN_MOVE_SELF|IN_ATTRIB,
+                 [PATH_CHANGED] = IN_DELETE_SELF|IN_MOVE_SELF|IN_ATTRIB|IN_CLOSE_WRITE|IN_CREATE|IN_DELETE|IN_MOVED_FROM|IN_MOVED_TO,
++                [PATH_MODIFIED] = IN_DELETE_SELF|IN_MOVE_SELF|IN_ATTRIB|IN_CLOSE_WRITE|IN_CREATE|IN_DELETE|IN_MOVED_FROM|IN_MOVED_TO|IN_MODIFY,
+                 [PATH_DIRECTORY_NOT_EMPTY] = IN_DELETE_SELF|IN_MOVE_SELF|IN_ATTRIB|IN_CREATE|IN_MOVED_TO
+         };
+ 
+@@ -713,6 +714,7 @@ static const char* const path_type_table[_PATH_TYPE_MAX] = {
+         [PATH_EXISTS] = "PathExists",
+         [PATH_EXISTS_GLOB] = "PathExistsGlob",
+         [PATH_CHANGED] = "PathChanged",
++        [PATH_MODIFIED] = "PathModified",
+         [PATH_DIRECTORY_NOT_EMPTY] = "DirectoryNotEmpty"
+ };
+ 
+diff --git a/src/path.h b/src/path.h
+index 4e6ccf5..1d78fe4 100644
+--- a/src/path.h
++++ b/src/path.h
+@@ -41,6 +41,7 @@ typedef enum PathType {
+         PATH_EXISTS_GLOB,
+         PATH_DIRECTORY_NOT_EMPTY,
+         PATH_CHANGED,
++        PATH_MODIFIED,
+         _PATH_TYPE_MAX,
+         _PATH_TYPE_INVALID = -1
+ } PathType;
+-- 
+1.7.7.5
+

@@ -1,0 +1,74 @@
+From c8be37cab131ec8a1aa54e5878483a18fc0bde6e Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Thu, 15 Dec 2011 21:31:14 +0100
+Subject: [PATCH] tmpfiles: use an enum instead of plain char for item type
+
+For better safety. gcc can warn about missing values in switch statements.
+(cherry picked from commit 66ccd0387e528567dff92239e85c962d2f140ef1)
+---
+ src/tmpfiles.c |   12 +++++++-----
+ 1 files changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/src/tmpfiles.c b/src/tmpfiles.c
+index 21bf44d..6171140 100644
+--- a/src/tmpfiles.c
++++ b/src/tmpfiles.c
+@@ -50,7 +50,7 @@
+  * properly owned directories beneath /tmp, /var/tmp, /run, which are
+  * volatile and hence need to be recreated on bootup. */
+ 
+-enum {
++typedef enum ItemType {
+         /* These ones take file names */
+         CREATE_FILE = 'f',
+         TRUNCATE_FILE = 'F',
+@@ -62,10 +62,10 @@ enum {
+         IGNORE_PATH = 'x',
+         REMOVE_PATH = 'r',
+         RECURSIVE_REMOVE_PATH = 'R'
+-};
++} ItemType;
+ 
+ typedef struct Item {
+-        char type;
++        ItemType type;
+ 
+         char *path;
+         uid_t uid;
+@@ -90,7 +90,7 @@ static const char *arg_prefix = NULL;
+ 
+ #define MAX_DEPTH 256
+ 
+-static bool needs_glob(int t) {
++static bool needs_glob(ItemType t) {
+         return t == IGNORE_PATH || t == REMOVE_PATH || t == RECURSIVE_REMOVE_PATH;
+ }
+ 
+@@ -701,6 +701,7 @@ static bool item_equal(Item *a, Item *b) {
+ static int parse_line(const char *fname, unsigned line, const char *buffer) {
+         Item *i, *existing;
+         char *mode = NULL, *user = NULL, *group = NULL, *age = NULL;
++        char type;
+         Hashmap *h;
+         int r;
+ 
+@@ -720,7 +721,7 @@ static int parse_line(const char *fname, unsigned line, const char *buffer) {
+                    "%ms "
+                    "%ms "
+                    "%ms",
+-                   &i->type,
++                   &type,
+                    &i->path,
+                    &mode,
+                    &user,
+@@ -730,6 +731,7 @@ static int parse_line(const char *fname, unsigned line, const char *buffer) {
+                 r = -EIO;
+                 goto finish;
+         }
++        i->type = type;
+ 
+         if (i->type != CREATE_FILE &&
+             i->type != TRUNCATE_FILE &&
+-- 
+1.7.7.5
+

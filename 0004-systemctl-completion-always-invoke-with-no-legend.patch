@@ -1,7 +1,7 @@
-From 74eeab044e506a39786f484b160d9f64d48ad243 Mon Sep 17 00:00:00 2001
+From fb4f5f218e83eb1496f2fdfa67b27e458b2bd6a4 Mon Sep 17 00:00:00 2001
 From: Dave Reisner <d@falconindy.com>
 Date: Tue, 11 Oct 2011 20:56:53 -0400
-Subject: [PATCH 5/5] systemctl-completion: always invoke with --no-legend
+Subject: [PATCH] systemctl-completion: always invoke with --no-legend
 
 In the case of completion for the 'restart' verb, passing the invalid
 unit name (the colums header) causes completion to cease functioning
@@ -11,6 +11,7 @@ entirely, with the error:
 
 This adds a small wrapper function for systemctl which can have common
 options added to it.
+(cherry picked from commit 74eeab044e506a39786f484b160d9f64d48ad243)
 ---
  src/systemctl-bash-completion.sh |   20 ++++++++++++--------
  1 files changed, 12 insertions(+), 8 deletions(-)
@@ -72,5 +73,5 @@ index 6369a6c..6ebb792 100644
          fi
  
 -- 
-1.7.4.4
+1.7.7.5
 

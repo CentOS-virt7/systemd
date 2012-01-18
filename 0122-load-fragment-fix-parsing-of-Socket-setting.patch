@@ -1,0 +1,42 @@
+From 22af36b4ce7e01e0f50cd1a5679b54304bd06599 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Sat, 7 Jan 2012 01:21:40 +0100
+Subject: [PATCH] load-fragment: fix parsing of Socket= setting (cherry picked
+ from commit 4ff77f66af8bd3e7e403c81febb7a2471457c5da)
+
+---
+ src/load-fragment.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
+
+diff --git a/src/load-fragment.c b/src/load-fragment.c
+index 1903190..ef5d192 100644
+--- a/src/load-fragment.c
++++ b/src/load-fragment.c
+@@ -1386,6 +1386,7 @@ int config_parse_socket_service(
+         Socket *s = data;
+         int r;
+         DBusError error;
++        Unit *x;
+ 
+         assert(filename);
+         assert(lvalue);
+@@ -1399,12 +1400,15 @@ int config_parse_socket_service(
+                 return 0;
+         }
+ 
+-        if ((r = manager_load_unit(s->meta.manager, rvalue, NULL, &error, (Unit**) &s->service)) < 0) {
++        r = manager_load_unit(s->meta.manager, rvalue, NULL, &error, &x);
++        if (r < 0) {
+                 log_error("[%s:%u] Failed to load unit %s, ignoring: %s", filename, line, rvalue, bus_error(&error, r));
+                 dbus_error_free(&error);
+                 return 0;
+         }
+ 
++        unit_ref_set(&s->service, x);
++
+         return 0;
+ }
+ 
+-- 
+1.7.7.5
+

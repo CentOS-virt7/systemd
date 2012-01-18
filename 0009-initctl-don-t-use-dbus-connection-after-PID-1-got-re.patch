@@ -1,0 +1,54 @@
+From 3e750716de6acad59112a34d3d79f50da680d023 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 1 Nov 2011 18:18:17 +0100
+Subject: [PATCH] initctl: don't use dbus connection after PID 1 got respawned
+
+After reexec PID 1 our bus connection is invalidated. Hence don't try to
+reuse it, just terminate so that when we are spawned the next time we
+just get a new one.
+
+Spotted by Marti Raudsepp.
+(cherry picked from commit f632a6634dd4eff041425aa9b3fb48ccfa98c014)
+---
+ src/initctl.c |   11 ++++++++++-
+ 1 files changed, 10 insertions(+), 1 deletions(-)
+
+diff --git a/src/initctl.c b/src/initctl.c
+index eaa717a..097c85f 100644
+--- a/src/initctl.c
++++ b/src/initctl.c
+@@ -56,6 +56,8 @@ typedef struct Server {
+         unsigned n_fifos;
+ 
+         DBusConnection *bus;
++
++        bool quit;
+ } Server;
+ 
+ struct Fifo {
+@@ -174,6 +176,13 @@ static void request_process(Server *s, const struct init_request *req) {
+                         case 'U':
+                                 if (kill(1, SIGTERM) < 0)
+                                         log_error("kill() failed: %m");
++
++                                /* The bus connection will be
++                                 * terminated if PID 1 is reexecuted,
++                                 * hence let's just exit here, and
++                                 * rely on that we'll be restarted on
++                                 * the next request */
++                                s->quit = true;
+                                 break;
+ 
+                         case 'q':
+@@ -404,7 +413,7 @@ int main(int argc, char *argv[]) {
+                   "READY=1\n"
+                   "STATUS=Processing requests...");
+ 
+-        for (;;) {
++        while (!server.quit) {
+                 struct epoll_event event;
+                 int k;
+ 
+-- 
+1.7.7.5
+

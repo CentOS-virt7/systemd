@@ -1,0 +1,55 @@
+From 43664cdd8565ae24b27c3f91be1de64ae9021608 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Fri, 9 Dec 2011 15:24:04 +0100
+Subject: [PATCH] unit: fix false positive in check for unneeded unit
+
+A freshly started unit A was immediately considered unneeded just because
+unit B, which Requires A, was starting later in the transaction.
+Fix it by looking not only at the state of B, but also at its pending job.
+
+Also fix a copied&pasted comment.
+(cherry picked from commit f60c2665f9ba1dd4a6b4a36b2e8195482ada9957)
+---
+ src/unit.c |   10 +++++-----
+ 1 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/src/unit.c b/src/unit.c
+index 018e986..56137d7 100644
+--- a/src/unit.c
++++ b/src/unit.c
+@@ -1032,19 +1032,19 @@ static void unit_check_unneeded(Unit *u) {
+                 return;
+ 
+         SET_FOREACH(other, u->meta.dependencies[UNIT_REQUIRED_BY], i)
+-                if (!UNIT_IS_INACTIVE_OR_DEACTIVATING(unit_active_state(other)))
++                if (unit_pending_active(other))
+                         return;
+ 
+         SET_FOREACH(other, u->meta.dependencies[UNIT_REQUIRED_BY_OVERRIDABLE], i)
+-                if (!UNIT_IS_INACTIVE_OR_DEACTIVATING(unit_active_state(other)))
++                if (unit_pending_active(other))
+                         return;
+ 
+         SET_FOREACH(other, u->meta.dependencies[UNIT_WANTED_BY], i)
+-                if (!UNIT_IS_INACTIVE_OR_DEACTIVATING(unit_active_state(other)))
++                if (unit_pending_active(other))
+                         return;
+ 
+         SET_FOREACH(other, u->meta.dependencies[UNIT_BOUND_BY], i)
+-                if (!UNIT_IS_INACTIVE_OR_DEACTIVATING(unit_active_state(other)))
++                if (unit_pending_active(other))
+                         return;
+ 
+         log_info("Service %s is not needed anymore. Stopping.", u->meta.id);
+@@ -2518,7 +2518,7 @@ bool unit_pending_inactive(Unit *u) {
+ bool unit_pending_active(Unit *u) {
+         assert(u);
+ 
+-        /* Returns true if the unit is inactive or going down */
++        /* Returns true if the unit is active or going up */
+ 
+         if (UNIT_IS_ACTIVE_OR_ACTIVATING(unit_active_state(u)))
+                 return true;
+-- 
+1.7.7.5
+

@@ -1,0 +1,30 @@
+From 21ee8544227b293260e864c2a6bcf47a1e0d7a4c Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Fri, 6 Jan 2012 01:32:34 +0100
+Subject: [PATCH] util: switch the console to text mode on reset
+
+In case we're taking over the console after a killed X server.
+
+https://bugzilla.redhat.com/show_bug.cgi?id=771563
+(cherry picked from commit 5c0100a53772eb7f4b11db7b071fc63e82e5a1a7)
+---
+ src/util.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
+
+diff --git a/src/util.c b/src/util.c
+index a9d0821..5bac05f 100644
+--- a/src/util.c
++++ b/src/util.c
+@@ -2436,6 +2436,9 @@ int reset_terminal_fd(int fd) {
+         /* Disable exclusive mode, just in case */
+         ioctl(fd, TIOCNXCL);
+ 
++        /* Switch to text mode */
++        ioctl(fd, KDSETMODE, KD_TEXT);
++
+         /* Enable console unicode mode */
+         ioctl(fd, KDSKBMODE, K_UNICODE);
+ 
+-- 
+1.7.7.5
+

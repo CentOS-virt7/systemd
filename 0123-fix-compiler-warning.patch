@@ -1,0 +1,25 @@
+From e9926ed4c022cd98b6174d675546b04900df91e4 Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay.sievers@vrfy.org>
+Date: Sat, 7 Jan 2012 02:12:43 +0100
+Subject: [PATCH] fix compiler warning (cherry picked from commit
+ ebd91b34d749cf29308d15601b5fbc971b4dab89)
+
+---
+ src/timer.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
+
+diff --git a/src/timer.c b/src/timer.c
+index c732076..d127a11 100644
+--- a/src/timer.c
++++ b/src/timer.c
+@@ -383,7 +383,6 @@ static void timer_timer_event(Unit *u, uint64_t elapsed, Watch *w) {
+ }
+ 
+ void timer_unit_notify(Unit *u, UnitActiveState new_state) {
+-        int r;
+         Iterator i;
+         Unit *k;
+ 
+-- 
+1.7.7.5
+

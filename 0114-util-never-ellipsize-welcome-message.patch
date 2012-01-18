@@ -1,0 +1,145 @@
+From a8bd50e0b09cb537bb3019845560e645899960ed Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 5 Jan 2012 15:35:16 +0100
+Subject: [PATCH] util: never ellipsize welcome message (cherry picked from
+ commit 67e5cc4f3ed41feaed399cfed77c6fbb41e14a8c)
+
+---
+ src/unit.c |    2 +-
+ src/util.c |   55 ++++++++++++++++++++++++++++++-------------------------
+ src/util.h |    4 ++--
+ 3 files changed, 33 insertions(+), 28 deletions(-)
+
+diff --git a/src/unit.c b/src/unit.c
+index dea8f4a..3191071 100644
+--- a/src/unit.c
++++ b/src/unit.c
+@@ -2455,7 +2455,7 @@ void unit_status_printf(Unit *u, const char *status, const char *format, ...) {
+                 return;
+ 
+         va_start(ap, format);
+-        status_vprintf(status, format, ap);
++        status_vprintf(status, true, format, ap);
+         va_end(ap);
+ }
+ 
+diff --git a/src/util.c b/src/util.c
+index 9ed7d13..fce0a0c 100644
+--- a/src/util.c
++++ b/src/util.c
+@@ -3531,7 +3531,7 @@ cpu_set_t* cpu_set_malloc(unsigned *ncpus) {
+         }
+ }
+ 
+-void status_vprintf(const char *status, const char *format, va_list ap) {
++void status_vprintf(const char *status, bool ellipse, const char *format, va_list ap) {
+         char *s = NULL, *spaces = NULL, *e;
+         int fd = -1, c;
+         size_t emax, sl, left;
+@@ -3546,38 +3546,42 @@ void status_vprintf(const char *status, const char *format, va_list ap) {
+         if (vasprintf(&s, format, ap) < 0)
+                 goto finish;
+ 
+-        fd = open_terminal("/dev/tty", O_WRONLY|O_NOCTTY|O_CLOEXEC);
++        fd = open_terminal("/dev/console", O_WRONLY|O_NOCTTY|O_CLOEXEC);
+         if (fd < 0)
+                 goto finish;
+ 
+-        c = fd_columns(fd);
+-        if (c <= 0)
+-                c = 80;
++        if (ellipse) {
++                c = fd_columns(fd);
++                if (c <= 0)
++                        c = 80;
+ 
+-        if (status) {
+-                sl = 2 + 6 + 1; /* " [" status "]" */
+-                emax = (size_t) c > sl ? c - sl - 1 : 0;
+-        } else
+-                emax = c - 1;
++                if (status) {
++                        sl = 2 + 6 + 1; /* " [" status "]" */
++                        emax = (size_t) c > sl ? c - sl - 1 : 0;
++                } else
++                        emax = c - 1;
+ 
+-        e = ellipsize(s, emax, 75);
+-        if (e) {
+-                free(s);
+-                s = e;
++                e = ellipsize(s, emax, 75);
++                if (e) {
++                        free(s);
++                        s = e;
++                }
+         }
+ 
+         zero(iovec);
+         IOVEC_SET_STRING(iovec[n++], s);
+ 
+-        sl = strlen(s);
+-        left = emax > sl ? emax - sl : 0;
+-        if (left > 0) {
+-                spaces = malloc(left);
+-                if (spaces) {
+-                        memset(spaces, ' ', left);
+-                        iovec[n].iov_base = spaces;
+-                        iovec[n].iov_len = left;
+-                        n++;
++        if (ellipse) {
++                sl = strlen(s);
++                left = emax > sl ? emax - sl : 0;
++                if (left > 0) {
++                        spaces = malloc(left);
++                        if (spaces) {
++                                memset(spaces, ' ', left);
++                                iovec[n].iov_base = spaces;
++                                iovec[n].iov_len = left;
++                                n++;
++                        }
+                 }
+         }
+ 
+@@ -3598,13 +3602,13 @@ finish:
+                 close_nointr_nofail(fd);
+ }
+ 
+-void status_printf(const char *status, const char *format, ...) {
++void status_printf(const char *status, bool ellipse, const char *format, ...) {
+         va_list ap;
+ 
+         assert(format);
+ 
+         va_start(ap, format);
+-        status_vprintf(status, format, ap);
++        status_vprintf(status, ellipse, format, ap);
+         va_end(ap);
+ }
+ 
+@@ -3762,6 +3766,7 @@ void status_welcome(void) {
+                 const_color = "1";
+ 
+         status_printf(NULL,
++                      false,
+                       "\nWelcome to \x1B[%sm%s\x1B[0m!\n",
+                       const_color ? const_color : ansi_color,
+                       const_pretty ? const_pretty : pretty_name);
+diff --git a/src/util.h b/src/util.h
+index e4a554a..40a2a39 100644
+--- a/src/util.h
++++ b/src/util.h
+@@ -370,8 +370,8 @@ int pipe_eof(int fd);
+ 
+ cpu_set_t* cpu_set_malloc(unsigned *ncpus);
+ 
+-void status_vprintf(const char *status, const char *format, va_list ap);
+-void status_printf(const char *status, const char *format, ...);
++void status_vprintf(const char *status, bool ellipse, const char *format, va_list ap);
++void status_printf(const char *status, bool ellipse, const char *format, ...);
+ void status_welcome(void);
+ 
+ int fd_columns(int fd);
+-- 
+1.7.7.5
+

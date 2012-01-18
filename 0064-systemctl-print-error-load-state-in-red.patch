@@ -1,0 +1,41 @@
+From 3fc55e7a9f4dc14ca74ed6b293e1fac03e1fec74 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Tue, 6 Dec 2011 01:14:36 +0100
+Subject: [PATCH] systemctl: print 'error' load state in red
+
+Be consistent in coloring of load states in list-units and status.
+Print only 'error' in red.
+There are no 'banned' or 'failed' states. Do not color 'masked', it's
+not an error.
+(cherry picked from commit f7b9e331ed71fb2f832ac5587fb5119dd2bfc32f)
+---
+ src/systemctl.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/src/systemctl.c b/src/systemctl.c
+index 668641d..960d3c0 100644
+--- a/src/systemctl.c
++++ b/src/systemctl.c
+@@ -377,8 +377,7 @@ static void output_units_list(const struct unit_info *unit_infos, unsigned c) {
+ 
+                 n_shown++;
+ 
+-                if (!streq(u->load_state, "loaded") &&
+-                    !streq(u->load_state, "banned")) {
++                if (streq(u->load_state, "error")) {
+                         on_loaded = ansi_highlight(true);
+                         off_loaded = ansi_highlight(false);
+                 } else
+@@ -2063,8 +2062,7 @@ static void print_status_info(UnitStatusInfo *i) {
+         if (i->following)
+                 printf("\t  Follow: unit currently follows state of %s\n", i->following);
+ 
+-        if (streq_ptr(i->load_state, "failed") ||
+-            streq_ptr(i->load_state, "banned")) {
++        if (streq_ptr(i->load_state, "error")) {
+                 on = ansi_highlight(true);
+                 off = ansi_highlight(false);
+         } else
+-- 
+1.7.7.5
+

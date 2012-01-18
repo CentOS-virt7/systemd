@@ -1,0 +1,49 @@
+From e5c58e069271013582b9de91859aaa5fef70f079 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Thu, 15 Dec 2011 23:04:37 +0100
+Subject: [PATCH] man: document 'Z' in tmpfiles (cherry picked from commit
+ 462d63db0680c2b69d5426ded197342372ebe309)
+
+---
+ man/systemd-tmpfiles.xml |    3 ++-
+ man/tmpfiles.d.xml       |   10 ++++++++++
+ 2 files changed, 12 insertions(+), 1 deletions(-)
+
+diff --git a/man/systemd-tmpfiles.xml b/man/systemd-tmpfiles.xml
+index 08d5c73..20e399b 100644
+--- a/man/systemd-tmpfiles.xml
++++ b/man/systemd-tmpfiles.xml
+@@ -84,7 +84,8 @@
+                                 <listitem><para>If this option is passed all
+                                 files and directories marked with f,
+                                 F, d, D in the configuration files are
+-                                created.</para></listitem>
++                                created. Files and directories marked with Z
++                                are relabeled.</para></listitem>
+                         </varlistentry>
+ 
+                         <varlistentry>
+diff --git a/man/tmpfiles.d.xml b/man/tmpfiles.d.xml
+index 7f4c45c..580d99c 100644
+--- a/man/tmpfiles.d.xml
++++ b/man/tmpfiles.d.xml
+@@ -155,6 +155,16 @@ d    /run/user 0755 root root 10d</programlisting>
+                                         place of normal path
+                                         names.</para></listitem>
+                                 </varlistentry>
++
++                                <varlistentry>
++                                        <term><varname>Z</varname></term>
++                                        <listitem><para>Recursively
++                                        relabel security context of a path and
++                                        all its subdirectories (if it is a
++                                        directory). Lines of this type accept
++                                        shell-style globs in place of normal
++                                        path names.</para></listitem>
++                                </varlistentry>
+                         </variablelist>
+                 </refsect2>
+ 
+-- 
+1.7.7.5
+

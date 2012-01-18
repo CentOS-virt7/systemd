@@ -1,0 +1,51 @@
+From b5494d9c9fa3c5e49c8f4672c99d6472f5f30003 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 13 Jan 2012 20:51:58 +0100
+Subject: [PATCH] pam: work correctly if a seat is specified but not vtnr
+ (cherry picked from commit
+ fc7985ed678f2f07cfe941715544e6184981e019)
+
+---
+ src/pam-module.c |   12 ++++++++----
+ 1 files changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/src/pam-module.c b/src/pam-module.c
+index 9002f4e..f6076d2 100644
+--- a/src/pam-module.c
++++ b/src/pam-module.c
+@@ -277,7 +277,6 @@ static int get_seat_from_display(const char *display, const char **seat, uint32_
+         int v;
+ 
+         assert(display);
+-        assert(seat);
+         assert(vtnr);
+ 
+         /* We deduce the X11 socket from the display name, then use
+@@ -325,7 +324,8 @@ static int get_seat_from_display(const char *display, const char **seat, uint32_
+         else if (v == 0)
+                 return -ENOENT;
+ 
+-        *seat = "seat0";
++        if (seat)
++                *seat = "seat0";
+         *vtnr = (uint32_t) v;
+ 
+         return 0;
+@@ -472,8 +472,12 @@ _public_ PAM_EXTERN int pam_sm_open_session(
+         if (!isempty(cvtnr))
+                 safe_atou32(cvtnr, &vtnr);
+ 
+-        if (!isempty(display) && isempty(seat) && vtnr <= 0)
+-                get_seat_from_display(display, &seat, &vtnr);
++        if (!isempty(display) && vtnr <= 0) {
++                if (isempty(seat))
++                        get_seat_from_display(handle, display, &seat, &vtnr);
++                else if (streq(seat, "seat0"))
++                        get_seat_from_display(handle, display, NULL, &vtnr);
++        }
+ 
+         type = !isempty(display) ? "x11" :
+                    !isempty(tty) ? "tty" : "unspecified";
+-- 
+1.7.7.5
+

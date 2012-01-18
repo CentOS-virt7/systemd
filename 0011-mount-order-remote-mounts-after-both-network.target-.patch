@@ -1,4 +1,4 @@
-From 7fc2a89a7387db1e5daa4892393c9e9536920c25 Mon Sep 17 00:00:00 2001
+From 10e099981a14b6f435552854d4c9d5eaaa65c4da Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Tue, 1 Nov 2011 22:27:48 +0100
 Subject: [PATCH] mount: order remote mounts after both network.target and
@@ -9,6 +9,7 @@ remote mounts after network.target, so let's add that order explicitly
 in addition to remote-fs-pre.target.
 
 https://bugzilla.redhat.com/show_bug.cgi?id=749940
+(cherry picked from commit 7fc2a89a7387db1e5daa4892393c9e9536920c25)
 ---
  src/mount.c |    7 ++++++-
  1 files changed, 6 insertions(+), 1 deletions(-)
@@ -46,5 +47,5 @@ index ef953f0..f9cfe91 100644
                  Unit *am;
  
 -- 
-1.7.7
+1.7.7.5
 

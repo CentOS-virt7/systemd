@@ -1,0 +1,83 @@
+From 5581802cca0ebea3b8a3193f94c80cfc4d0a3111 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Sun, 18 Sep 2011 17:00:12 +0200
+Subject: [PATCH] systemadm: coalesce id and decription fields
+
+This is just in interest of saving space (e.g. 5 lines for multi-user.target).
+(cherry picked from commit 8f38d5a4c6e627180809db739b2bdaa5ca0c645a)
+---
+ src/systemadm.vala |   24 +++++++++++-------------
+ 1 files changed, 11 insertions(+), 13 deletions(-)
+
+diff --git a/src/systemadm.vala b/src/systemadm.vala
+index d420800..4cb5c55 100644
+--- a/src/systemadm.vala
++++ b/src/systemadm.vala
+@@ -96,7 +96,6 @@ public class MainWindow : Window {
+         private Manager manager;
+ 
+         private RightLabel unit_id_label;
+-        private RightLabel unit_aliases_label;
+         private RightLabel unit_dependency_label;
+         private RightLabel unit_description_label;
+         private RightLabel unit_load_state_label;
+@@ -220,7 +219,6 @@ public class MainWindow : Window {
+                 job_vbox.pack_start(scroll, true, true, 0);
+ 
+                 unit_id_label = new RightLabel();
+-                unit_aliases_label = new RightLabel();
+                 unit_dependency_label = new RightLabel();
+                 unit_description_label = new RightLabel();
+                 unit_load_state_label = new RightLabel();
+@@ -255,8 +253,6 @@ public class MainWindow : Window {
+ 
+                 unit_table.attach(new LeftLabel("Id:"),                     0, 1, 0, 1, AttachOptions.FILL, AttachOptions.FILL, 0, 0);
+                 unit_table.attach(unit_id_label,                            1, 6, 0, 1, AttachOptions.EXPAND|AttachOptions.FILL, AttachOptions.FILL, 0, 0);
+-                unit_table.attach(new LeftLabel("Aliases:"),                0, 1, 1, 2, AttachOptions.FILL, AttachOptions.FILL, 0, 0);
+-                unit_table.attach(unit_aliases_label,                       1, 6, 1, 2, AttachOptions.EXPAND|AttachOptions.FILL, AttachOptions.FILL, 0, 0);
+                 unit_table.attach(new LeftLabel("Description:"),            0, 1, 2, 3, AttachOptions.FILL, AttachOptions.FILL, 0, 0);
+                 unit_table.attach(unit_description_label,                   1, 6, 2, 3, AttachOptions.EXPAND|AttachOptions.FILL, AttachOptions.FILL, 0, 0);
+                 unit_table.attach(new LeftLabel("Dependencies:"),           0, 1, 3, 4, AttachOptions.FILL, AttachOptions.FILL, 0, 0);
+@@ -443,7 +439,6 @@ public class MainWindow : Window {
+                 restart_button.set_sensitive(false);
+ 
+                 unit_id_label.set_text_or_na();
+-                unit_aliases_label.set_text_or_na();
+                 unit_description_label.set_text_or_na();
+                 unit_description_label.set_text_or_na();
+                 unit_load_state_label.set_text_or_na();
+@@ -507,20 +502,23 @@ public class MainWindow : Window {
+         public void show_unit(Unit unit) {
+                 current_unit_id = unit.id;
+ 
+-                unit_id_label.set_text_or_na(current_unit_id);
+-
+-                string a = "";
++                string id_display = current_unit_id;
++                bool has_alias = false;
+                 foreach (string i in unit.names) {
+                         if (i == current_unit_id)
+                                 continue;
+ 
+-                        if (a == "")
+-                                a = i;
+-                        else
+-                                a += "\n" + i;
++                        if (!has_alias) {
++                                id_display += " (aliases:";
++                                has_alias = true;
++                        }
++
++                        id_display += " " + i;
+                 }
++                if(has_alias)
++                        id_display += ")";
+ 
+-                unit_aliases_label.set_text_or_na(a);
++                unit_id_label.set_text_or_na(id_display);
+ 
+                 string[]
+                         requires = unit.requires,
+-- 
+1.7.7.5
+

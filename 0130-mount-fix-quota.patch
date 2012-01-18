@@ -1,0 +1,80 @@
+From 5c63cb680e18ac72a5de0247d5659d1ad0f4ec0d Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Fri, 13 Jan 2012 23:55:28 +0100
+Subject: [PATCH] mount: fix quota
+
+quotacheck.service and quotaon.service were not pulled in for fstab mounts.
+Fix it by not clearing the default_dependencies flag.
+
+The root filesystem may have quotas too, so don't check for "/" there.
+
+No need to have duplicate code for adding dependencies on umount.target.
+
+https://bugzilla.redhat.com/show_bug.cgi?id=773431
+(cherry picked from commit 9ddc4a26e56b06cd7774a03597980351855d8d54)
+---
+ src/mount.c |   27 ++++++++++-----------------
+ 1 files changed, 10 insertions(+), 17 deletions(-)
+
+diff --git a/src/mount.c b/src/mount.c
+index f72c50a..12c0710 100644
+--- a/src/mount.c
++++ b/src/mount.c
+@@ -357,10 +357,6 @@ static int mount_add_fstab_links(Mount *m) {
+                 after = SPECIAL_LOCAL_FS_PRE_TARGET;
+         }
+ 
+-        if (!path_equal(m->where, "/"))
+-                if ((r = unit_add_two_dependencies_by_name(UNIT(m), UNIT_BEFORE, UNIT_CONFLICTS, SPECIAL_UMOUNT_TARGET, NULL, true)) < 0)
+-                        return r;
+-
+         if ((r = manager_load_unit(m->meta.manager, target, NULL, NULL, &tu)) < 0)
+                 return r;
+ 
+@@ -461,24 +457,23 @@ static int mount_add_device_links(Mount *m) {
+ 
+ static int mount_add_default_dependencies(Mount *m) {
+         int r;
++        MountParameters *p;
+ 
+         assert(m);
+ 
+-        if (m->meta.manager->running_as == MANAGER_SYSTEM &&
+-            !path_equal(m->where, "/")) {
+-                MountParameters *p;
+-
+-                p = get_mount_parameters_configured(m);
++        if (m->meta.manager->running_as != MANAGER_SYSTEM)
++                return 0;
+ 
+-                if (p && needs_quota(p)) {
+-                        if ((r = unit_add_two_dependencies_by_name(UNIT(m), UNIT_BEFORE, UNIT_WANTS, SPECIAL_QUOTACHECK_SERVICE, NULL, true)) < 0 ||
+-                            (r = unit_add_two_dependencies_by_name(UNIT(m), UNIT_BEFORE, UNIT_WANTS, SPECIAL_QUOTAON_SERVICE, NULL, true)) < 0)
+-                                return r;
+-                }
++        p = get_mount_parameters_configured(m);
++        if (p && needs_quota(p)) {
++                if ((r = unit_add_two_dependencies_by_name(UNIT(m), UNIT_BEFORE, UNIT_WANTS, SPECIAL_QUOTACHECK_SERVICE, NULL, true)) < 0 ||
++                    (r = unit_add_two_dependencies_by_name(UNIT(m), UNIT_BEFORE, UNIT_WANTS, SPECIAL_QUOTAON_SERVICE, NULL, true)) < 0)
++                        return r;
++        }
+ 
++        if (!path_equal(m->where, "/"))
+                 if ((r = unit_add_two_dependencies_by_name(UNIT(m), UNIT_BEFORE, UNIT_CONFLICTS, SPECIAL_UMOUNT_TARGET, NULL, true)) < 0)
+                         return r;
+-        }
+ 
+         return 0;
+ }
+@@ -588,8 +583,6 @@ static int mount_load(Unit *u) {
+ 
+                 if (m->meta.fragment_path)
+                         m->from_fragment = true;
+-                else if (m->from_etc_fstab)
+-                        m->meta.default_dependencies = false;
+ 
+                 if (!m->where)
+                         if (!(m->where = unit_name_to_path(u->meta.id)))
+-- 
+1.7.7.5
+

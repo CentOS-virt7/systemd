@@ -1,0 +1,29 @@
+From 8787a5577aef2703a1484a57db4fe3afb196fc73 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Mon, 19 Dec 2011 18:32:10 +0100
+Subject: [PATCH] dbus: no sync D-Bus connection flushing
+
+Blocking on D-Bus in a system manager could lead to deadlock.
+(cherry picked from commit 9721b19968dd80ad187d03da214a2a8d28ead3ad)
+---
+ src/dbus.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
+
+diff --git a/src/dbus.c b/src/dbus.c
+index 81b4f53..f9250f1 100644
+--- a/src/dbus.c
++++ b/src/dbus.c
+@@ -1196,7 +1196,9 @@ static void shutdown_connection(Manager *m, DBusConnection *c) {
+         }
+ 
+         dbus_connection_set_dispatch_status_function(c, NULL, NULL, NULL);
+-        dbus_connection_flush(c);
++        /* system manager cannot afford to block on DBus */
++        if (m->running_as != MANAGER_SYSTEM)
++                dbus_connection_flush(c);
+         dbus_connection_close(c);
+         dbus_connection_unref(c);
+ }
+-- 
+1.7.7.5
+

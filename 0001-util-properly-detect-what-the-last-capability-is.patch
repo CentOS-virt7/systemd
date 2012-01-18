@@ -1,0 +1,122 @@
+From 3ad4e947bb0312940d56059328dd518d01718f6f Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 11 Oct 2011 22:30:31 +0200
+Subject: [PATCH] util: properly detect what the last capability is (cherry
+ picked from commit
+ 64685e0cea62b4937f0804e47ce2cb7929f58223)
+
+---
+ src/execute.c |    7 ++-----
+ src/nspawn.c  |    8 +-------
+ src/util.c    |   33 +++++++++++++++++++++++++++++++++
+ src/util.h    |    2 ++
+ 4 files changed, 38 insertions(+), 12 deletions(-)
+
+diff --git a/src/execute.c b/src/execute.c
+index 53e7e77..866e8bf 100644
+--- a/src/execute.c
++++ b/src/execute.c
+@@ -895,12 +895,9 @@ static int do_capability_bounding_set_drop(uint64_t drop) {
+                 }
+         }
+ 
+-        for (i = 0; i <= MAX(63LU, (unsigned long) CAP_LAST_CAP); i++)
++        for (i = 0; i <= cap_last_cap(); i++)
+                 if (drop & ((uint64_t) 1ULL << (uint64_t) i)) {
+                         if (prctl(PR_CAPBSET_DROP, i) < 0) {
+-                                if (errno == EINVAL)
+-                                        break;
+-
+                                 r = -errno;
+                                 goto finish;
+                         }
+@@ -1720,7 +1717,7 @@ void exec_context_dump(ExecContext *c, FILE* f, const char *prefix) {
+                 unsigned long l;
+                 fprintf(f, "%sCapabilityBoundingSet:", prefix);
+ 
+-                for (l = 0; l <= (unsigned long) CAP_LAST_CAP; l++)
++                for (l = 0; l <= cap_last_cap(); l++)
+                         if (!(c->capability_bounding_set_drop & ((uint64_t) 1ULL << (uint64_t) l))) {
+                                 char *t;
+ 
+diff --git a/src/nspawn.c b/src/nspawn.c
+index 8441c05..653d7db 100644
+--- a/src/nspawn.c
++++ b/src/nspawn.c
+@@ -361,7 +361,7 @@ static int drop_capabilities(void) {
+ 
+         unsigned long l;
+ 
+-        for (l = 0; l <= MAX(63LU, (unsigned long) CAP_LAST_CAP); l++) {
++        for (l = 0; l <= cap_last_cap(); l++) {
+                 unsigned i;
+ 
+                 for (i = 0; i < ELEMENTSOF(retain); i++)
+@@ -372,12 +372,6 @@ static int drop_capabilities(void) {
+                         continue;
+ 
+                 if (prctl(PR_CAPBSET_DROP, l) < 0) {
+-
+-                        /* If this capability is not known, EINVAL
+-                         * will be returned, let's ignore this. */
+-                        if (errno == EINVAL)
+-                                break;
+-
+                         log_error("PR_CAPBSET_DROP failed: %m");
+                         return -errno;
+                 }
+diff --git a/src/util.c b/src/util.c
+index e46606d..e93e6f6 100644
+--- a/src/util.c
++++ b/src/util.c
+@@ -5703,3 +5703,36 @@ int strdup_or_null(const char *a, char **b) {
+         *b = c;
+         return 0;
+ }
++
++unsigned long cap_last_cap(void) {
++        static __thread unsigned long saved;
++        static __thread bool valid = false;
++        unsigned long p;
++
++        if (valid)
++                return saved;
++
++        p = (unsigned long) CAP_LAST_CAP;
++
++        if (prctl(PR_CAPBSET_READ, p) < 0) {
++
++                /* Hmm, look downwards, until we find one that
++                 * works */
++                for (p--; p > 0; p --)
++                        if (prctl(PR_CAPBSET_READ, p) >= 0)
++                                break;
++
++        } else {
++
++                /* Hmm, look upwards, until we find one that doesn't
++                 * work */
++                for (;; p++)
++                        if (prctl(PR_CAPBSET_READ, p+1) < 0)
++                                break;
++        }
++
++        saved = p;
++        valid = true;
++
++        return p;
++}
+diff --git a/src/util.h b/src/util.h
+index ccbe8a3..a71a297 100644
+--- a/src/util.h
++++ b/src/util.h
+@@ -506,4 +506,6 @@ extern char **saved_argv;
+ 
+ bool kexec_loaded(void);
+ 
++unsigned long cap_last_cap(void);
++
+ #endif
+-- 
+1.7.7.5
+

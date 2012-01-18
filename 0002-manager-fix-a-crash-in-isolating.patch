@@ -1,7 +1,7 @@
-From 563ba9ea6e60774086555998b957edf923e24b46 Mon Sep 17 00:00:00 2001
+From b93ae6c00edfe8ef2f0fd70177dee1d111598fe0 Mon Sep 17 00:00:00 2001
 From: Michal Schmidt <mschmidt@redhat.com>
 Date: Mon, 17 Oct 2011 11:12:12 +0200
-Subject: [PATCH 2/5] manager: fix a crash in isolating
+Subject: [PATCH] manager: fix a crash in isolating
 
 HASHMAP_FOREACH is safe against the removal of the current entry, but
 not against the removal of other entries. job_finish_and_invalidate()
@@ -17,6 +17,7 @@ possibility that the iterator could be invalid.
 It is O(n^2) in the worst case, but that's better than a crash.
 
 https://bugzilla.redhat.com/show_bug.cgi?id=717325
+(cherry picked from commit 563ba9ea6e60774086555998b957edf923e24b46)
 ---
  src/job.c     |   19 ++++++++++++++-----
  src/manager.c |    7 ++++++-
@@ -113,5 +114,5 @@ index e626347..6d20258 100644
          }
  
 -- 
-1.7.4.4
+1.7.7.5
 

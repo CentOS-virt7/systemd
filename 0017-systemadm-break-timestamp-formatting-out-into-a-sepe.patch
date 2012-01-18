@@ -1,0 +1,60 @@
+From 59c42570c4191f833c06561ea5c6df134946e1f8 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Wed, 23 Feb 2011 14:03:59 +0100
+Subject: [PATCH] systemadm: break timestamp formatting out into a seperate
+ function
+
+Since the timezone is always local, it doesn't make much sense to
+display it. The timestamp is now formatted without the timezone.
+I guess it can be further improved, which should be easier now
+that it is tucked-away in a separate function.
+(cherry picked from commit 8401f1533d6936add337a621c5e58e3bbe9f346a)
+---
+ src/systemadm.vala |   24 +++++++++++-------------
+ 1 files changed, 11 insertions(+), 13 deletions(-)
+
+diff --git a/src/systemadm.vala b/src/systemadm.vala
+index d45ec64..988e9f1 100644
+--- a/src/systemadm.vala
++++ b/src/systemadm.vala
+@@ -23,6 +23,13 @@ using Pango;
+ 
+ static bool user = false;
+ 
++public string format_time(uint64 time_ns) {
++        if (time_ns <= 0)
++                return "";
++        Time timestamp = Time.local((time_t) (time_ns / 1000000));
++        return timestamp.format("%a, %d %b %Y %H:%M:%S");
++}
++
+ public class LeftLabel : Label {
+         public LeftLabel(string? text = null) {
+                 if (text != null)
+@@ -515,19 +522,10 @@ public class MainWindow : Window {
+                 else
+                         unit_fragment_path_label.set_text_or_na();
+ 
+-                uint64 t = unit.active_enter_timestamp;
+-                if (t > 0) {
+-                        Time timestamp = Time.local((time_t) (t / 1000000));
+-                        unit_active_enter_timestamp_label.set_text_or_na(timestamp.format("%a, %d %b %Y %H:%M:%S %z"));
+-                } else
+-                        unit_active_enter_timestamp_label.set_text_or_na();
+-
+-                t = unit.active_exit_timestamp;
+-                if (t > 0) {
+-                        Time timestamp = Time.local((time_t) (t / 1000000));
+-                        unit_active_exit_timestamp_label.set_text_or_na(timestamp.format("%a, %d %b %Y %H:%M:%S %z"));
+-                } else
+-                        unit_active_exit_timestamp_label.set_text_or_na();
++
++                unit_active_enter_timestamp_label.set_text_or_na(format_time(unit.active_enter_timestamp));
++
++                unit_active_exit_timestamp_label.set_text_or_na(format_time(unit.active_exit_timestamp));
+ 
+                 bool b = unit.can_start;
+                 start_button.set_sensitive(b);
+-- 
+1.7.7.5
+

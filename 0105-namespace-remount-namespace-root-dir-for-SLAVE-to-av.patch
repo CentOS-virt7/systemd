@@ -1,0 +1,34 @@
+From 4cecfa6c03410e72e42b520575613c4f30253bef Mon Sep 17 00:00:00 2001
+From: Daniel Walsh <dwalsh@redhat.com>
+Date: Tue, 3 Jan 2012 21:12:10 +0100
+Subject: [PATCH] namespace: remount namespace root dir for SLAVE to avoid
+ propagation of mounts from the namespace to the host
+
+https://bugzilla.redhat.com/show_bug.cgi?id=752540
+(cherry picked from commit dc4b02006455a4dddeb6ccc1f6656c89d3ebd27c)
+---
+ src/namespace.c |    8 ++++++--
+ 1 files changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/src/namespace.c b/src/namespace.c
+index 54b22f4..a06cac1 100644
+--- a/src/namespace.c
++++ b/src/namespace.c
+@@ -266,8 +266,12 @@ int setup_namespace(
+                 goto fail;
+         }
+ 
+-        /* We assume that by default mount events from us won't be
+-         * propagated to the root namespace. */
++        /* Remount / as SLAVE so that nothing mounted in the namespace
++           shows up in the parent */
++        if (mount(NULL, "/", NULL, MS_SLAVE|MS_REC, NULL) < 0) {
++                r = -errno;
++                goto fail;
++        }
+ 
+         for (p = paths; p < paths + n; p++)
+                 if ((r = apply_mount(p, root_dir, inaccessible_dir, private_dir, flags)) < 0)
+-- 
+1.7.7.5
+

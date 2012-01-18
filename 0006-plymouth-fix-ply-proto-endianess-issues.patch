@@ -1,0 +1,31 @@
+From 4cff61c8150be456da22cc737696fad925c1393f Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 1 Nov 2011 14:20:31 +0100
+Subject: [PATCH] plymouth: fix ply proto endianess issues
+
+Plymouth enforces LE even for the local Ply proto, hence we should do
+the conversion properly for BE arch compat.
+
+Tracked down by Harald Hoyer.
+
+https://bugzilla.redhat.com/show_bug.cgi?id=744415
+(cherry picked from commit bb53abeb8c3407ea250be69bc43510b03c0df3da)
+---
+ src/tty-ask-password-agent.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/src/tty-ask-password-agent.c b/src/tty-ask-password-agent.c
+index 43d008f..13481b2 100644
+--- a/src/tty-ask-password-agent.c
++++ b/src/tty-ask-password-agent.c
+@@ -206,6 +206,7 @@ static int ask_password_plymouth(
+                                 continue;
+ 
+                         memcpy(&size, buffer+1, sizeof(size));
++                        size = le32toh(size);
+                         if (size+5 > sizeof(buffer)) {
+                                 r = -EIO;
+                                 goto finish;
+-- 
+1.7.7.5
+

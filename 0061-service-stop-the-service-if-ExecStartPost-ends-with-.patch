@@ -1,0 +1,60 @@
+From 4035af799be35919232a68dfb0786af4f54257a1 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Sat, 3 Dec 2011 21:34:34 +0100
+Subject: [PATCH] service: stop the service if ExecStartPost ends with a
+ failure
+
+The handling of failures in ExecStartPost is inconsistent. If the
+command times out, the service is stopped. But if the command exits
+with a failure, the service keeps running.
+
+It makes more sense to stop the service when ExecStartPost fails.
+If this behaviour is not desired, the ExecStartPost command can be
+prefixed with "-".
+(cherry picked from commit 2096e009a790073a934f5cd07d17024d3b199d0b)
+---
+ src/service.c |   26 ++++++++++++++------------
+ 1 files changed, 14 insertions(+), 12 deletions(-)
+
+diff --git a/src/service.c b/src/service.c
+index 0b03a8d..175a729 100644
+--- a/src/service.c
++++ b/src/service.c
+@@ -2862,20 +2862,22 @@ static void service_sigchld_event(Unit *u, pid_t pid, int code, int status) {
+                                 break;
+ 
+                         case SERVICE_START_POST:
+-                                if (success) {
+-                                        if (s->pid_file) {
+-                                                int r = service_load_pid_file(s, true);
+-                                                if (r < 0) {
+-                                                        r = service_demand_pid_file(s);
+-                                                        if (r < 0 || !cgroup_good(s))
+-                                                                service_enter_stop(s, false);
+-                                                        break;
+-                                                }
+-                                        } else
+-                                                service_search_main_pid(s);
++                                if (!success) {
++                                        service_enter_stop(s, false);
++                                        break;
+                                 }
+ 
+-                                s->reload_failure = !success;
++                                if (s->pid_file) {
++                                        int r = service_load_pid_file(s, true);
++                                        if (r < 0) {
++                                                r = service_demand_pid_file(s);
++                                                if (r < 0 || !cgroup_good(s))
++                                                        service_enter_stop(s, false);
++                                                break;
++                                        }
++                                } else
++                                        service_search_main_pid(s);
++
+                                 service_enter_running(s, true);
+                                 break;
+ 
+-- 
+1.7.7.5
+

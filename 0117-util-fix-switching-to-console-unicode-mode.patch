@@ -1,0 +1,36 @@
+From 6fca919fd967a6a16405f96872228c93eb8217c3 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Fri, 6 Jan 2012 01:28:30 +0100
+Subject: [PATCH] util: fix switching to console unicode mode
+
+The KDSKBMODE ioctl wants a value directly, not its address.
+(cherry picked from commit df465b3f4419b6ba2e12bf9a5f7d7bde5a0c3531)
+---
+ src/util.c |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
+
+diff --git a/src/util.c b/src/util.c
+index fce0a0c..a9d0821 100644
+--- a/src/util.c
++++ b/src/util.c
+@@ -2424,7 +2424,6 @@ int ask(char *ret, const char *replies, const char *text, ...) {
+ int reset_terminal_fd(int fd) {
+         struct termios termios;
+         int r = 0;
+-        long arg;
+ 
+         /* Set terminal to some sane defaults */
+ 
+@@ -2438,8 +2437,7 @@ int reset_terminal_fd(int fd) {
+         ioctl(fd, TIOCNXCL);
+ 
+         /* Enable console unicode mode */
+-        arg = K_UNICODE;
+-        ioctl(fd, KDSKBMODE, &arg);
++        ioctl(fd, KDSKBMODE, K_UNICODE);
+ 
+         if (tcgetattr(fd, &termios) < 0) {
+                 r = -errno;
+-- 
+1.7.7.5
+

@@ -1,0 +1,88 @@
+From 1b6836c15717a62ef81cef8e9617fc7df6c7e605 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 19 Dec 2011 20:25:52 +0100
+Subject: [PATCH] man: switch to UTF-8 output, to work around charset issues
+ (cherry picked from commit
+ 76318284fc970b30e9dc4c079960807345331dad)
+
+---
+ Makefile.am         |    9 +++++----
+ man/custom-html.xsl |   29 +++++++++++++++++++++++++++++
+ 2 files changed, 34 insertions(+), 4 deletions(-)
+ create mode 100644 man/custom-html.xsl
+
+diff --git a/Makefile.am b/Makefile.am
+index 9ee2c7f..295944d 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -495,7 +495,8 @@ EXTRA_DIST = \
+ 	src/libsystemd-login.sym \
+ 	introspect.awk \
+ 	src/73-seat-late.rules.in \
+-        src/99-systemd.rules.in
++        src/99-systemd.rules.in \
++        man/custom-html.xsl
+ 
+ if ENABLE_BINFMT
+ EXTRA_DIST += \
+@@ -1696,7 +1697,7 @@ endif
+ if HAVE_XSLTPROC
+ XSLTPROC_FLAGS = \
+ 	--nonet \
+-	--param funcsynopsis.style "'ansi'"
++	--stringparam funcsynopsis.style ansi
+ 
+ XSLTPROC_PROCESS_MAN = \
+ 	$(AM_V_GEN)$(MKDIR_P) $(dir $@) && \
+@@ -1709,11 +1710,11 @@ XSLTPROC_PROCESS_MAN_IN = \
+ 
+ XSLTPROC_PROCESS_HTML = \
+ 	$(AM_V_GEN)$(MKDIR_P) $(dir $@) && \
+-	$(XSLTPROC) -o $@ $(XSLTPROC_FLAGS) http://docbook.sourceforge.net/release/xsl/current/html/docbook.xsl $<
++	$(XSLTPROC) -o $@ $(XSLTPROC_FLAGS) man/custom-html.xsl $<
+ 
+ XSLTPROC_PROCESS_HTML_IN = \
+ 	$(AM_V_GEN)$(MKDIR_P) $(dir $@) && \
+-	$(XSLTPROC) -o ${@:.in=} $(XSLTPROC_FLAGS) http://docbook.sourceforge.net/release/xsl/current/html/docbook.xsl $< && \
++	$(XSLTPROC) -o ${@:.in=} $(XSLTPROC_FLAGS) man/custom-html.xsl $< && \
+ 	mv ${@:.in=} $@
+ 
+ man/%.1: man/%.xml
+diff --git a/man/custom-html.xsl b/man/custom-html.xsl
+new file mode 100644
+index 0000000..2d2f458
+--- /dev/null
++++ b/man/custom-html.xsl
+@@ -0,0 +1,29 @@
++<?xml version='1.0'?> <!--*-nxml-*-->
++
++<!--
++  This file is part of systemd.
++
++  Copyright 2011 Lennart Poettering
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU General Public License as published by
++  the Free Software Foundation; either version 2 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  General Public License for more details.
++
++  You should have received a copy of the GNU General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++-->
++
++<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
++
++<xsl:import href="http://docbook.sourceforge.net/release/xsl/current/html/docbook.xsl"/>
++
++<!-- Switch things to UTF-8, ISO-8859-1 is soo yesteryear -->
++<xsl:output method="html" encoding="UTF-8" indent="no"/>
++
++</xsl:stylesheet>
+-- 
+1.7.7.5
+

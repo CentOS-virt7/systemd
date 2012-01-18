@@ -1,0 +1,54 @@
+From 360ab562c360ec375f76fb88318546323a835459 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Sat, 3 Dec 2011 00:41:34 +0100
+Subject: [PATCH] util: fix error checking after fgets()
+
+fgets() does not set errno on EOF.
+(cherry picked from commit 35d50f55f346c71fd5e957d35ebcae1c50b1f9ce)
+---
+ src/util.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/src/util.c b/src/util.c
+index e93e6f6..da71e4d 100644
+--- a/src/util.c
++++ b/src/util.c
+@@ -516,7 +516,7 @@ int get_parent_of_pid(pid_t pid, pid_t *_ppid) {
+                 return -errno;
+ 
+         if (!(fgets(line, sizeof(line), f))) {
+-                r = -errno;
++                r = feof(f) ? -EIO : -errno;
+                 fclose(f);
+                 return r;
+         }
+@@ -561,7 +561,7 @@ int get_starttime_of_pid(pid_t pid, unsigned long long *st) {
+                 return -errno;
+ 
+         if (!(fgets(line, sizeof(line), f))) {
+-                r = -errno;
++                r = feof(f) ? -EIO : -errno;
+                 fclose(f);
+                 return r;
+         }
+@@ -708,7 +708,7 @@ int read_one_line_file(const char *fn, char **line) {
+                 return -errno;
+ 
+         if (!(fgets(t, sizeof(t), f))) {
+-                r = -errno;
++                r = feof(f) ? -EIO : -errno;
+                 goto finish;
+         }
+ 
+@@ -3266,7 +3266,7 @@ int get_ctty_devnr(pid_t pid, dev_t *d) {
+                 return -errno;
+ 
+         if (!fgets(line, sizeof(line), f)) {
+-                k = -errno;
++                k = feof(f) ? -EIO : -errno;
+                 fclose(f);
+                 return k;
+         }
+-- 
+1.7.7.5
+

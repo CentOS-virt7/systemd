@@ -1,0 +1,27 @@
+From d9e63f3d535758350a83b9b39050e98e01d8d638 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Sat, 19 Nov 2011 01:14:11 +0100
+Subject: [PATCH] pam-module: use the correct session type "unspecified"
+
+logind does not understand "other".
+(cherry picked from commit 1dc995370987660ff045ff4d7cf512da0390cf96)
+---
+ src/pam-module.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/src/pam-module.c b/src/pam-module.c
+index dd05f93..e650886 100644
+--- a/src/pam-module.c
++++ b/src/pam-module.c
+@@ -472,7 +472,7 @@ _public_ PAM_EXTERN int pam_sm_open_session(
+                 get_seat_from_display(display, &seat, &vtnr);
+ 
+         type = !isempty(display) ? "x11" :
+-                   !isempty(tty) ? "tty" : "other";
++                   !isempty(tty) ? "tty" : "unspecified";
+ 
+         remote = !isempty(remote_host) && !streq(remote_host, "localhost") && !streq(remote_host, "localhost.localdomain");
+ 
+-- 
+1.7.7.5
+

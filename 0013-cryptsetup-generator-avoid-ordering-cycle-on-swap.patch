@@ -1,0 +1,40 @@
+From 88230ce30fcd48f8f6fadcdf838e6f047a91acdf Mon Sep 17 00:00:00 2001
+From: Tom Gundersen <teg@jklm.no>
+Date: Mon, 17 Oct 2011 13:01:08 +0200
+Subject: [PATCH] cryptsetup-generator: avoid ordering cycle on swap
+
+Devices with random keys (swap), should not be ordered before local-fs.target,
+as this creates a cycle with systemd-load-random-seed.service (and also it
+does not make sense, a swap device is not a local-fs).
+(cherry picked from commit 87e75fddbb3701fd5f4e0d62dc1d661e8d94b071)
+---
+ src/cryptsetup-generator.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/src/cryptsetup-generator.c b/src/cryptsetup-generator.c
+index 6f3aa78..a48b7a4 100644
+--- a/src/cryptsetup-generator.c
++++ b/src/cryptsetup-generator.c
+@@ -112,8 +112,7 @@ static int create_disk(
+                 "DefaultDependencies=no\n"
+                 "BindTo=%s dev-mapper-%%i.device\n"
+                 "After=systemd-readahead-collect.service systemd-readahead-replay.service %s\n"
+-                "Before=umount.target\n"
+-                "Before=local-fs.target\n",
++                "Before=umount.target\n",
+                 d, d);
+ 
+         if (!nofail)
+@@ -125,6 +124,9 @@ static int create_disk(
+                          streq(password, "/dev/hw_random")))
+                 fprintf(f,
+                         "After=systemd-random-seed-load.service\n");
++        else
++                fprintf(f,
++                        "Before=local-fs.target\n");
+ 
+         fprintf(f,
+                 "\n[Service]\n"
+-- 
+1.7.7.5
+

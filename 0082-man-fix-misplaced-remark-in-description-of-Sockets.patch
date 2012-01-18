@@ -1,0 +1,32 @@
+From f2a7f81850607590c5d64efe5beedadc85be9909 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Sat, 17 Dec 2011 00:39:19 +0100
+Subject: [PATCH] man: fix misplaced remark in description of Sockets= (cherry
+ picked from commit
+ 4f025f4c4f9e043a06a05bcd4fc9fa65ee232ecc)
+
+---
+ man/systemd.service.xml |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/man/systemd.service.xml b/man/systemd.service.xml
+index 7b6f12d..0baddd1 100644
+--- a/man/systemd.service.xml
++++ b/man/systemd.service.xml
+@@ -671,11 +671,11 @@
+                                 <listitem><para>Specifies the name of
+                                 the socket units this service shall
+                                 inherit the sockets from when the
+-                                service (ignoring the different suffix
+-                                of course) is started. Normally it
++                                service is started. Normally it
+                                 should not be necessary to use this
+                                 setting as all sockets whose unit
+                                 shares the same name as the service
++                                (ignoring the different suffix of course)
+                                 are passed to the spawned
+                                 process.</para>
+ 
+-- 
+1.7.7.5
+

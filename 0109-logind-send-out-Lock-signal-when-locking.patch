@@ -1,0 +1,29 @@
+From 02ed8bfecd03c02b39c0d9d04c846e7deb905381 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 3 Jan 2012 23:08:15 +0100
+Subject: [PATCH] logind: send out Lock signal when locking (cherry picked
+ from commit bda061759c3baef4383a2ec0bf1b538905cb30b0)
+
+Conflicts:
+
+	TODO
+---
+ src/logind-session-dbus.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/src/logind-session-dbus.c b/src/logind-session-dbus.c
+index dc0ef5b..cbd6d7f 100644
+--- a/src/logind-session-dbus.c
++++ b/src/logind-session-dbus.c
+@@ -288,7 +288,7 @@ static DBusHandlerResult session_message_dispatch(
+         } else if (dbus_message_is_method_call(message, "org.freedesktop.login1.Session", "Lock") ||
+                    dbus_message_is_method_call(message, "org.freedesktop.login1.Session", "Unlock")) {
+ 
+-                if (session_send_signal(s, streq(dbus_message_get_member(message), "Lock")) < 0)
++                if (session_send_lock(s, streq(dbus_message_get_member(message), "Lock")) < 0)
+                         goto oom;
+ 
+                 reply = dbus_message_new_method_return(message);
+-- 
+1.7.7.5
+

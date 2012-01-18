@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        37
-Release:        3.1%{?dist}
+Release:        8%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -18,6 +18,8 @@ BuildRequires:  docbook-style-xsl
 BuildRequires:  vala >= 0.11
 BuildRequires:  pkgconfig
 BuildRequires:  gtk2-devel
+BuildRequires:  glib2-devel
+BuildRequires:  libgee-devel
 BuildRequires:  libnotify-devel >= 0.7
 BuildRequires:  libacl-devel
 BuildRequires:  automake
@@ -36,6 +38,7 @@ Requires:       libudev >= 160
 Requires:       initscripts >= 9.28
 Requires:       filesystem >= 2.4.40
 Conflicts:      selinux-policy < 3.9.16-12.fc15
+Conflicts:      kernel < 2.6.35.2-9.fc14
 Requires:       nss-myhostname
 Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.tar.bz2
 # Adds support for the %%{_unitdir} macro
@@ -43,14 +46,139 @@ Source1:        macros.systemd
 Source2:        systemd-sysv-convert
 # Stop-gap, just to ensure things work out-of-the-box for this driver.
 Source3:        udlfb.conf
-# We revert this one for https://bugzilla.redhat.com/show_bug.cgi?id=741078
-# Must keep until https://bugzilla.redhat.com/show_bug.cgi?id=741115 is fixed.
-Patch0:         0001-unit-fix-complementing-of-requirement-deps-with-Afte.patch
-# some post-v37 patches from upstream:
-Patch1:         0002-manager-fix-a-crash-in-isolating.patch
-Patch2:         0005-systemctl-completion-always-invoke-with-no-legend.patch
-Patch3:         0001-mount-order-remote-mounts-after-both-network.target-.patch
-Patch4:         0001-units-drop-Install-section-from-remote-fs-pre.target.patch
+# selected patches from v38
+Patch0001:      0001-util-properly-detect-what-the-last-capability-is.patch
+Patch0002:      0002-manager-fix-a-crash-in-isolating.patch
+Patch0003:      0003-audit-do-not-complain-if-kernel-lacks-audit.patch
+Patch0004:      0004-systemctl-completion-always-invoke-with-no-legend.patch
+Patch0005:      0005-systemctl-make-list-unit-files-output-more-economica.patch
+Patch0006:      0006-plymouth-fix-ply-proto-endianess-issues.patch
+Patch0007:      0007-random-seed-convert-poolsize-from-bits-to-bytes.patch
+Patch0008:      0008-condition-Fix-file-descriptor-leak-in-test_capabilit.patch
+Patch0009:      0009-initctl-don-t-use-dbus-connection-after-PID-1-got-re.patch
+Patch0010:      0010-cgroup-always-recreate-cgroup-before-we-try-to-apply.patch
+Patch0011:      0011-mount-order-remote-mounts-after-both-network.target-.patch
+Patch0012:      0012-units-drop-Install-section-from-remote-fs-pre.target.patch
+Patch0013:      0013-cryptsetup-generator-avoid-ordering-cycle-on-swap.patch
+Patch0014:      0014-bash-completion-update-with-new-verbs-and-arguments.patch
+Patch0015:      0015-bash-completion-add-completions-for-systemd-loginctl.patch
+Patch0016:      0016-bash-completion-rename-file-since-it-is-no-longer-fo.patch
+Patch0017:      0017-systemadm-break-timestamp-formatting-out-into-a-sepe.patch
+Patch0018:      0018-systemadm-allow-sorting-of-jobs-and-units.patch
+Patch0019:      0019-systemadm-split-the-type-status-combo-box-into-type-.patch
+Patch0020:      0020-systemadm-filter-on-swaps-paths-and-timers-too.patch
+Patch0021:      0021-systemadm-add-a-wrappable-label-and-use-it-for-statu.patch
+Patch0022:      0022-systemadm-add-libgee-as-dependency-and-use-it-for-a-.patch
+Patch0023:      0023-systemadm-display-dependencies-sorted.patch
+Patch0024:      0024-systemadm-use-color-for-dependency-links.patch
+Patch0025:      0025-systemadm-use-bold-for-requires-etc.patch
+Patch0026:      0026-systemadm-make-the-dependency-listing-selectable.patch
+Patch0027:      0027-systemadm-catch-exceptions-generated-by-dbus.patch
+Patch0028:      0028-systemadm-coalesce-id-and-decription-fields.patch
+Patch0029:      0029-systemadm-adjust-row-numbers-after-removing-aliases.patch
+Patch0030:      0030-systemadm-use-colors-for-id-too-remove-color-from-fr.patch
+Patch0031:      0031-cgroup-immediately-remove-all-cgroups-which-run-empt.patch
+Patch0032:      0032-utmp-remove-unneded-parameters.patch
+Patch0033:      0033-utmp-no-need-to-zero-a-struct-before-overwriting-it-.patch
+Patch0034:      0034-utmp-initialize-store-with-the-found-entry-not-with-.patch
+Patch0035:      0035-utmp-for-DEAD_PROCESS-write-the-current-time-to-wtmp.patch
+Patch0036:      0036-man-fix-a-typo-in-signal-number.patch
+Patch0037:      0037-units-drop-unnecessary-StandardOutput-syslog.patch
+Patch0038:      0038-units-fedora-let-rc-local.service-log-to-syslog.patch
+Patch0039:      0039-service-don-t-warn-if-the-pidfile-still-exists-after.patch
+Patch0040:      0040-job-colored-status-messages-on-boot.patch
+Patch0041:      0041-man-fix-typo-in-sd_notify.patch
+Patch0042:      0042-Fix-same-expression-on-both-sides-of.patch
+Patch0043:      0043-execute-avoid-logging-to-closed-fds.patch
+Patch0044:      0044-execute-make-setup_pam-return-errno-when-possible.patch
+Patch0045:      0045-execute-log-errors-from-sd-EXEC.patch
+Patch0046:      0046-pam-module-use-the-correct-session-type-unspecified.patch
+Patch0047:      0047-pam-module-treat-cron-in-PAM_TTY-as-empty-tty.patch
+Patch0048:      0048-let-mount-and-swap-units-log-to-the-configured-defau.patch
+Patch0049:      0049-socket-add-option-for-SO_PASSCRED.patch
+Patch0050:      0050-shutdownd-use-PassCred-yes-in-the-socket-unit.patch
+Patch0051:      0051-syslog-use-PassCred-yes-for-the-dev-log-socket.patch
+Patch0052:      0052-man-document-the-PassCred-option.patch
+Patch0053:      0053-add-a-generator-to-pull-rc-local.service-in.patch
+Patch0054:      0054-rc-local-no-need-to-check-if-the-script-is-executabl.patch
+Patch0055:      0055-rc-local-order-after-network.target.patch
+Patch0056:      0056-util-fix-error-checking-after-fgets.patch
+Patch0057:      0057-path-use-m-instead-of-strerror-errno.patch
+Patch0058:      0058-path-refactor-PathSpec-usage.patch
+Patch0059:      0059-path-add-PathModified-PathChanged-IN_MODIFY.patch
+Patch0060:      0060-service-handle-services-with-racy-daemonization-grac.patch
+Patch0061:      0061-service-stop-the-service-if-ExecStartPost-ends-with-.patch
+Patch0062:      0062-Allow-list-unit-files-to-run-with-root.patch
+Patch0063:      0063-unit-garbage-collect-units-with-load-error.patch
+Patch0064:      0064-systemctl-print-error-load-state-in-red.patch
+Patch0065:      0065-is-an-ampersat-not-an-ampersand-let-s-call-it-at-sym.patch
+Patch0066:      0066-path-add-missing-pieces-for-PathModified.patch
+Patch0067:      0067-unit-fix-false-positive-in-check-for-unneeded-unit.patch
+Patch0068:      0068-unit-check-for-unneeded-dependencies-even-when-unit-.patch
+Patch0069:      0069-pam-module-add-a-couple-of-debugging-prints.patch
+Patch0070:      0070-fsck-Fix-typo-in-comment.patch
+Patch0071:      0071-systemctl-fix-typo-in-is-enabled.patch
+Patch0072:      0072-tmpfiles-use-an-enum-instead-of-plain-char-for-item-.patch
+Patch0073:      0073-tmpfiles-rename-a-couple-of-functions.patch
+Patch0074:      0074-tmpfiles-use-a-common-function-to-set-owner-group-mo.patch
+Patch0075:      0075-tmpfiles-separate-a-generic-item-glob-processing-fun.patch
+Patch0076:      0076-tmpfiles-add-RECURSIVE_RELABEL_PATH-Z.patch
+Patch0077:      0077-man-document-Z-in-tmpfiles.patch
+Patch0078:      0078-man-mention-that-Z-ignores-uid-gid-mode.patch
+Patch0079:      0079-service-use-syslog-console-for-sysv_console.patch
+Patch0080:      0080-tmpfiles-apply-chown-chmod-for-Z-entries-too.patch
+Patch0081:      0081-tmpfiles-add-z-like-Z-but-not-recursive.patch
+Patch0082:      0082-man-fix-misplaced-remark-in-description-of-Sockets.patch
+Patch0083:      0083-execute-fix-losing-of-start-timestamps.patch
+Patch0084:      0084-label-fix-labeling-of-symbolic-links.patch
+Patch0085:      0085-dbus-register-to-DBus-asynchronously.patch
+Patch0086:      0086-dbus-no-sync-D-Bus-connection-flushing.patch
+Patch0087:      0087-log-never-block-on-syslog-in-PID-1.patch
+Patch0088:      0088-macro-fix-ALIGN_TO-macro-definition.patch
+Patch0089:      0089-man-document-the-sd-login-interfaces.patch
+Patch0090:      0090-sd-daemon-fix-include-lines-since-we-now-ship-a-shar.patch
+Patch0091:      0091-man-build-new-man-pages.patch
+Patch0092:      0092-man-sd_readahead-is-not-actually-available-in-libsys.patch
+Patch0093:      0093-build-sys-add-rules-for-man-page-aliases.patch
+Patch0094:      0094-man-add-sd-login-7-page.patch
+Patch0095:      0095-man-various-updates.patch
+Patch0096:      0096-man-extend-sd-login-7-in-regards-to-mixing-D-Bus-and.patch
+Patch0097:      0097-man-generate-HTML-instead-of-XHTML-with-XSL-docbook-.patch
+Patch0098:      0098-man-switch-to-UTF-8-output-to-work-around-charset-is.patch
+Patch0099:      0099-udev-exclude-loopback-device-from-udev-rule-based-sy.patch
+Patch0100:      0100-remount-api-vfs-handle-another-OOM-condition.patch
+Patch0101:      0101-socket-rename-the-PassCred-option-to-PassCredentials.patch
+Patch0102:      0102-socket-only-add-dependency-on-kmsg-socket-to-socket-.patch
+Patch0103:      0103-readahead-bring-export-definition-of-sd-readahead-in.patch
+Patch0104:      0104-nspawn-get-rid-of-BUFFER_SIZE-use-LINE_MAX-instead.patch
+Patch0105:      0105-namespace-remount-namespace-root-dir-for-SLAVE-to-av.patch
+Patch0106:      0106-logind-if-we-can-t-open-dev-tty0-assume-there-is-no-.patch
+Patch0107:      0107-logind-don-t-watch-vcsa-if-nobody-cares.patch
+Patch0108:      0108-man-fix-SEE-ALSO-in-hostname-5.patch
+Patch0109:      0109-logind-send-out-Lock-signal-when-locking.patch
+Patch0110:      0110-logind-add-needed-include-for-sd_notify.patch
+Patch0111:      0111-fix-compilation-error-with-PathSpec-redefined.patch
+Patch0112:      0112-util-when-printing-status-updates-during-boot-take-t.patch
+Patch0113:      0113-log-minor-optimization.patch
+Patch0114:      0114-util-never-ellipsize-welcome-message.patch
+Patch0115:      0115-headers-fix-git-URLs-for-source-files.patch
+Patch0116:      0116-README-correct-license-claims.patch
+Patch0117:      0117-util-fix-switching-to-console-unicode-mode.patch
+Patch0118:      0118-util-switch-the-console-to-text-mode-on-reset.patch
+Patch0119:      0119-service-add-dependencies-on-configured-sockets.patch
+Patch0120:      0120-unit-properly-update-references-to-units-which-are-m.patch
+Patch0121:      0121-main-fix-spelling.patch
+Patch0122:      0122-load-fragment-fix-parsing-of-Socket-setting.patch
+Patch0123:      0123-fix-compiler-warning.patch
+Patch0124:      0124-shutdown-exclude-processes-with-argv-0-0-from-killin.patch
+Patch0125:      0125-shutdown-add-link-to-root-storage-daemon-text.patch
+Patch0126:      0126-unit-implement-new-PropagateReloadTo-PropagateReload.patch
+# from v39:
+Patch0127:      0127-tmpfiles-fix-parsing-of-proc-net-unix-on-32Bit-machi.patch
+Patch0128:      0128-pam-work-correctly-if-a-seat-is-specified-but-not-vt.patch
+Patch0129:      0129-pam-fix-build.patch
+Patch0130:      0130-mount-fix-quota.patch
+Patch0131:      0131-logind-downgrade-login-message-to-debug.patch
 
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
@@ -113,13 +241,15 @@ SysV compatibility tools for systemd
 
 %prep
 %setup -q
-%patch0 -p1 -R
-%patch1 -p1
-%patch2 -p1
-%patch3 -p1
-%patch4 -p1
+set +x
+for p in %{patches}; do
+	echo "Applying $p"
+	patch -p1 < $p
+done
+set -x
 
 %build
+autoreconf -i
 %configure --with-rootdir= --with-distro=fedora --with-rootlibdir=/%{_lib}
 make %{?_smp_mflags}
 
@@ -186,7 +316,7 @@ rm -rf $RPM_BUILD_ROOT
 /bin/systemctl daemon-reexec > /dev/null 2>&1 || :
 
 # Make sure pam_systemd is enabled
-if ! /bin/grep -q pam_systemd /etc/pam.d/system-auth-ac >/dev/null 2>&1 ; then
+if ! /bin/grep -q pam_systemd /etc/pam.d/system-auth-ac >/dev/null 2>&1 || ! [ -h /etc/pam.d/system-auth ] ; then
         /usr/sbin/authconfig --update --nostart >/dev/null 2>&1 || :
 
         # Try harder
@@ -275,6 +405,7 @@ fi
 /lib/udev/rules.d/*.rules
 /lib/systemd/system-generators/systemd-cryptsetup-generator
 /lib/systemd/system-generators/systemd-getty-generator
+/lib/systemd/system-generators/systemd-rc-local-generator
 /%{_lib}/security/pam_systemd.so
 /%{_lib}/libsystemd-daemon.so.*
 /%{_lib}/libsystemd-login.so.*
@@ -333,7 +464,7 @@ fi
 /lib/systemd/system
 /bin/systemctl
 /bin/systemd-tmpfiles
-%{_sysconfdir}/bash_completion.d/systemctl-bash-completion.sh
+%{_sysconfdir}/bash_completion.d/systemd-bash-completion.sh
 %{_sysconfdir}/rpm/macros.systemd
 %{_mandir}/man1/systemctl.*
 %{_datadir}/pkgconfig/systemd.pc
@@ -366,8 +497,22 @@ fi
 %{_bindir}/systemd-sysv-convert
 
 %changelog
-* Thu Dec 01 2011 Daniel Mach <dmach@redhat.com> - 37-3.1
-- Remove dependecy on kernel because it breaks i686, ppc and s390 build roots.
+* Tue Jan 17 2012 Michal Schmidt <mschmidt@redhat.com> - 37-8
+- Shut up another logind message (#727315).
+
+* Sat Jan 14 2012 Michal Schmidt <mschmidt@redhat.com> - 37-7
+- Fix for quota and a couple of other issues.
+
+* Wed Jan 11 2012 Michal Schmidt <mschmidt@redhat.com> - 37-6
+- Fixes and low-risk enhancements (no journald) from upstream v38.
+
+* Thu Dec 02 2011 Karsten Hopp <karsten@redhat.com> - 37-5
+- add upstream patch for bugzilla 744415, encrypted filesystem passphrases 
+  fail on runtime systems in hvc consoles
+
+* Tue Nov 15 2011 Michal Schmidt <mschmidt@redhat.com> - 37-4
+- Run authconfig if /etc/pam.d/system-auth is not a symlink.
+- Resolves: #753160
 
 * Wed Nov 02 2011 Michal Schmidt <mschmidt@redhat.com> - 37-3
 - Fix remote-fs-pre.target and its ordering.

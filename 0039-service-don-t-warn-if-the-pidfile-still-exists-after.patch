@@ -1,0 +1,61 @@
+From 3fdac700a322217421675774e25cfd5cb09c2dd2 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Thu, 10 Nov 2011 09:55:47 +0100
+Subject: [PATCH] service: don't warn if the pidfile still exists after
+ SIGCHLD
+
+A service that drops its privileges may not be able to remove it when it
+exits. The stale pidfile is not a problem as long as the service
+carefully recognizes it on its next start.
+
+systemd would produce a warning after the service exits:
+  PID ... read from file ... does not exist. Your service or init
+  script might be broken.
+
+Silence the warning in this case. Still warn if this error is detected
+when loading the pidfile after service start.
+
+Noticed by Miroslav Lichvar in
+ https://bugzilla.redhat.com/show_bug.cgi?id=752396
+(cherry picked from commit c5419d4239ceb4c3bd0263a0a810cf24a072b3c0)
+---
+ src/service.c |    9 +++++----
+ 1 files changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/src/service.c b/src/service.c
+index e64d289..d51445e 100644
+--- a/src/service.c
++++ b/src/service.c
+@@ -1282,7 +1282,7 @@ static void service_dump(Unit *u, FILE *f, const char *prefix) {
+         free(p2);
+ }
+ 
+-static int service_load_pid_file(Service *s, bool warn_if_missing) {
++static int service_load_pid_file(Service *s, bool may_warn) {
+         char *k;
+         int r;
+         pid_t pid;
+@@ -1293,7 +1293,7 @@ static int service_load_pid_file(Service *s, bool warn_if_missing) {
+                 return -ENOENT;
+ 
+         if ((r = read_one_line_file(s->pid_file, &k)) < 0) {
+-                if (warn_if_missing)
++                if (may_warn)
+                         log_warning("Failed to read PID file %s after %s. The service might be broken.",
+                                     s->pid_file, service_state_to_string(s->state));
+                 return r;
+@@ -1306,8 +1306,9 @@ static int service_load_pid_file(Service *s, bool warn_if_missing) {
+                 return r;
+ 
+         if (kill(pid, 0) < 0 && errno != EPERM) {
+-                log_warning("PID %lu read from file %s does not exist. Your service or init script might be broken.",
+-                            (unsigned long) pid, s->pid_file);
++                if (may_warn)
++                        log_warning("PID %lu read from file %s does not exist. Your service or init script might be broken.",
++                                    (unsigned long) pid, s->pid_file);
+                 return -ESRCH;
+         }
+ 
+-- 
+1.7.7.5
+

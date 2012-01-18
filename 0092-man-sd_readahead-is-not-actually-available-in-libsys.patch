@@ -1,0 +1,61 @@
+From d5956203ad4ed4f8183685c65cc323ae8f927820 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 19 Dec 2011 13:19:01 +0100
+Subject: [PATCH] man: sd_readahead is not actually available in
+ libsystemd-daemon (cherry picked from commit
+ 559de1289000f874e23ad01edfa1b37c102a793a)
+
+---
+ man/sd_readahead.xml |   28 +++++++++++-----------------
+ 1 files changed, 11 insertions(+), 17 deletions(-)
+
+diff --git a/man/sd_readahead.xml b/man/sd_readahead.xml
+index 88b135b..25fe5b2 100644
+--- a/man/sd_readahead.xml
++++ b/man/sd_readahead.xml
+@@ -49,7 +49,7 @@
+ 
+         <refsynopsisdiv>
+                 <funcsynopsis>
+-                        <funcsynopsisinfo>#include "sd-daemon.h"</funcsynopsisinfo>
++                        <funcsynopsisinfo>#include "sd-readahead.h"</funcsynopsisinfo>
+ 
+                         <funcprototype>
+                                 <funcdef>int <function>sd_readahead</function></funcdef>
+@@ -134,23 +134,17 @@
+                 url="http://cgit.freedesktop.org/systemd/tree/src/sd-readahead.h"/></para>
+ 
+                 <para><function>sd_readahead()</function> is
+-                implemented in the reference implementation's
++                implemented in the reference implementation's drop-in
+                 <filename>sd-readahead.c</filename> and
+-                <filename>sd-readahead.h</filename> files. These
+-                interfaces are available as shared library, which can
+-                be compiled and linked to with the
+-                <literal>libsystemd-daemon</literal>
+-                <citerefentry><refentrytitle>pkg-config</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+-                file. Alternatively, applications consuming this API
+-                may copy the implementation into their source
+-                tree. For more details about the reference
+-                implementation see
+-                <citerefentry><refentrytitle>sd-readahead</refentrytitle><manvolnum>7</manvolnum></citerefentry>.</para>
+-
+-                <para>If the reference implementation is used as
+-                drop-in files and -DDISABLE_SYSTEMD is set during
+-                compilation this function will always return 0 and
+-                otherwise become a NOP.</para>
++                <filename>sd-readahead.h</filename> files. It is
++                recommended that applications consuming this API copy
++                the implementation into their source tree. For more
++                details about the reference implementation see
++                <citerefentry><refentrytitle>sd-readahead</refentrytitle><manvolnum>7</manvolnum></citerefentry></para>
++
++                <para>If -DDISABLE_SYSTEMD is set during compilation
++                this function will always return 0 and otherwise
++                become a NOP.</para>
+         </refsect1>
+ 
+         <refsect1>
+-- 
+1.7.7.5
+

@@ -1,0 +1,35 @@
+From 6cddfe340771dd1c120e13379646e0cc9d012b11 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Thu, 5 Jan 2012 00:56:21 +0100
+Subject: [PATCH] fix compilation error with 'PathSpec redefined' (cherry
+ picked from commit
+ 9cf3ab0e16af7db666ca3cf7d73dc4d616deb8fa)
+
+---
+ src/service.h |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
+
+diff --git a/src/service.h b/src/service.h
+index 15d58cc..2102826 100644
+--- a/src/service.h
++++ b/src/service.h
+@@ -25,6 +25,7 @@
+ typedef struct Service Service;
+ 
+ #include "unit.h"
++#include "path.h"
+ #include "ratelimit.h"
+ 
+ typedef enum ServiceState {
+@@ -86,8 +87,6 @@ typedef enum NotifyAccess {
+         _NOTIFY_ACCESS_INVALID = -1
+ } NotifyAccess;
+ 
+-typedef struct PathSpec PathSpec;
+-
+ struct Service {
+         Meta meta;
+ 
+-- 
+1.7.7.5
+

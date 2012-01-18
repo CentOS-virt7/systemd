@@ -1,0 +1,27 @@
+From 7ac8afd6e39c4f485d3b066f61d755d0f678f4f8 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 5 Jan 2012 18:24:18 +0100
+Subject: [PATCH] README: correct license claims (cherry picked from commit
+ 0df4f9d669bec2d34777735f8cdd40797b1fd753)
+
+---
+ README |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/README b/README
+index 15afb2c..17b3f49 100644
+--- a/README
++++ b/README
+@@ -27,7 +27,8 @@ AUTHOR:
+         Lennart Poettering with major support from Kay Sievers
+ 
+ LICENSE:
+-        GPLv2+ for all code, except sd-daemon.[ch] which is MIT
++        GPLv2+ for all code, except sd-daemon.[ch] and
++        sd-readahead.[ch] which are MIT
+ 
+ REQUIREMENTS:
+         Linux kernel >= 2.6.39 (with devtmpfs, cgroups; optional but strongly recommended: autofs4, ipv6)
+-- 
+1.7.7.5
+

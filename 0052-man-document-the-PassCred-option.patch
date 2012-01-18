@@ -1,0 +1,35 @@
+From b1d7dbb539fcbd671ec4ddce1d162fe3543440ea Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Wed, 30 Nov 2011 11:06:35 +0100
+Subject: [PATCH] man: document the PassCred option (cherry picked from commit
+ 42e87475cfe20a5e79da882012629f9d3ae63648)
+
+---
+ man/systemd.socket.xml |   11 +++++++++++
+ 1 files changed, 11 insertions(+), 0 deletions(-)
+
+diff --git a/man/systemd.socket.xml b/man/systemd.socket.xml
+index 28c8dc4..2f31242 100644
+--- a/man/systemd.socket.xml
++++ b/man/systemd.socket.xml
+@@ -525,6 +525,17 @@
+                         </varlistentry>
+ 
+                         <varlistentry>
++                                <term><varname>PassCred=</varname></term>
++                                <listitem><para>Takes a boolean
++                                value. This controls the SO_PASSCRED
++                                option, which allows UNIX sockets to
++                                receive the credentials of the sending
++                                process in an ancillary message.
++                                Defaults to
++                                <option>false</option>.</para></listitem>
++                        </varlistentry>
++
++                        <varlistentry>
+                                 <term><varname>TCPCongestion=</varname></term>
+                                 <listitem><para>Takes a string
+                                 value. Controls the TCP congestion
+-- 
+1.7.7.5
+

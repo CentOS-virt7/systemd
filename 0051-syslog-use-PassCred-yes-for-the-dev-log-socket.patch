@@ -1,0 +1,52 @@
+From 20f36bebf9cb9655cb8ac606b70461e4db7ecbde Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Wed, 30 Nov 2011 09:37:13 +0100
+Subject: [PATCH] syslog: use PassCred=yes for the /dev/log socket
+
+Both kmsg-syslogd and the real syslog service want to receive
+SCM_CREDENTIALS. With socket activation it is too late to set
+SO_PASSCRED in the services.
+(cherry picked from commit 1a2801529e916ec31d2a8cc66cd5c3b8d9ad9caa)
+---
+ src/kmsg-syslogd.c  |    5 +----
+ units/syslog.socket |    1 +
+ 2 files changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/src/kmsg-syslogd.c b/src/kmsg-syslogd.c
+index 0901a0e..7fd69f8 100644
+--- a/src/kmsg-syslogd.c
++++ b/src/kmsg-syslogd.c
+@@ -91,7 +91,7 @@ static int server_init(Server *s, unsigned n_sockets) {
+         }
+ 
+         for (i = 0; i < n_sockets; i++) {
+-                int fd, one = 1;
++                int fd;
+ 
+                 fd = SD_LISTEN_FDS_START+i;
+ 
+@@ -106,9 +106,6 @@ static int server_init(Server *s, unsigned n_sockets) {
+                         goto fail;
+                 }
+ 
+-                if (setsockopt(fd, SOL_SOCKET, SO_PASSCRED, &one, sizeof(one)) < 0)
+-                        log_error("SO_PASSCRED failed: %m");
+-
+                 zero(ev);
+                 ev.events = EPOLLIN;
+                 ev.data.fd = fd;
+diff --git a/units/syslog.socket b/units/syslog.socket
+index 500bb7c..e74b559 100644
+--- a/units/syslog.socket
++++ b/units/syslog.socket
+@@ -18,6 +18,7 @@ Wants=syslog.target
+ [Socket]
+ ListenDatagram=/dev/log
+ SocketMode=0666
++PassCred=yes
+ 
+ # The service we activate on incoming traffic is
+ # systemd-kmsg-syslogd.service. That doesn't mean however, that this
+-- 
+1.7.7.5
+

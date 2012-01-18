@@ -1,0 +1,79 @@
+From 27b67ec67a39321dd52828002a50868071cb5bbf Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Wed, 9 Nov 2011 08:42:03 +0100
+Subject: [PATCH] units: drop unnecessary 'StandardOutput=syslog'
+
+DefaultStandardOutput is syslog anyway. There's no reason to assume that
+the administrator would want these units to be excluded when he configures
+a different DefaultStandardOutput.
+(cherry picked from commit c99e42c1db91eb1982b90a1aa631f4c4a765f95e)
+---
+ units/quotacheck.service.in              |    1 -
+ units/quotaon.service                    |    1 -
+ units/remount-rootfs.service             |    1 -
+ units/systemd-logind.service.in          |    1 -
+ units/systemd-remount-api-vfs.service.in |    1 -
+ units/systemd-vconsole-setup.service.in  |    1 -
+ 6 files changed, 0 insertions(+), 6 deletions(-)
+
+diff --git a/units/quotacheck.service.in b/units/quotacheck.service.in
+index 27dcb1e..c97b7a4 100644
+--- a/units/quotacheck.service.in
++++ b/units/quotacheck.service.in
+@@ -16,5 +16,4 @@ ConditionPathExists=/sbin/quotacheck
+ Type=oneshot
+ RemainAfterExit=yes
+ ExecStart=@rootlibexecdir@/systemd-quotacheck
+-StandardOutput=syslog
+ TimeoutSec=0
+diff --git a/units/quotaon.service b/units/quotaon.service
+index 2c7b36b..ef2fc8c 100644
+--- a/units/quotaon.service
++++ b/units/quotaon.service
+@@ -16,4 +16,3 @@ ConditionPathExists=/sbin/quotaon
+ Type=oneshot
+ RemainAfterExit=yes
+ ExecStart=/sbin/quotaon -aug
+-StandardOutput=syslog
+diff --git a/units/remount-rootfs.service b/units/remount-rootfs.service
+index 89a16c8..7b63752 100644
+--- a/units/remount-rootfs.service
++++ b/units/remount-rootfs.service
+@@ -17,4 +17,3 @@ Wants=local-fs-pre.target
+ Type=oneshot
+ RemainAfterExit=yes
+ ExecStart=/bin/mount / -o remount
+-StandardOutput=syslog
+diff --git a/units/systemd-logind.service.in b/units/systemd-logind.service.in
+index 4241b8b..c332039 100644
+--- a/units/systemd-logind.service.in
++++ b/units/systemd-logind.service.in
+@@ -15,7 +15,6 @@ ExecStart=@rootlibexecdir@/systemd-logind
+ Type=dbus
+ BusName=org.freedesktop.login1
+ CapabilityBoundingSet=CAP_AUDIT_CONTROL CAP_CHOWN CAP_KILL CAP_DAC_READ_SEARCH CAP_DAC_OVERRIDE CAP_FOWNER
+-StandardOutput=syslog
+ 
+ # Increase the default a bit in order to allow many simultaneous
+ # logins since we keep one fd open per session.
+diff --git a/units/systemd-remount-api-vfs.service.in b/units/systemd-remount-api-vfs.service.in
+index 6339ee6..f4df0ca 100644
+--- a/units/systemd-remount-api-vfs.service.in
++++ b/units/systemd-remount-api-vfs.service.in
+@@ -17,4 +17,3 @@ Wants=local-fs-pre.target
+ Type=oneshot
+ RemainAfterExit=yes
+ ExecStart=@rootlibexecdir@/systemd-remount-api-vfs
+-StandardOutput=syslog
+diff --git a/units/systemd-vconsole-setup.service.in b/units/systemd-vconsole-setup.service.in
+index 91d95d6..673fb6c 100644
+--- a/units/systemd-vconsole-setup.service.in
++++ b/units/systemd-vconsole-setup.service.in
+@@ -16,4 +16,3 @@ Before=sysinit.target shutdown.target
+ Type=oneshot
+ RemainAfterExit=yes
+ ExecStart=@rootlibexecdir@/systemd-vconsole-setup
+-StandardOutput=syslog
+-- 
+1.7.7.5
+

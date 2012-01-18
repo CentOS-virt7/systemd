@@ -1,0 +1,32 @@
+From b3070998c22feaa3b85337c56fb437527aec962e Mon Sep 17 00:00:00 2001
+From: Thomas Jarosch <thomas.jarosch@intra2net.com>
+Date: Wed, 9 Nov 2011 20:48:31 +0100
+Subject: [PATCH] Fix same expression on both sides of '&&'
+
+The code should probably look like the statements above it.
+Please verify, I just detected it using cppcheck.
+
+Signed-off-by: Thomas Jarosch <thomas.jarosch@intra2net.com>
+(cherry picked from commit 085c98af4eb17858b4687068f12eccc51a032732)
+---
+ src/unit.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/unit.c b/src/unit.c
+index ad4063b..2a549e2 100644
+--- a/src/unit.c
++++ b/src/unit.c
+@@ -564,8 +564,8 @@ int unit_add_exec_dependencies(Unit *u, ExecContext *c) {
+             c->std_output != EXEC_OUTPUT_KMSG_AND_CONSOLE &&
+             c->std_output != EXEC_OUTPUT_SYSLOG_AND_CONSOLE &&
+             c->std_error != EXEC_OUTPUT_KMSG &&
+-            c->std_error != EXEC_OUTPUT_SYSLOG_AND_CONSOLE &&
+-            c->std_error != EXEC_OUTPUT_KMSG &&
++            c->std_error != EXEC_OUTPUT_SYSLOG &&
++            c->std_error != EXEC_OUTPUT_KMSG_AND_CONSOLE &&
+             c->std_error != EXEC_OUTPUT_SYSLOG_AND_CONSOLE)
+                 return 0;
+ 
+-- 
+1.7.7.5
+

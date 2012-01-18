@@ -1,0 +1,55 @@
+From 003cb5ce02b9660a790ab330796e92b5d79806b6 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Sat, 19 Nov 2011 02:47:09 +0100
+Subject: [PATCH] let mount and swap units log to the configured defaults
+
+Related-to: https://bugzilla.redhat.com/show_bug.cgi?id=750032
+(cherry picked from commit f6cebb3bd5a00d79c8131637c0f6796a75e6af99)
+---
+ src/mount.c |    6 ++++--
+ src/swap.c  |    5 +++--
+ 2 files changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/src/mount.c b/src/mount.c
+index f9cfe91..47422cc 100644
+--- a/src/mount.c
++++ b/src/mount.c
+@@ -68,8 +68,10 @@ static void mount_init(Unit *u) {
+ 
+         /* The stdio/kmsg bridge socket is on /, in order to avoid a
+          * dep loop, don't use kmsg logging for -.mount */
+-        if (!unit_has_name(u, "-.mount"))
+-                m->exec_context.std_output = EXEC_OUTPUT_KMSG;
++        if (!unit_has_name(u, "-.mount")) {
++                m->exec_context.std_output = u->meta.manager->default_std_output;
++                m->exec_context.std_error = u->meta.manager->default_std_error;
++        }
+ 
+         /* We need to make sure that /bin/mount is always called in
+          * the same process group as us, so that the autofs kernel
+diff --git a/src/swap.c b/src/swap.c
+index 54a8640..4fa30a3 100644
+--- a/src/swap.c
++++ b/src/swap.c
+@@ -74,7 +74,7 @@ static void swap_unset_proc_swaps(Swap *s) {
+         s->parameters_proc_swaps.what = NULL;
+ }
+ 
+- static void swap_init(Unit *u) {
++static void swap_init(Unit *u) {
+         Swap *s = SWAP(u);
+ 
+         assert(s);
+@@ -83,7 +83,8 @@ static void swap_unset_proc_swaps(Swap *s) {
+         s->timeout_usec = DEFAULT_TIMEOUT_USEC;
+ 
+         exec_context_init(&s->exec_context);
+-        s->exec_context.std_output = EXEC_OUTPUT_KMSG;
++        s->exec_context.std_output = u->meta.manager->default_std_output;
++        s->exec_context.std_error = u->meta.manager->default_std_error;
+ 
+         s->parameters_etc_fstab.priority = s->parameters_proc_swaps.priority = s->parameters_fragment.priority = -1;
+ 
+-- 
+1.7.7.5
+

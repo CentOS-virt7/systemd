@@ -1,0 +1,28 @@
+From a8fda0ca8760ccad7630b9dd4b544577ce97d232 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Wed, 9 Nov 2011 08:58:36 +0100
+Subject: [PATCH] units/fedora: let rc-local.service log to syslog
+
+rc-local.service should not be excluded from the default stdout logging.
+
+Missing logs were noticed by Andrew McNabb in
+ https://bugzilla.redhat.com/show_bug.cgi?id=750032#c3
+(cherry picked from commit 9d7286112d8b54da0294ca0d6bbd7314d890b7e2)
+---
+ units/fedora/rc-local.service |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
+
+diff --git a/units/fedora/rc-local.service b/units/fedora/rc-local.service
+index f5f940f..106b12c 100644
+--- a/units/fedora/rc-local.service
++++ b/units/fedora/rc-local.service
+@@ -13,6 +13,5 @@ ConditionFileIsExecutable=/etc/rc.d/rc.local
+ Type=forking
+ ExecStart=/etc/rc.d/rc.local start
+ TimeoutSec=0
+-StandardOutput=tty
+ RemainAfterExit=yes
+ SysVStartPriority=99
+-- 
+1.7.7.5
+

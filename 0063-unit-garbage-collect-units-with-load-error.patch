@@ -1,0 +1,30 @@
+From 069a85095fb07d894ae1825db5f7300c5b5f092b Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Tue, 6 Dec 2011 00:47:28 +0100
+Subject: [PATCH] unit: garbage collect units with load error
+
+Units that failed to load were never cleaned up. It was possible to
+reach the 128K limit of units by attempting to load a bunch of nonsense.
+
+Bug observed by Reartes Guillermo in
+https://bugzilla.redhat.com/show_bug.cgi?id=680122
+(cherry picked from commit 9a46fc3b9014de1bf0ed1f3004a536b08a19ebb3)
+---
+ src/unit.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/src/unit.c b/src/unit.c
+index 2a549e2..018e986 100644
+--- a/src/unit.c
++++ b/src/unit.c
+@@ -858,6 +858,7 @@ fail:
+         u->meta.load_state = UNIT_ERROR;
+         u->meta.load_error = r;
+         unit_add_to_dbus_queue(u);
++        unit_add_to_gc_queue(u);
+ 
+         log_debug("Failed to load configuration for %s: %s", u->meta.id, strerror(-r));
+ 
+-- 
+1.7.7.5
+

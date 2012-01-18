@@ -1,0 +1,29 @@
+From 9d0c042242530e6b0d5ee3e7aaca5c03c151676d Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 13 Jan 2012 20:52:45 +0100
+Subject: [PATCH] pam: fix build (cherry picked from commit
+ 6ef25fb65ee0a62972ed7cbc01b6a11feb5fcb16)
+
+---
+ src/pam-module.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/pam-module.c b/src/pam-module.c
+index f6076d2..d13e906 100644
+--- a/src/pam-module.c
++++ b/src/pam-module.c
+@@ -474,9 +474,9 @@ _public_ PAM_EXTERN int pam_sm_open_session(
+ 
+         if (!isempty(display) && vtnr <= 0) {
+                 if (isempty(seat))
+-                        get_seat_from_display(handle, display, &seat, &vtnr);
++                        get_seat_from_display(display, &seat, &vtnr);
+                 else if (streq(seat, "seat0"))
+-                        get_seat_from_display(handle, display, NULL, &vtnr);
++                        get_seat_from_display(display, NULL, &vtnr);
+         }
+ 
+         type = !isempty(display) ? "x11" :
+-- 
+1.7.7.5
+

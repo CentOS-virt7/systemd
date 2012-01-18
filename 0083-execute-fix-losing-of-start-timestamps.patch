@@ -1,0 +1,29 @@
+From ef50636c71f16165e58b38c25890213e2a6b073b Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Sat, 17 Dec 2011 01:33:40 +0100
+Subject: [PATCH] execute: fix losing of start timestamps
+
+Start timestamps were always cleared before saving exit timestamps.
+Fix it by removing a condition that makes no sense any way I look at it.
+(cherry picked from commit 0b1f4ae63548c627decd80e3e2fd030c2d4f3af6)
+---
+ src/execute.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
+
+diff --git a/src/execute.c b/src/execute.c
+index 481725d..abbbfdd 100644
+--- a/src/execute.c
++++ b/src/execute.c
+@@ -1860,8 +1860,7 @@ void exec_status_start(ExecStatus *s, pid_t pid) {
+ void exec_status_exit(ExecStatus *s, ExecContext *context, pid_t pid, int code, int status) {
+         assert(s);
+ 
+-        if ((s->pid && s->pid != pid) ||
+-            !s->start_timestamp.realtime <= 0)
++        if (s->pid && s->pid != pid)
+                 zero(*s);
+ 
+         s->pid = pid;
+-- 
+1.7.7.5
+

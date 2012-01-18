@@ -1,0 +1,27 @@
+From b07ccd2e4d5fd58f9ead2e597a69711d50f7d744 Mon Sep 17 00:00:00 2001
+From: Tom Gundersen <teg@jklm.no>
+Date: Sat, 31 Dec 2011 01:15:04 +0100
+Subject: [PATCH] man: fix SEE ALSO in hostname(5)
+
+Rather than referencing itself (hostname(5)), point to hostname(7).
+(cherry picked from commit 63c52e45de6b6071d64cc4d3bb0d47357a1f5ead)
+---
+ man/hostname.xml |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/man/hostname.xml b/man/hostname.xml
+index b8b05c8..1acda1a 100644
+--- a/man/hostname.xml
++++ b/man/hostname.xml
+@@ -86,7 +86,7 @@
+                           <citerefentry><refentrytitle>systemd</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+                           <citerefentry><refentrytitle>sethostname</refentrytitle><manvolnum>2</manvolnum></citerefentry>,
+                           <citerefentry><refentrytitle>hostname</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+-                          <citerefentry><refentrytitle>hostname</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
++                          <citerefentry><refentrytitle>hostname</refentrytitle><manvolnum>7</manvolnum></citerefentry>,
+                           <citerefentry><refentrytitle>machine-id</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
+                           <citerefentry><refentrytitle>machine-info</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                   </para>
+-- 
+1.7.7.5
+

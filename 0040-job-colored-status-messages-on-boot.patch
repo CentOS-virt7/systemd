@@ -1,0 +1,132 @@
+From dd36a516b3945e64578ab4190499266ae44b1155 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Thu, 10 Nov 2011 12:53:39 +0100
+Subject: [PATCH] job: colored status messages on boot
+
+The lack or green/red status marks on boot has been described by some
+users as "critical", "dramatic", "dealbreaker", "showstopper". Seriously.
+(cherry picked from commit 5831e9b726ab6e76b28a94861a014d3bc2aa3015)
+---
+ src/job.c  |   13 +++++++------
+ src/unit.c |   24 ++++++++++++++++++++----
+ src/unit.h |    2 +-
+ 3 files changed, 28 insertions(+), 11 deletions(-)
+
+diff --git a/src/job.c b/src/job.c
+index 20971da..1520d81 100644
+--- a/src/job.c
++++ b/src/job.c
+@@ -484,19 +484,20 @@ static void job_print_status_message(Unit *u, JobType t, JobResult result) {
+                 switch (result) {
+ 
+                 case JOB_DONE:
+-                        unit_status_printf(u, "Started %s.\n", unit_description(u));
++                        unit_status_printf(u, ANSI_HIGHLIGHT_GREEN_ON "  OK  " ANSI_HIGHLIGHT_OFF, "Started %s", unit_description(u));
+                         break;
+ 
+                 case JOB_FAILED:
+-                        unit_status_printf(u, "Starting %s " ANSI_HIGHLIGHT_ON "failed" ANSI_HIGHLIGHT_OFF ", see 'systemctl status %s' for details.\n", unit_description(u), u->meta.id);
++                        unit_status_printf(u, ANSI_HIGHLIGHT_ON "FAILED" ANSI_HIGHLIGHT_OFF, "Failed to start %s", unit_description(u));
++                        unit_status_printf(u, NULL, "See 'systemctl status %s' for details.", u->meta.id);
+                         break;
+ 
+                 case JOB_DEPENDENCY:
+-                        unit_status_printf(u, "Starting %s " ANSI_HIGHLIGHT_ON "aborted" ANSI_HIGHLIGHT_OFF " because a dependency failed.\n", unit_description(u));
++                        unit_status_printf(u, ANSI_HIGHLIGHT_ON " ABORT" ANSI_HIGHLIGHT_OFF, "Dependency failed. Aborted start of %s", unit_description(u));
+                         break;
+ 
+                 case JOB_TIMEOUT:
+-                        unit_status_printf(u, "Starting %s " ANSI_HIGHLIGHT_ON "timed out" ANSI_HIGHLIGHT_OFF ".\n", unit_description(u), u->meta.id);
++                        unit_status_printf(u, ANSI_HIGHLIGHT_ON " TIME " ANSI_HIGHLIGHT_OFF, "Timed out starting %s", unit_description(u));
+                         break;
+ 
+                 default:
+@@ -508,12 +509,12 @@ static void job_print_status_message(Unit *u, JobType t, JobResult result) {
+                 switch (result) {
+ 
+                 case JOB_TIMEOUT:
+-                        unit_status_printf(u, "Stopping %s " ANSI_HIGHLIGHT_ON "timed out" ANSI_HIGHLIGHT_OFF ".\n", unit_description(u), u->meta.id);
++                        unit_status_printf(u, ANSI_HIGHLIGHT_ON " TIME " ANSI_HIGHLIGHT_OFF, "Timed out stopping %s", unit_description(u));
+                         break;
+ 
+                 case JOB_DONE:
+                 case JOB_FAILED:
+-                        unit_status_printf(u, "Stopped %s.\n", unit_description(u));
++                        unit_status_printf(u, ANSI_HIGHLIGHT_GREEN_ON "  OK  " ANSI_HIGHLIGHT_OFF, "Stopped %s", unit_description(u));
+                         break;
+ 
+                 default:
+diff --git a/src/unit.c b/src/unit.c
+index 903a8e4..ad4063b 100644
+--- a/src/unit.c
++++ b/src/unit.c
+@@ -924,7 +924,7 @@ int unit_start(Unit *u) {
+ 
+         unit_add_to_dbus_queue(u);
+ 
+-        unit_status_printf(u, "Starting %s...\n", unit_description(u));
++        unit_status_printf(u, NULL, "Starting %s...", unit_description(u));
+         return UNIT_VTABLE(u)->start(u);
+ }
+ 
+@@ -966,7 +966,7 @@ int unit_stop(Unit *u) {
+ 
+         unit_add_to_dbus_queue(u);
+ 
+-        unit_status_printf(u, "Stopping %s...\n", unit_description(u));
++        unit_status_printf(u, NULL, "Stopping %s...", unit_description(u));
+         return UNIT_VTABLE(u)->stop(u);
+ }
+ 
+@@ -2426,8 +2426,11 @@ int unit_coldplug(Unit *u) {
+         return 0;
+ }
+ 
+-void unit_status_printf(Unit *u, const char *format, ...) {
++void unit_status_printf(Unit *u, const char *status, const char *format, ...) {
+         va_list ap;
++        char *s, *e;
++        int err;
++        const unsigned emax = status ? 80 - (sizeof("[  OK  ]")-1) : 80;
+ 
+         assert(u);
+         assert(format);
+@@ -2442,8 +2445,21 @@ void unit_status_printf(Unit *u, const char *format, ...) {
+                 return;
+ 
+         va_start(ap, format);
+-        status_vprintf(format, ap);
++        err = vasprintf(&s, format, ap);
+         va_end(ap);
++        if (err < 0)
++                return;
++
++        e = ellipsize(s, emax, 100);
++        free(s);
++        if (!e)
++                return;
++
++        if (status)
++                status_printf("%s%*s[%s]\n", e, emax - strlen(e), "", status);
++        else
++                status_printf("%s\n", e);
++        free(e);
+ }
+ 
+ bool unit_need_daemon_reload(Unit *u) {
+diff --git a/src/unit.h b/src/unit.h
+index 7da5723..b32c1a7 100644
+--- a/src/unit.h
++++ b/src/unit.h
+@@ -512,7 +512,7 @@ int unit_add_node_link(Unit *u, const char *what, bool wants);
+ 
+ int unit_coldplug(Unit *u);
+ 
+-void unit_status_printf(Unit *u, const char *format, ...);
++void unit_status_printf(Unit *u, const char *status, const char *format, ...);
+ 
+ bool unit_need_daemon_reload(Unit *u);
+ 
+-- 
+1.7.7.5
+
