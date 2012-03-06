@@ -141,6 +141,3 @@ index e7fa354..d420800 100644
                          show_error(e.message);
                  }
  
--- 
-1.7.7.5
-

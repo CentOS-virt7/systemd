@@ -22,6 +22,3 @@ index 2f31242..f883543 100644
                                  namespace socket in the AF_UNIX
                                  family. The @ is replaced with a NUL
                                  character before binding. For details
--- 
-1.7.7.5
-

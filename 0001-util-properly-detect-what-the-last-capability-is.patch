@@ -117,6 +117,3 @@ index ccbe8a3..a71a297 100644
 +unsigned long cap_last_cap(void);
 +
  #endif
--- 
-1.7.7.5
-

@@ -502,6 +502,3 @@ index 116fc63..4e6ccf5 100644
  struct Path {
          Meta meta;
  
--- 
-1.7.7.5
-

@@ -25,6 +25,3 @@ index 2a549e2..018e986 100644
  
          log_debug("Failed to load configuration for %s: %s", u->meta.id, strerror(-r));
  
--- 
-1.7.7.5
-

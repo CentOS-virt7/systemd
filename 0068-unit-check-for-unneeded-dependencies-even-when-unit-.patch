@@ -43,6 +43,3 @@ index 56137d7..03c90f5 100644
                  if (ns != os && ns == UNIT_FAILED) {
                          log_notice("Unit %s entered failed state.", u->meta.id);
                          unit_trigger_on_failure(u);
--- 
-1.7.7.5
-

@@ -148,6 +148,3 @@ index 6ebb792..0aa87af 100644
          fi
  
          COMPREPLY=( $(compgen -W "$comps" -- "$cur") )
--- 
-1.7.7.5
-

@@ -22,6 +22,3 @@ index 15afb2c..17b3f49 100644
  
  REQUIREMENTS:
          Linux kernel >= 2.6.39 (with devtmpfs, cgroups; optional but strongly recommended: autofs4, ipv6)
--- 
-1.7.7.5
-

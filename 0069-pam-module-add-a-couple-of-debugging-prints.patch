@@ -36,6 +36,3 @@ index 46b7bec..9002f4e 100644
          r = pam_misc_setenv(handle, "XDG_SESSION_ID", id, 0);
          if (r != PAM_SUCCESS) {
                  pam_syslog(handle, LOG_ERR, "Failed to set session id.");
--- 
-1.7.7.5
-

@@ -1,0 +1,98 @@
+From e5740fa36d79ecd9d4aaee5f757c1829be232978 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Sun, 29 Jan 2012 21:55:51 +0100
+Subject: [PATCH] main: don't force text mode in console_setup()
+
+When systemd starts, plymouth may be already displaying progress
+graphically. Do not switch the console to text mode at that time.
+All other users of reset_terminal_fd() do the switch as before.
+
+This avoids a graphical glitch with plymouth, especially visible with
+vesafb, but could be also seen as a sub-second blink with radeon.
+
+https://bugzilla.redhat.com/show_bug.cgi?id=785548
+(cherry picked from commit 512947d46f9fd7daf74c059ac8548cc98b294807)
+---
+ src/main.c |    8 ++++++--
+ src/util.c |   10 ++++++----
+ src/util.h |    2 +-
+ 3 files changed, 13 insertions(+), 7 deletions(-)
+
+diff --git a/src/main.c b/src/main.c
+index cdf32bf..87e0f32 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -200,12 +200,16 @@ static int console_setup(bool do_reset) {
+         if (!do_reset)
+                 return 0;
+ 
+-        if ((tty_fd = open_terminal("/dev/console", O_WRONLY|O_NOCTTY|O_CLOEXEC)) < 0) {
++        tty_fd = open_terminal("/dev/console", O_WRONLY|O_NOCTTY|O_CLOEXEC);
++        if (tty_fd < 0) {
+                 log_error("Failed to open /dev/console: %s", strerror(-tty_fd));
+                 return -tty_fd;
+         }
+ 
+-        if ((r = reset_terminal_fd(tty_fd)) < 0)
++        /* We don't want to force text mode.
++         * plymouth may be showing pictures already from initrd. */
++        r = reset_terminal_fd(tty_fd, false);
++        if (r < 0)
+                 log_error("Failed to reset /dev/console: %s", strerror(-r));
+ 
+         close_nointr_nofail(tty_fd);
+diff --git a/src/util.c b/src/util.c
+index 497fd05..ed939a2 100644
+--- a/src/util.c
++++ b/src/util.c
+@@ -2472,7 +2472,7 @@ int ask(char *ret, const char *replies, const char *text, ...) {
+         }
+ }
+ 
+-int reset_terminal_fd(int fd) {
++int reset_terminal_fd(int fd, bool switch_to_text) {
+         struct termios termios;
+         int r = 0;
+ 
+@@ -2488,7 +2488,8 @@ int reset_terminal_fd(int fd) {
+         ioctl(fd, TIOCNXCL);
+ 
+         /* Switch to text mode */
+-        ioctl(fd, KDSETMODE, KD_TEXT);
++        if (switch_to_text)
++                ioctl(fd, KDSETMODE, KD_TEXT);
+ 
+         /* Enable console unicode mode */
+         ioctl(fd, KDSKBMODE, K_UNICODE);
+@@ -2542,7 +2543,7 @@ int reset_terminal(const char *name) {
+         if (fd < 0)
+                 return fd;
+ 
+-        r = reset_terminal_fd(fd);
++        r = reset_terminal_fd(fd, true);
+         close_nointr_nofail(fd);
+ 
+         return r;
+@@ -2736,7 +2737,8 @@ int acquire_terminal(const char *name, bool fail, bool force, bool ignore_tiocst
+         if (notify >= 0)
+                 close_nointr_nofail(notify);
+ 
+-        if ((r = reset_terminal_fd(fd)) < 0)
++        r = reset_terminal_fd(fd, true);
++        if (r < 0)
+                 log_warning("Failed to reset terminal: %s", strerror(-r));
+ 
+         return fd;
+diff --git a/src/util.h b/src/util.h
+index 944c7d2..441c75f 100644
+--- a/src/util.h
++++ b/src/util.h
+@@ -325,7 +325,7 @@ int chvt(int vt);
+ int read_one_char(FILE *f, char *ret, bool *need_nl);
+ int ask(char *ret, const char *replies, const char *text, ...);
+ 
+-int reset_terminal_fd(int fd);
++int reset_terminal_fd(int fd, bool switch_to_text);
+ int reset_terminal(const char *name);
+ 
+ int open_terminal(const char *name, int mode);

@@ -214,6 +214,3 @@ index a71a297..e4a554a 100644
  
  int running_in_chroot(void);
  
--- 
-1.7.7.5
-

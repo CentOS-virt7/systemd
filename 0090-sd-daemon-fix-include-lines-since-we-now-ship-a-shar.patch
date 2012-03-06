@@ -78,6 +78,3 @@ index 62347f8..c3791ce 100644
  
                          <funcprototype>
                                  <funcdef>int <function>sd_notify</function></funcdef>
--- 
-1.7.7.5
-

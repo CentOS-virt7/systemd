@@ -24,6 +24,3 @@ index 46b5aea..d157e0f 100644
          if (count == 1 && c == '@')
                  return true;
  
--- 
-1.7.7.5
-

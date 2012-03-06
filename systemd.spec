@@ -2,7 +2,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Version:        37
-Release:        8%{?dist}
+Release:        16%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -179,6 +179,40 @@ Patch0128:      0128-pam-work-correctly-if-a-seat-is-specified-but-not-vt.patch
 Patch0129:      0129-pam-fix-build.patch
 Patch0130:      0130-mount-fix-quota.patch
 Patch0131:      0131-logind-downgrade-login-message-to-debug.patch
+Patch0132:      0132-service-add-missing-pid-file-unwatch-in-the-destruct.patch
+Patch0133:      0133-socket-don-t-fail-the-socket-on-ENOTCONN.patch
+# from v40:
+Patch0134:      0134-mount-fix-automount-regression.patch
+Patch0135:      0135-logind-make-sure-we-create-var-lib-systemd-before-us.patch
+Patch0136:      0136-logind-add-sys_tty_config-capability-to-let-it-use-V.patch
+Patch0137:      0137-main-don-t-force-text-mode-in-console_setup.patch
+Patch0138:      0138-load-fragment-properly-parse-size-values-denoted-in-.patch
+Patch0139:      0139-socket-typo-in-dump-output.patch
+Patch0140:      0140-man-document-that-we-support-tcpwrappers-only-for-ac.patch
+Patch0141:      0141-manager-tell-correctly-if-the-manager-is-booting.patch
+Patch0142:      0142-hashmap-add-hashmap_first_key.patch
+Patch0143:      0143-util-prevent-daemon-reload-from-reaping-service-proc.patch
+# from v41:
+Patch0144:      0144-logind-fix-introspection-data.patch
+Patch0145:      0145-man-document-x-systemd-device-timeout.patch
+# from v42:
+Patch0146:      0146-systemctl-check-for-no-more-work-after-chkconfig.patch
+Patch0147:      0147-install-fix-incorrect-Access-denied-message-with-a-n.patch
+Patch0148:      0148-man-Clarify-man-page-with-respect-to-automatic-fstab.patch
+Patch0149:      0149-logind-Allow-PowerOff-Reboot-in-default-context.patch
+Patch0150:      0150-util-fix-handling-of-empty-files-in-read_one_line_fi.patch
+# from v43:
+Patch0151:      0151-Fix-broken-Git-repository-URLs.patch
+Patch0152:      0152-timedate-don-t-fail-if-NTP-is-not-installed.patch
+Patch0153:      0153-namespace-temporaily-reset-umask-when-creating-priva.patch
+Patch0154:      0154-logind-move-X11-socket.patch
+# from v44:
+Patch0155:      0155-fix-sparse-warnings.patch
+Patch0156:      0156-socket-fail-the-socket-if-the-service-keeps-dying-on.patch
+Patch0157:      0157-socket-rename-broken-failure-result-to-failed-perman.patch
+Patch0158:      0158-nspawn-be-less-cryptic-when-clone-fails.patch
+Patch0159:      0159-bash-completion-get-rid-of-awk-sed-and-grep.patch
+Patch0160:      0160-mount-properly-check-return-for-mount_add_.patch
 
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
@@ -191,6 +225,9 @@ Obsoletes:      upstart-sysvinit < 1.2-3
 Conflicts:      upstart-sysvinit
 Obsoletes:      readahead < 1:1.5.7-3
 Provides:       readahead = 1:1.5.7-3
+
+# since 37-6 we rely more strongly on PIDFile= being correct (BZ#783108)
+Conflicts:      spamassassin < 3.3.2-9
 
 %description
 systemd is a system and service manager for Linux, compatible with
@@ -497,6 +534,40 @@ fi
 %{_bindir}/systemd-sysv-convert
 
 %changelog
+* Tue Mar 06 2012 Michal Schmidt <mschmidt@redhat.com> - 37-16
+- From upstream:
+  - avoid socket tarpits when the service keeps failing
+  - get rid of awk, sed, grep in bash completion
+  - and minor fixes
+
+* Thu Mar 01 2012 Michal Schmidt <mschmidt@redhat.com> - 37-15
+- logind: move X11 socket
+
+* Mon Feb 27 2012 Michal Schmidt <mschmidt@redhat.com> - 37-14
+- A few fixes from upstream:
+  - PrivateTmp permissions (#790522)
+  - timedated without ntp installed (#790260)
+  - logind: allow PowerOff and Reboot via polkit
+  - loading empty files in read_one_line_file() (fdo#45362)
+  - fix cgit URLs in manpages
+
+* Thu Feb 09 2012 Michal Schmidt <mschmidt@redhat.com> - 37-13
+- Minor fixes and some manpage updates from upstream.
+
+* Sun Jan 29 2012 Michal Schmidt <mschmidt@redhat.com> - 37-12
+- Avoid a glitch with plymouth (#785548).
+- Fix logind capabilities.
+
+* Thu Jan 26 2012 Michal Schmidt <mschmidt@redhat.com> - 37-11
+- Fix automount regression.
+
+* Sat Jan 21 2012 Michal Schmidt <mschmidt@redhat.com> - 37-10
+- Fix occasionally failing socket units with Accept=yes (#783344).
+
+* Fri Jan 20 2012 Michal Schmidt <mschmidt@redhat.com> - 37-9
+- Fix a crash related to pid file watch and daemon-reload (#783118).
+- Added Conflicts with known broken spamassassin.
+
 * Tue Jan 17 2012 Michal Schmidt <mschmidt@redhat.com> - 37-8
 - Shut up another logind message (#727315).
 

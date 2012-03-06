@@ -83,6 +83,3 @@ index 0000000..2d2f458
 +<xsl:output method="html" encoding="UTF-8" indent="no"/>
 +
 +</xsl:stylesheet>
--- 
-1.7.7.5
-

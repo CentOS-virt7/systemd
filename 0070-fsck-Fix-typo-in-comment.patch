@@ -21,6 +21,3 @@ index c5088ad..3e66535 100644
                   * startup */
                  if (!dbus_error_has_name(&error, BUS_ERROR_NO_SUCH_JOB))
                          log_error("Failed to start unit: %s", bus_error_message(&error));
--- 
-1.7.7.5
-

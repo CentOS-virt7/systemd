@@ -46,6 +46,3 @@ index 9002f4e..f6076d2 100644
  
          type = !isempty(display) ? "x11" :
                     !isempty(tty) ? "tty" : "unspecified";
--- 
-1.7.7.5
-

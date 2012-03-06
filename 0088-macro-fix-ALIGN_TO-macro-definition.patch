@@ -21,6 +21,3 @@ index e7a4d2c..3f30aa7 100644
  
  static inline size_t IOVEC_TOTAL_SIZE(const struct iovec *i, unsigned n) {
          unsigned j;
--- 
-1.7.7.5
-

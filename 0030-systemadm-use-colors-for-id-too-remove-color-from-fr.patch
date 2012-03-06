@@ -72,6 +72,3 @@ index 1118999..5971ac0 100644
                  else
                          unit_fragment_path_label.set_text_or_na();
  
--- 
-1.7.7.5
-

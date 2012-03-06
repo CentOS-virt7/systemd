@@ -127,6 +127,3 @@ index 7da5723..b32c1a7 100644
  
  bool unit_need_daemon_reload(Unit *u);
  
--- 
-1.7.7.5
-

@@ -144,6 +144,3 @@ index 1395082..19a7c08 100644
                  log_error("[%s:%u] Unknown file type '%c'.", fname, line, type);
                  r = -EBADMSG;
                  goto finish;
--- 
-1.7.7.5
-

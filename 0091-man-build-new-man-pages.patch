@@ -25,6 +25,3 @@ index 4d04db3..3b2cbc2 100644
  	man/init.1
  
  man/reboot.8: man/halt.8
--- 
-1.7.7.5
-

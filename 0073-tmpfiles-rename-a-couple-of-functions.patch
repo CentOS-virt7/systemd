@@ -50,6 +50,3 @@ index 6171140..4308f7f 100644
          p = arg_clean ? clean_item(i) : 0;
  
          if (r < 0)
--- 
-1.7.7.5
-

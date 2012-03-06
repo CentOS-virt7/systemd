@@ -26,6 +26,3 @@ index 43d008f..13481b2 100644
                          if (size+5 > sizeof(buffer)) {
                                  r = -EIO;
                                  goto finish;
--- 
-1.7.7.5
-

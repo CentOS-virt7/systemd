@@ -190,6 +190,3 @@ index d655bc3..18067c4 100644
  
          if (!path_is_absolute(i->path)) {
                  log_error("[%s:%u] Path '%s' not absolute.", fname, line, i->path);
--- 
-1.7.7.5
-

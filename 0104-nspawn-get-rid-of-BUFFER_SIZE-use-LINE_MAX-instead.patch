@@ -50,6 +50,3 @@ index 653d7db..3ea603f 100644
  
                                          if (errno == EAGAIN || errno == EPIPE || errno == ECONNRESET || errno == EIO)
                                                  master_readable = false;
--- 
-1.7.7.5
-

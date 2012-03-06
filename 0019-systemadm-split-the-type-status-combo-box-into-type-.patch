@@ -107,6 +107,3 @@ index 21177bf..e78fd7c 100644
          }
  
          public void unit_type_changed() {
--- 
-1.7.7.5
-

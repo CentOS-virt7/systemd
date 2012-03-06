@@ -33,6 +33,3 @@ index 56c7de4..432d609 100644
  
          LIST_FOREACH(sessions_by_user, s, u->sessions) {
                  k = session_stop(s);
--- 
-1.7.7.5
-

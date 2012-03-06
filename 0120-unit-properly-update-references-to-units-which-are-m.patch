@@ -1509,6 +1509,3 @@ index b32c1a7..4d83309 100644
  const char *unit_load_state_to_string(UnitLoadState i);
  UnitLoadState unit_load_state_from_string(const char *s);
  
--- 
-1.7.7.5
-

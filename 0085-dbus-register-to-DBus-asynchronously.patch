@@ -558,6 +558,3 @@ index 5deb569..6e7558e 100644
          int32_t subscribed_data_slot;
  
          uint32_t current_job_id;
--- 
-1.7.7.5
-

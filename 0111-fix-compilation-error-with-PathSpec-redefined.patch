@@ -30,6 +30,3 @@ index 15d58cc..2102826 100644
  struct Service {
          Meta meta;
  
--- 
-1.7.7.5
-

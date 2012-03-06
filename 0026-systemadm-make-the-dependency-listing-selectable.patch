@@ -22,6 +22,3 @@ index a3068f1..e7fa354 100644
                  unit_dependency_label.activate_link.connect(on_activate_link);
  
                  unit_fragment_path_label.set_track_visited_links(false);
--- 
-1.7.7.5
-

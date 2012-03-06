@@ -72,6 +72,3 @@ index 5c5b734..4f57821 100644
  
                  buffer = e;
          } while (buffer);
--- 
-1.7.7.5
-

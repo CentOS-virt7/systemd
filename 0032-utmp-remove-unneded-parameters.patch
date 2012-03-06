@@ -132,6 +132,3 @@ index 4054aff..a5998eb 100644
  
  int utmp_wall(const char *message, bool (*match_tty)(const char *tty));
  
--- 
-1.7.7.5
-

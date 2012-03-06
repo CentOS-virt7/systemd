@@ -83,6 +83,3 @@ index 19a7c08..44e5c9d 100644
                  return r < 0 ? EXIT_FAILURE : EXIT_SUCCESS;
  
          log_set_target(LOG_TARGET_AUTO);
--- 
-1.7.7.5
-

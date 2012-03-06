@@ -154,6 +154,3 @@ index ee7e306..afe6768 100644
  
    This should compile on non-Linux systems, too, but all functions
    will become NOPs.
--- 
-1.7.7.5
-

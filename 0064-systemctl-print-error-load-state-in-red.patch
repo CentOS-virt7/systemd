@@ -36,6 +36,3 @@ index 668641d..960d3c0 100644
                  on = ansi_highlight(true);
                  off = ansi_highlight(false);
          } else
--- 
-1.7.7.5
-

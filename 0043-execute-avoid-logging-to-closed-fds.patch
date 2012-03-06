@@ -56,6 +56,3 @@ index c402afb..9942e3e 100644
  
  void log_close_syslog(void);
  void log_close_kmsg(void);
--- 
-1.7.7.5
-

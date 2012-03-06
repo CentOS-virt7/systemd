@@ -85,6 +85,3 @@ index 4e6ccf5..1d78fe4 100644
          _PATH_TYPE_MAX,
          _PATH_TYPE_INVALID = -1
  } PathType;
--- 
-1.7.7.5
-

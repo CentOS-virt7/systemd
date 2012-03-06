@@ -22,6 +22,3 @@ index 5406aa2..8aceb08 100644
 -
 -[Install]
 -WantedBy=multi-user.target
--- 
-1.7.7.5
-

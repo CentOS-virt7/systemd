@@ -74,6 +74,3 @@ index 91d95d6..673fb6c 100644
  RemainAfterExit=yes
  ExecStart=@rootlibexecdir@/systemd-vconsole-setup
 -StandardOutput=syslog
--- 
-1.7.7.5
-

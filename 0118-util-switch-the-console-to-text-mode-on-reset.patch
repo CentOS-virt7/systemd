@@ -25,6 +25,3 @@ index a9d0821..5bac05f 100644
          /* Enable console unicode mode */
          ioctl(fd, KDSKBMODE, K_UNICODE);
  
--- 
-1.7.7.5
-

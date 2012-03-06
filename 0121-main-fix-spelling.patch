@@ -82,6 +82,3 @@ index 5c28a6c..cdf32bf 100644
                  else
                          arg_sysv_console = r;
  #endif
--- 
-1.7.7.5
-

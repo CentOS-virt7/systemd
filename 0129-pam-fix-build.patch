@@ -24,6 +24,3 @@ index f6076d2..d13e906 100644
          }
  
          type = !isempty(display) ? "x11" :
--- 
-1.7.7.5
-

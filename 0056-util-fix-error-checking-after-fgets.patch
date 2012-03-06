@@ -49,6 +49,3 @@ index e93e6f6..da71e4d 100644
                  fclose(f);
                  return k;
          }
--- 
-1.7.7.5
-

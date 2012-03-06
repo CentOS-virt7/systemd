@@ -1,0 +1,23 @@
+From a4a842502732f5814b9cab29c1221184dbe770f2 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Tue, 31 Jan 2012 23:58:15 +0100
+Subject: [PATCH] socket: typo in dump output (cherry picked from commit
+ ede3deb4256742c6dfb3be515436209c1b088ac6)
+
+---
+ src/socket.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/src/socket.c b/src/socket.c
+index 00f0ebd..8bce18c 100644
+--- a/src/socket.c
++++ b/src/socket.c
+@@ -415,7 +415,7 @@ static void socket_dump(Unit *u, FILE *f, const char *prefix) {
+                 "%sFreeBind: %s\n"
+                 "%sTransparent: %s\n"
+                 "%sBroadcast: %s\n"
+-                "%sPassCrededentials: %s\n"
++                "%sPassCredentials: %s\n"
+                 "%sTCPCongestion: %s\n",
+                 prefix, socket_state_to_string(s->state),
+                 prefix, socket_address_bind_ipv6_only_to_string(s->bind_ipv6_only),

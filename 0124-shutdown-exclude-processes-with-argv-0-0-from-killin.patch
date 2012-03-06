@@ -171,6 +171,3 @@ index 40a2a39..944c7d2 100644
  
  char hexchar(int x);
  int unhexchar(char c);
--- 
-1.7.7.5
-

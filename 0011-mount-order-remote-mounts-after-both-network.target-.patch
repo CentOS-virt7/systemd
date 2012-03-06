@@ -46,6 +46,3 @@ index ef953f0..f9cfe91 100644
          if (automount) {
                  Unit *am;
  
--- 
-1.7.7.5
-

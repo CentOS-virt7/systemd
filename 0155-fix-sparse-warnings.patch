@@ -1,0 +1,94 @@
+From e425ad8c3800e126450f3fc8e49a357f674fc3eb Mon Sep 17 00:00:00 2001
+From: Frederic Crozat <fcrozat@suse.com>
+Date: Wed, 29 Feb 2012 14:42:49 +0100
+Subject: [PATCH] fix sparse warnings (cherry picked from commit
+ 6a39419fe4e4ab7beb2412b6a52b5fd513509452)
+
+Conflicts:
+
+	src/log.c
+---
+ src/getty-generator.c |    2 +-
+ src/hashmap.c         |    4 ++--
+ src/macro.h           |    1 +
+ src/mount.c           |    2 +-
+ src/util.c            |    4 ++--
+ 5 files changed, 7 insertions(+), 6 deletions(-)
+
+diff --git a/src/getty-generator.c b/src/getty-generator.c
+index 6b5b254..1bb0d34 100644
+--- a/src/getty-generator.c
++++ b/src/getty-generator.c
+@@ -28,7 +28,7 @@
+ #include "unit-name.h"
+ #include "virt.h"
+ 
+-const char *arg_dest = "/tmp";
++static const char *arg_dest = "/tmp";
+ 
+ static int add_symlink(const char *fservice, const char *tservice) {
+         char *from = NULL, *to = NULL;
+diff --git a/src/hashmap.c b/src/hashmap.c
+index 7ef8097..6928118 100644
+--- a/src/hashmap.c
++++ b/src/hashmap.c
+@@ -55,10 +55,10 @@ struct pool {
+         unsigned n_used;
+ };
+ 
+-struct pool *first_hashmap_pool = NULL;
++static struct pool *first_hashmap_pool = NULL;
+ static void *first_hashmap_tile = NULL;
+ 
+-struct pool *first_entry_pool = NULL;
++static struct pool *first_entry_pool = NULL;
+ static void *first_entry_tile = NULL;
+ 
+ static void* allocate_tile(struct pool **first_pool, void **first_tile, size_t tile_size) {
+diff --git a/src/macro.h b/src/macro.h
+index 3f30aa7..5515490 100644
+--- a/src/macro.h
++++ b/src/macro.h
+@@ -23,6 +23,7 @@
+ ***/
+ 
+ #include <assert.h>
++#include <sys/param.h>
+ #include <sys/types.h>
+ #include <sys/uio.h>
+ #include <inttypes.h>
+diff --git a/src/mount.c b/src/mount.c
+index 3dc14bb..8281082 100644
+--- a/src/mount.c
++++ b/src/mount.c
+@@ -271,7 +271,7 @@ static char* mount_test_option(const char *haystack, const char *needle) {
+          * struct mntent */
+ 
+         if (!haystack)
+-                return false;
++                return NULL;
+ 
+         zero(me);
+         me.mnt_opts = (char*) haystack;
+diff --git a/src/util.c b/src/util.c
+index 6065463..a488289 100644
+--- a/src/util.c
++++ b/src/util.c
+@@ -891,7 +891,7 @@ int load_env_file(
+                 char ***rl) {
+ 
+         FILE *f;
+-        char **m = 0;
++        char **m = NULL;
+         int r;
+ 
+         assert(fname);
+@@ -4172,7 +4172,7 @@ int wait_for_terminate_and_warn(const char *name, pid_t pid) {
+ 
+ }
+ 
+-void freeze(void) {
++_noreturn_ void freeze(void) {
+ 
+         /* Make sure nobody waits for us on a socket anymore */
+         close_all_fds(NULL, 0);

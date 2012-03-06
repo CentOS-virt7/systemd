@@ -21,6 +21,3 @@ index d9d195b..2c887a0 100644
                          freecon(fcon);
  
                          /* If the FS doesn't support labels, then exit without warning */
--- 
-1.7.7.5
-

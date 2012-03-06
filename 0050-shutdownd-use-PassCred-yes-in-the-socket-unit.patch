@@ -53,6 +53,3 @@ index bc0358a..13b6c7a 100644
  ListenDatagram=/run/systemd/shutdownd
  SocketMode=0600
 +PassCred=yes
--- 
-1.7.7.5
-

@@ -47,6 +47,3 @@ index 500bb7c..e74b559 100644
  
  # The service we activate on incoming traffic is
  # systemd-kmsg-syslogd.service. That doesn't mean however, that this
--- 
-1.7.7.5
-

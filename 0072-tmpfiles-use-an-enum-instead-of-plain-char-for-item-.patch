@@ -69,6 +69,3 @@ index 21bf44d..6171140 100644
  
          if (i->type != CREATE_FILE &&
              i->type != TRUNCATE_FILE &&
--- 
-1.7.7.5
-

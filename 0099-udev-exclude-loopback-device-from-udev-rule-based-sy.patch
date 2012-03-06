@@ -23,6 +23,3 @@ index b2481ae..d306f71 100644
  
  # Asynchronously mount file systems implemented by these modules as
  # soon as they are loaded.
--- 
-1.7.7.5
-

@@ -70,6 +70,3 @@ index 4cb5c55..1118999 100644
  
                  job_table.attach(new LeftLabel("Id:"),                      0, 1, 0, 1, AttachOptions.FILL, AttachOptions.FILL, 0, 0);
                  job_table.attach(job_id_label,                              1, 2, 0, 1, AttachOptions.EXPAND|AttachOptions.FILL, AttachOptions.FILL, 0, 0);
--- 
-1.7.7.5
-

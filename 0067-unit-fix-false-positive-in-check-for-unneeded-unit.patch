@@ -50,6 +50,3 @@ index 018e986..56137d7 100644
  
          if (UNIT_IS_ACTIVE_OR_ACTIVATING(unit_active_state(u)))
                  return true;
--- 
-1.7.7.5
-

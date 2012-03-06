@@ -30,6 +30,3 @@ index 28c8dc4..2f31242 100644
                                  <term><varname>TCPCongestion=</varname></term>
                                  <listitem><para>Takes a string
                                  value. Controls the TCP congestion
--- 
-1.7.7.5
-

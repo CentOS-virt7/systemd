@@ -61,6 +61,3 @@ index e78fd7c..6126eca 100644
                          return id.has_suffix(".snapshot");
                  default:
                          assert(false);
--- 
-1.7.7.5
-

@@ -29,6 +29,3 @@ index 54b22f4..a06cac1 100644
  
          for (p = paths; p < paths + n; p++)
                  if ((r = apply_mount(p, root_dir, inaccessible_dir, private_dir, flags)) < 0)
--- 
-1.7.7.5
-

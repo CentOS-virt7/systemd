@@ -245,6 +245,3 @@ index fe4c007..df9a09b 100644
  [Unit]
  Description=/etc/init.d/boot.local Compatibility
  ConditionFileIsExecutable=/etc/init.d/boot.local
--- 
-1.7.7.5
-

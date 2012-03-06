@@ -23,6 +23,3 @@ index f5f940f..106b12c 100644
 -StandardOutput=tty
  RemainAfterExit=yes
  SysVStartPriority=99
--- 
-1.7.7.5
-

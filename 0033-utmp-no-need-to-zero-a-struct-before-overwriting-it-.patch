@@ -22,6 +22,3 @@ index e7b2e3c..98c1a25 100644
          memcpy(&store, &lookup, sizeof(store));
          store.ut_type = DEAD_PROCESS;
          store.ut_exit.e_termination = code;
--- 
-1.7.7.5
-

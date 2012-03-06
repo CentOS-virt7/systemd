@@ -96,6 +96,3 @@ index 68652d0..c893da0 100644
          }
  
          public void on_job_removed(uint32 id, ObjectPath path, string res) {
--- 
-1.7.7.5
-

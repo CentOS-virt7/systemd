@@ -47,6 +47,3 @@ index 1e5d825..3fee247 100644
                  bool b;
  
                  b = access(s->path, F_OK) >= 0;
--- 
-1.7.7.5
-

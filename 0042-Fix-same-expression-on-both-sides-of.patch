@@ -27,6 +27,3 @@ index ad4063b..2a549e2 100644
              c->std_error != EXEC_OUTPUT_SYSLOG_AND_CONSOLE)
                  return 0;
  
--- 
-1.7.7.5
-

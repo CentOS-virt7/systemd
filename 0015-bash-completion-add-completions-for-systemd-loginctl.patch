@@ -101,6 +101,3 @@ index 0aa87af..176591f 100644
 +        return 0
 +}
 +complete -F _systemd_loginctl systemd-loginctl
--- 
-1.7.7.5
-

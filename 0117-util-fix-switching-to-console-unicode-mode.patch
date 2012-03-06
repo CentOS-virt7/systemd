@@ -31,6 +31,3 @@ index fce0a0c..a9d0821 100644
  
          if (tcgetattr(fd, &termios) < 0) {
                  r = -errno;
--- 
-1.7.7.5
-

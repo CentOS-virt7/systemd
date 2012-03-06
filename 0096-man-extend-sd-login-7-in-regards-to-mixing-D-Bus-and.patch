@@ -38,6 +38,3 @@ index 9926d2b..3fc0e16 100644
                  <para>If the functions return string arrays, these are
                  generally NULL terminated and need to be freed by the
                  caller with the libc
--- 
-1.7.7.5
-

@@ -22,6 +22,3 @@ index 98c1a25..00e19a3 100644
          store.ut_type = DEAD_PROCESS;
          store.ut_exit.e_termination = code;
          store.ut_exit.e_exit = status;
--- 
-1.7.7.5
-

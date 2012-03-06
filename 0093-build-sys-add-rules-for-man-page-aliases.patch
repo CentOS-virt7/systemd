@@ -35,6 +35,3 @@ index 3b2cbc2..c04125e 100644
  
  dist_man_MANS = \
  	$(MANPAGES) \
--- 
-1.7.7.5
-

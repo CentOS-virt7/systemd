@@ -1,0 +1,158 @@
+From bfa350c7e425a6d77fdaadffc8a2cc7c24452a5c Mon Sep 17 00:00:00 2001
+From: Michael Biebl <biebl@debian.org>
+Date: Mon, 13 Feb 2012 17:46:46 +0100
+Subject: [PATCH] Fix broken Git repository URLs (cherry picked from commit
+ a26c9cc60477acacf3a147009894bd837353ed6c)
+
+---
+ man/sd-daemon.xml     |    4 ++--
+ man/sd-readahead.xml  |    4 ++--
+ man/sd_booted.xml     |    4 ++--
+ man/sd_is_fifo.xml    |    4 ++--
+ man/sd_listen_fds.xml |    4 ++--
+ man/sd_notify.xml     |    4 ++--
+ man/sd_readahead.xml  |    4 ++--
+ src/sd-daemon.h       |    4 ++--
+ src/sd-readahead.h    |    4 ++--
+ 9 files changed, 18 insertions(+), 18 deletions(-)
+
+diff --git a/man/sd-daemon.xml b/man/sd-daemon.xml
+index 3f3a723..4ea88e4 100644
+--- a/man/sd-daemon.xml
++++ b/man/sd-daemon.xml
+@@ -130,8 +130,8 @@
+                 <para>In addition, for details about the algorithms
+                 check the liberally licensed reference implementation
+                 sources:
+-                <ulink url="http://cgit.freedesktop.org/systemd/plain/src/sd-daemon.c"/>
+-                resp. <ulink url="http://cgit.freedesktop.org/systemd/plain/src/systemd/sd-daemon.h"/></para>
++                <ulink url="http://cgit.freedesktop.org/systemd/systemd/plain/src/sd-daemon.c"/>
++                resp. <ulink url="http://cgit.freedesktop.org/systemd/systemd/plain/src/systemd/sd-daemon.h"/></para>
+ 
+                 <para>These APIs are implemented in the reference
+                 implementation's <filename>sd-daemon.c</filename> and
+diff --git a/man/sd-readahead.xml b/man/sd-readahead.xml
+index 7c21656..7fb8634 100644
+--- a/man/sd-readahead.xml
++++ b/man/sd-readahead.xml
+@@ -86,8 +86,8 @@
+                 <para>In addition, for details about the algorithms
+                 check the liberally licensed reference implementation
+                 sources:
+-                <ulink url="http://cgit.freedesktop.org/systemd/plain/src/readahead/sd-readahead.c"/>
+-                resp. <ulink url="http://cgit.freedesktop.org/systemd/plain/src/systemd/sd-readahead.h"/></para>
++                <ulink url="http://cgit.freedesktop.org/systemd/systemd/plain/src/readahead/sd-readahead.c"/>
++                resp. <ulink url="http://cgit.freedesktop.org/systemd/systemd/plain/src/systemd/sd-readahead.h"/></para>
+ 
+                 <para>These APIs are implemented in the reference
+                 implementation's drop-in
+diff --git a/man/sd_booted.xml b/man/sd_booted.xml
+index c876874..141625d 100644
+--- a/man/sd_booted.xml
++++ b/man/sd_booted.xml
+@@ -93,9 +93,9 @@
+ 
+                 <para>For details about the algorithm check the
+                 liberally licensed reference implementation sources:
+-                <ulink url="http://cgit.freedesktop.org/systemd/plain/src/sd-daemon.c"/>
++                <ulink url="http://cgit.freedesktop.org/systemd/systemd/plain/src/sd-daemon.c"/>
+                 resp. <ulink
+-                url="http://cgit.freedesktop.org/systemd/plain/src/systemd/sd-daemon.h"/></para>
++                url="http://cgit.freedesktop.org/systemd/systemd/plain/src/systemd/sd-daemon.h"/></para>
+ 
+                 <para><function>sd_booted()</function> is implemented
+                 in the reference implementation's
+diff --git a/man/sd_is_fifo.xml b/man/sd_is_fifo.xml
+index 6055893..4db5120 100644
+--- a/man/sd_is_fifo.xml
++++ b/man/sd_is_fifo.xml
+@@ -180,9 +180,9 @@
+ 
+                 <para>For details about the algorithms check the
+                 liberally licensed reference implementation sources:
+-                <ulink url="http://cgit.freedesktop.org/systemd/plain/src/sd-daemon.c"/>
++                <ulink url="http://cgit.freedesktop.org/systemd/systemd/plain/src/sd-daemon.c"/>
+                 resp. <ulink
+-                url="http://cgit.freedesktop.org/systemd/plain/src/systemd/sd-daemon.h"/></para>
++                url="http://cgit.freedesktop.org/systemd/systemd/plain/src/systemd/sd-daemon.h"/></para>
+ 
+                 <para><function>sd_is_fifo()</function> and the
+                 related functions are implemented in the reference
+diff --git a/man/sd_listen_fds.xml b/man/sd_listen_fds.xml
+index 09d0503..c3c70a0 100644
+--- a/man/sd_listen_fds.xml
++++ b/man/sd_listen_fds.xml
+@@ -140,9 +140,9 @@
+ 
+                 <para>For details about the algorithm check the
+                 liberally licensed reference implementation sources:
+-                <ulink url="http://cgit.freedesktop.org/systemd/plain/src/sd-daemon.c"/>
++                <ulink url="http://cgit.freedesktop.org/systemd/systemd/plain/src/sd-daemon.c"/>
+                 resp. <ulink
+-                url="http://cgit.freedesktop.org/systemd/plain/src/systemd/sd-daemon.h"/></para>
++                url="http://cgit.freedesktop.org/systemd/systemd/plain/src/systemd/sd-daemon.h"/></para>
+ 
+                 <para><function>sd_listen_fds()</function> is
+                 implemented in the reference implementation's
+diff --git a/man/sd_notify.xml b/man/sd_notify.xml
+index 0209146..d3508b8 100644
+--- a/man/sd_notify.xml
++++ b/man/sd_notify.xml
+@@ -208,9 +208,9 @@
+ 
+                 <para>For details about the algorithms check the
+                 liberally licensed reference implementation sources:
+-                <ulink url="http://cgit.freedesktop.org/systemd/plain/src/sd-daemon.c"/>
++                <ulink url="http://cgit.freedesktop.org/systemd/systemd/plain/src/sd-daemon.c"/>
+                 resp. <ulink
+-                url="http://cgit.freedesktop.org/systemd/plain/src/systemd/sd-daemon.h"/></para>
++                url="http://cgit.freedesktop.org/systemd/systemd/plain/src/systemd/sd-daemon.h"/></para>
+ 
+                 <para><function>sd_notify()</function> and
+                 <function>sd_notifyf()</function> are implemented in
+diff --git a/man/sd_readahead.xml b/man/sd_readahead.xml
+index 4b8c957..2e7e09c 100644
+--- a/man/sd_readahead.xml
++++ b/man/sd_readahead.xml
+@@ -129,9 +129,9 @@
+ 
+                 <para>For details about the algorithm check the
+                 liberally licensed reference implementation sources:
+-                <ulink url="http://cgit.freedesktop.org/systemd/plain/src/readahead/sd-readahead.c"/>
++                <ulink url="http://cgit.freedesktop.org/systemd/systemd/plain/src/readahead/sd-readahead.c"/>
+                 resp. <ulink
+-                url="http://cgit.freedesktop.org/systemd/plain/src/systemd/sd-readahead.h"/></para>
++                url="http://cgit.freedesktop.org/systemd/systemd/plain/src/systemd/sd-readahead.h"/></para>
+ 
+                 <para><function>sd_readahead()</function> is
+                 implemented in the reference implementation's drop-in
+diff --git a/src/sd-daemon.h b/src/sd-daemon.h
+index eb2a606..4c9ca4f 100644
+--- a/src/sd-daemon.h
++++ b/src/sd-daemon.h
+@@ -58,8 +58,8 @@ extern "C" {
+ 
+   You may find an up-to-date version of these source files online:
+ 
+-  http://cgit.freedesktop.org/systemd/plain/src/systemd/sd-daemon.h
+-  http://cgit.freedesktop.org/systemd/plain/src/sd-daemon.c
++  http://cgit.freedesktop.org/systemd/systemd/plain/src/systemd/sd-daemon.h
++  http://cgit.freedesktop.org/systemd/systemd/plain/src/sd-daemon.c
+ 
+   This should compile on non-Linux systems, too, but with the
+   exception of the sd_is_xxx() calls all functions will become NOPs.
+diff --git a/src/sd-readahead.h b/src/sd-readahead.h
+index afe6768..1f8c5a0 100644
+--- a/src/sd-readahead.h
++++ b/src/sd-readahead.h
+@@ -47,8 +47,8 @@ extern "C" {
+ 
+   You may find an up-to-date version of these source files online:
+ 
+-  http://cgit.freedesktop.org/systemd/plain/src/systemd/sd-readahead.h
+-  http://cgit.freedesktop.org/systemd/plain/src/readahead/sd-readahead.c
++  http://cgit.freedesktop.org/systemd/systemd/plain/src/systemd/sd-readahead.h
++  http://cgit.freedesktop.org/systemd/systemd/plain/src/readahead/sd-readahead.c
+ 
+   This should compile on non-Linux systems, too, but all functions
+   will become NOPs.

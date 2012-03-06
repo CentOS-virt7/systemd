@@ -140,6 +140,3 @@ index e4a554a..40a2a39 100644
  void status_welcome(void);
  
  int fd_columns(int fd);
--- 
-1.7.7.5
-

@@ -49,6 +49,3 @@ index d229301..65a45e1 100644
                  if (s->meta.default_dependencies)
                          if ((r = service_add_default_dependencies(s)) < 0)
                                  return r;
--- 
-1.7.7.5
-

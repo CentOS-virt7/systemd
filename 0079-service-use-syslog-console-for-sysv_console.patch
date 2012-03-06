@@ -23,6 +23,3 @@ index 175a729..d229301 100644
  
          s->exec_context.kill_mode = KILL_PROCESS;
  
--- 
-1.7.7.5
-

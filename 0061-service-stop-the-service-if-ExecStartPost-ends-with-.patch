@@ -55,6 +55,3 @@ index 0b03a8d..175a729 100644
                                  service_enter_running(s, true);
                                  break;
  
--- 
-1.7.7.5
-

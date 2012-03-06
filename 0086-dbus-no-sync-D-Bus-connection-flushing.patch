@@ -24,6 +24,3 @@ index 81b4f53..f9250f1 100644
          dbus_connection_close(c);
          dbus_connection_unref(c);
  }
--- 
-1.7.7.5
-

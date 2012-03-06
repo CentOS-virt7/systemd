@@ -58,6 +58,3 @@ index 4426f70..668641d 100644
              !streq(verbs[i].verb, "reenable") &&
              !streq(verbs[i].verb, "preset") &&
              !streq(verbs[i].verb, "mask") &&
--- 
-1.7.7.5
-

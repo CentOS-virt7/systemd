@@ -50,6 +50,3 @@ index 54a8640..4fa30a3 100644
  
          s->parameters_etc_fstab.priority = s->parameters_proc_swaps.priority = s->parameters_fragment.priority = -1;
  
--- 
-1.7.7.5
-

@@ -24,6 +24,3 @@ index dc0ef5b..cbd6d7f 100644
                          goto oom;
  
                  reply = dbus_message_new_method_return(message);
--- 
-1.7.7.5
-

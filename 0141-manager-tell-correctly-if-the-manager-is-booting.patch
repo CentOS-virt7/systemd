@@ -1,0 +1,81 @@
+From 4befb7d4d78893625052768ddb879bde47deb9f3 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Thu, 2 Feb 2012 12:39:33 +0100
+Subject: [PATCH] manager: tell correctly if the manager is booting
+
+The assumption that the initial job is the job with id==1 is incorrect.
+Some jobs may be enqueued before the job that starts the default unit as
+in this example:
+
+ -.mount changed dead -> mounted
+ Trying to enqueue job quotacheck.service/start/fail
+ Installed new job quotacheck.service/start as 1
+ Installed new job systemd-stdout-syslog-bridge.socket/start as 2
+ Enqueued job quotacheck.service/start as 1
+ Trying to enqueue job quotaon.service/start/fail
+ Installed new job quotaon.service/start as 5
+ Enqueued job quotaon.service/start as 5
+ Activating default unit: default.target
+ Trying to enqueue job graphical.target/start/replace
+
+This fixes a bug where displaying of boot status messages was turned off
+too early.
+(cherry picked from commit bacbccb78cec45c4759ef4291375605284248eb0)
+---
+ src/main.c    |    5 ++++-
+ src/manager.c |    2 +-
+ src/manager.h |    1 +
+ 3 files changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/src/main.c b/src/main.c
+index 87e0f32..e691720 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -1404,6 +1404,7 @@ int main(int argc, char *argv[]) {
+         } else {
+                 DBusError error;
+                 Unit *target = NULL;
++                Job *default_unit_job;
+ 
+                 dbus_error_init(&error);
+ 
+@@ -1440,11 +1441,13 @@ int main(int argc, char *argv[]) {
+                         manager_dump_units(m, stdout, "\t");
+                 }
+ 
+-                if ((r = manager_add_job(m, JOB_START, target, JOB_REPLACE, false, &error, NULL)) < 0) {
++                r = manager_add_job(m, JOB_START, target, JOB_REPLACE, false, &error, &default_unit_job);
++                if (r < 0) {
+                         log_error("Failed to start default target: %s", bus_error(&error, r));
+                         dbus_error_free(&error);
+                         goto finish;
+                 }
++                m->default_unit_job_id = default_unit_job->id;
+ 
+                 after_startup = now(CLOCK_MONOTONIC);
+                 log_full(arg_action == ACTION_TEST ? LOG_INFO : LOG_DEBUG,
+diff --git a/src/manager.c b/src/manager.c
+index 98106dd..003764e 100644
+--- a/src/manager.c
++++ b/src/manager.c
+@@ -2926,7 +2926,7 @@ bool manager_is_booting_or_shutting_down(Manager *m) {
+         assert(m);
+ 
+         /* Is the initial job still around? */
+-        if (manager_get_job(m, 1))
++        if (manager_get_job(m, m->default_unit_job_id))
+                 return true;
+ 
+         /* Is there a job for the shutdown target? */
+diff --git a/src/manager.h b/src/manager.h
+index 6e7558e..3455776 100644
+--- a/src/manager.h
++++ b/src/manager.h
+@@ -183,6 +183,7 @@ struct Manager {
+         int32_t subscribed_data_slot;
+ 
+         uint32_t current_job_id;
++        uint32_t default_unit_job_id;
+ 
+         /* Data specific to the Automount subsystem */
+         int dev_autofs_fd;

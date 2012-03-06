@@ -1,0 +1,24 @@
+From 1a587a67ab522dee3d11cad49d0d509ed5a081d2 Mon Sep 17 00:00:00 2001
+From: Mike Kazantsev <mk.fraggod@gmail.com>
+Date: Fri, 27 Jan 2012 21:13:42 +0100
+Subject: [PATCH] logind: add sys_tty_config capability, to let it use
+ VT_ACTIVATE ioctl on "activate" action (cherry picked from
+ commit 9c07474c6fa296195dcdc734d77792dff95f5c35)
+
+---
+ units/systemd-logind.service.in |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/units/systemd-logind.service.in b/units/systemd-logind.service.in
+index c332039..531b8f7 100644
+--- a/units/systemd-logind.service.in
++++ b/units/systemd-logind.service.in
+@@ -14,7 +14,7 @@ Description=Login Service
+ ExecStart=@rootlibexecdir@/systemd-logind
+ Type=dbus
+ BusName=org.freedesktop.login1
+-CapabilityBoundingSet=CAP_AUDIT_CONTROL CAP_CHOWN CAP_KILL CAP_DAC_READ_SEARCH CAP_DAC_OVERRIDE CAP_FOWNER
++CapabilityBoundingSet=CAP_AUDIT_CONTROL CAP_CHOWN CAP_KILL CAP_DAC_READ_SEARCH CAP_DAC_OVERRIDE CAP_FOWNER CAP_SYS_TTY_CONFIG
+ 
+ # Increase the default a bit in order to allow many simultaneous
+ # logins since we keep one fd open per session.

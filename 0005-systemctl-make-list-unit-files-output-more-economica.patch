@@ -74,6 +74,3 @@ index 0de2444..b0baf8d 100644
                  printf("\n%u unit files listed.\n", n_shown);
  }
  
--- 
-1.7.7.5
-

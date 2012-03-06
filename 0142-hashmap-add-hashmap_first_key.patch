@@ -1,0 +1,45 @@
+From 36d1d02befb6ffd302ea7a9cf1728345da9968e4 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 19 Dec 2011 19:54:51 +0100
+Subject: [PATCH] hashmap: add hashmap_first_key() (cherry picked from commit
+ 2e4a6ff47b311216829ed0f48f17ee9bc35641dc)
+
+---
+ src/hashmap.c |   11 +++++++++++
+ src/hashmap.h |    1 +
+ 2 files changed, 12 insertions(+), 0 deletions(-)
+
+diff --git a/src/hashmap.c b/src/hashmap.c
+index 95ea45d..7ef8097 100644
+--- a/src/hashmap.c
++++ b/src/hashmap.c
+@@ -558,6 +558,17 @@ void* hashmap_first(Hashmap *h) {
+         return h->iterate_list_head->value;
+ }
+ 
++void* hashmap_first_key(Hashmap *h) {
++
++        if (!h)
++                return NULL;
++
++        if (!h->iterate_list_head)
++                return NULL;
++
++        return (void*) h->iterate_list_head->key;
++}
++
+ void* hashmap_last(Hashmap *h) {
+ 
+         if (!h)
+diff --git a/src/hashmap.h b/src/hashmap.h
+index 16ffbd3..ab4363a 100644
+--- a/src/hashmap.h
++++ b/src/hashmap.h
+@@ -74,6 +74,7 @@ void hashmap_clear(Hashmap *h);
+ void *hashmap_steal_first(Hashmap *h);
+ void *hashmap_steal_first_key(Hashmap *h);
+ void* hashmap_first(Hashmap *h);
++void* hashmap_first_key(Hashmap *h);
+ void* hashmap_last(Hashmap *h);
+ 
+ char **hashmap_get_strv(Hashmap *h);

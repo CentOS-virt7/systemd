@@ -20,6 +20,3 @@ index 333d5f8..5cff2db 100644
  #include "dbus-common.h"
  #include "dbus-loop.h"
  #include "strv.h"
--- 
-1.7.7.5
-

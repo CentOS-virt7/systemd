@@ -21,6 +21,3 @@ index a8a6967..c1766e2 100644
                                  controlled via
                                  <varname>systemd.log_level=debug</varname>
                                  (resp. <varname>systemd.log_level=info</varname>
--- 
-1.7.7.5
-

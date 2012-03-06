@@ -89,6 +89,3 @@ index fd13ac4..fbd29da 100644
          int priority;
          int mark;
          size_t receive_buffer;
--- 
-1.7.7.5
-

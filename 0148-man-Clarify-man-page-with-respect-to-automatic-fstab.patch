@@ -1,0 +1,32 @@
+From bf3f210997575b700020ce1e209282fb75de5a65 Mon Sep 17 00:00:00 2001
+From: Bill Nottingham <notting@redhat.com>
+Date: Thu, 9 Feb 2012 20:04:38 +0100
+Subject: [PATCH] man: Clarify man page with respect to automatic fstab
+ dependencies
+
+Automatic mounts will be added if 'MountAuto=yes' is in system.conf,
+regardless of whether comment=systemd.mount is set.
+(cherry picked from commit 54f5e17193a6837c1b2d59abcd4f84ec61069f33)
+---
+ man/systemd.mount.xml |    8 +++++---
+ 1 files changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/man/systemd.mount.xml b/man/systemd.mount.xml
+index 1986784..8f1cc51 100644
+--- a/man/systemd.mount.xml
++++ b/man/systemd.mount.xml
+@@ -110,9 +110,11 @@
+                 few special mount options are understood by systemd
+                 which influence how dependencies are created for mount
+                 points from <filename>/etc/fstab</filename>. If
+-                <option>x-systemd.mount</option> is specified as mount
+-                option, then systemd will create a dependency of type
+-                <option>Wants</option> from either
++                <option>MountAuto=yes</option> is set in
++                <filename>system.conf</filename> (which is the
++                default), or if <option>x-systemd.mount</option> is
++                specified as mount option, then systemd will create a
++                dependency of type <option>Wants</option> from either
+                 <filename>local-fs.target</filename> or
+                 <filename>remote-fs.target</filename>, depending
+                 whether the file system is local or remote. If
