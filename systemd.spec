@@ -1,218 +1,59 @@
+#global gitcommit 9fa2f41
+
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
-BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Version:        37
-Release:        16%{?dist}
+Version:        44
+Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
-BuildRequires:  libudev-devel >= 160
+BuildRequires:  udev >= 179-2
+BuildRequires:  libudev-devel >= 179-2
 BuildRequires:  libcap-devel
 BuildRequires:  tcp_wrappers-devel
 BuildRequires:  pam-devel
 BuildRequires:  libselinux-devel
 BuildRequires:  audit-libs-devel
 BuildRequires:  cryptsetup-luks-devel
+BuildRequires:  dbus-devel
 BuildRequires:  libxslt
 BuildRequires:  docbook-style-xsl
-BuildRequires:  vala >= 0.11
 BuildRequires:  pkgconfig
-BuildRequires:  gtk2-devel
-BuildRequires:  glib2-devel
-BuildRequires:  libgee-devel
-BuildRequires:  libnotify-devel >= 0.7
 BuildRequires:  libacl-devel
+BuildRequires:  intltool >= 0.40.0
+BuildRequires:  gperf
+BuildRequires:  xz-devel
+BuildRequires:  kmod-devel >= 5
+%if %{defined gitcommit}
 BuildRequires:  automake
 BuildRequires:  autoconf
 BuildRequires:  libtool
-BuildRequires:  make
-BuildRequires:  intltool >= 0.40.0
-BuildRequires:  binutils
-BuildRequires:  gperf
-BuildRequires:  gawk
+%endif
 Requires(post): authconfig
-Requires:       systemd-units = %{version}-%{release}
+Requires(post): coreutils
+Requires(post): gawk
 Requires:       dbus >= 1.4.6-3.fc15
-Requires:       udev >= 167
-Requires:       libudev >= 160
+Requires:       udev >= 179-2
+Requires:       libudev >= 179-2
 Requires:       initscripts >= 9.28
-Requires:       filesystem >= 2.4.40
+Requires:       filesystem >= 3
 Conflicts:      selinux-policy < 3.9.16-12.fc15
 Conflicts:      kernel < 2.6.35.2-9.fc14
 Requires:       nss-myhostname
-Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.tar.bz2
+%if %{defined gitcommit}
+# Snapshot tarball can be created using: ./make-git-shapshot.sh [gitcommit]
+Source0:        %{name}-git%{gitcommit}.tar.xz
+%else
+Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.tar.xz
+%endif
 # Adds support for the %%{_unitdir} macro
 Source1:        macros.systemd
 Source2:        systemd-sysv-convert
 # Stop-gap, just to ensure things work out-of-the-box for this driver.
 Source3:        udlfb.conf
-# selected patches from v38
-Patch0001:      0001-util-properly-detect-what-the-last-capability-is.patch
-Patch0002:      0002-manager-fix-a-crash-in-isolating.patch
-Patch0003:      0003-audit-do-not-complain-if-kernel-lacks-audit.patch
-Patch0004:      0004-systemctl-completion-always-invoke-with-no-legend.patch
-Patch0005:      0005-systemctl-make-list-unit-files-output-more-economica.patch
-Patch0006:      0006-plymouth-fix-ply-proto-endianess-issues.patch
-Patch0007:      0007-random-seed-convert-poolsize-from-bits-to-bytes.patch
-Patch0008:      0008-condition-Fix-file-descriptor-leak-in-test_capabilit.patch
-Patch0009:      0009-initctl-don-t-use-dbus-connection-after-PID-1-got-re.patch
-Patch0010:      0010-cgroup-always-recreate-cgroup-before-we-try-to-apply.patch
-Patch0011:      0011-mount-order-remote-mounts-after-both-network.target-.patch
-Patch0012:      0012-units-drop-Install-section-from-remote-fs-pre.target.patch
-Patch0013:      0013-cryptsetup-generator-avoid-ordering-cycle-on-swap.patch
-Patch0014:      0014-bash-completion-update-with-new-verbs-and-arguments.patch
-Patch0015:      0015-bash-completion-add-completions-for-systemd-loginctl.patch
-Patch0016:      0016-bash-completion-rename-file-since-it-is-no-longer-fo.patch
-Patch0017:      0017-systemadm-break-timestamp-formatting-out-into-a-sepe.patch
-Patch0018:      0018-systemadm-allow-sorting-of-jobs-and-units.patch
-Patch0019:      0019-systemadm-split-the-type-status-combo-box-into-type-.patch
-Patch0020:      0020-systemadm-filter-on-swaps-paths-and-timers-too.patch
-Patch0021:      0021-systemadm-add-a-wrappable-label-and-use-it-for-statu.patch
-Patch0022:      0022-systemadm-add-libgee-as-dependency-and-use-it-for-a-.patch
-Patch0023:      0023-systemadm-display-dependencies-sorted.patch
-Patch0024:      0024-systemadm-use-color-for-dependency-links.patch
-Patch0025:      0025-systemadm-use-bold-for-requires-etc.patch
-Patch0026:      0026-systemadm-make-the-dependency-listing-selectable.patch
-Patch0027:      0027-systemadm-catch-exceptions-generated-by-dbus.patch
-Patch0028:      0028-systemadm-coalesce-id-and-decription-fields.patch
-Patch0029:      0029-systemadm-adjust-row-numbers-after-removing-aliases.patch
-Patch0030:      0030-systemadm-use-colors-for-id-too-remove-color-from-fr.patch
-Patch0031:      0031-cgroup-immediately-remove-all-cgroups-which-run-empt.patch
-Patch0032:      0032-utmp-remove-unneded-parameters.patch
-Patch0033:      0033-utmp-no-need-to-zero-a-struct-before-overwriting-it-.patch
-Patch0034:      0034-utmp-initialize-store-with-the-found-entry-not-with-.patch
-Patch0035:      0035-utmp-for-DEAD_PROCESS-write-the-current-time-to-wtmp.patch
-Patch0036:      0036-man-fix-a-typo-in-signal-number.patch
-Patch0037:      0037-units-drop-unnecessary-StandardOutput-syslog.patch
-Patch0038:      0038-units-fedora-let-rc-local.service-log-to-syslog.patch
-Patch0039:      0039-service-don-t-warn-if-the-pidfile-still-exists-after.patch
-Patch0040:      0040-job-colored-status-messages-on-boot.patch
-Patch0041:      0041-man-fix-typo-in-sd_notify.patch
-Patch0042:      0042-Fix-same-expression-on-both-sides-of.patch
-Patch0043:      0043-execute-avoid-logging-to-closed-fds.patch
-Patch0044:      0044-execute-make-setup_pam-return-errno-when-possible.patch
-Patch0045:      0045-execute-log-errors-from-sd-EXEC.patch
-Patch0046:      0046-pam-module-use-the-correct-session-type-unspecified.patch
-Patch0047:      0047-pam-module-treat-cron-in-PAM_TTY-as-empty-tty.patch
-Patch0048:      0048-let-mount-and-swap-units-log-to-the-configured-defau.patch
-Patch0049:      0049-socket-add-option-for-SO_PASSCRED.patch
-Patch0050:      0050-shutdownd-use-PassCred-yes-in-the-socket-unit.patch
-Patch0051:      0051-syslog-use-PassCred-yes-for-the-dev-log-socket.patch
-Patch0052:      0052-man-document-the-PassCred-option.patch
-Patch0053:      0053-add-a-generator-to-pull-rc-local.service-in.patch
-Patch0054:      0054-rc-local-no-need-to-check-if-the-script-is-executabl.patch
-Patch0055:      0055-rc-local-order-after-network.target.patch
-Patch0056:      0056-util-fix-error-checking-after-fgets.patch
-Patch0057:      0057-path-use-m-instead-of-strerror-errno.patch
-Patch0058:      0058-path-refactor-PathSpec-usage.patch
-Patch0059:      0059-path-add-PathModified-PathChanged-IN_MODIFY.patch
-Patch0060:      0060-service-handle-services-with-racy-daemonization-grac.patch
-Patch0061:      0061-service-stop-the-service-if-ExecStartPost-ends-with-.patch
-Patch0062:      0062-Allow-list-unit-files-to-run-with-root.patch
-Patch0063:      0063-unit-garbage-collect-units-with-load-error.patch
-Patch0064:      0064-systemctl-print-error-load-state-in-red.patch
-Patch0065:      0065-is-an-ampersat-not-an-ampersand-let-s-call-it-at-sym.patch
-Patch0066:      0066-path-add-missing-pieces-for-PathModified.patch
-Patch0067:      0067-unit-fix-false-positive-in-check-for-unneeded-unit.patch
-Patch0068:      0068-unit-check-for-unneeded-dependencies-even-when-unit-.patch
-Patch0069:      0069-pam-module-add-a-couple-of-debugging-prints.patch
-Patch0070:      0070-fsck-Fix-typo-in-comment.patch
-Patch0071:      0071-systemctl-fix-typo-in-is-enabled.patch
-Patch0072:      0072-tmpfiles-use-an-enum-instead-of-plain-char-for-item-.patch
-Patch0073:      0073-tmpfiles-rename-a-couple-of-functions.patch
-Patch0074:      0074-tmpfiles-use-a-common-function-to-set-owner-group-mo.patch
-Patch0075:      0075-tmpfiles-separate-a-generic-item-glob-processing-fun.patch
-Patch0076:      0076-tmpfiles-add-RECURSIVE_RELABEL_PATH-Z.patch
-Patch0077:      0077-man-document-Z-in-tmpfiles.patch
-Patch0078:      0078-man-mention-that-Z-ignores-uid-gid-mode.patch
-Patch0079:      0079-service-use-syslog-console-for-sysv_console.patch
-Patch0080:      0080-tmpfiles-apply-chown-chmod-for-Z-entries-too.patch
-Patch0081:      0081-tmpfiles-add-z-like-Z-but-not-recursive.patch
-Patch0082:      0082-man-fix-misplaced-remark-in-description-of-Sockets.patch
-Patch0083:      0083-execute-fix-losing-of-start-timestamps.patch
-Patch0084:      0084-label-fix-labeling-of-symbolic-links.patch
-Patch0085:      0085-dbus-register-to-DBus-asynchronously.patch
-Patch0086:      0086-dbus-no-sync-D-Bus-connection-flushing.patch
-Patch0087:      0087-log-never-block-on-syslog-in-PID-1.patch
-Patch0088:      0088-macro-fix-ALIGN_TO-macro-definition.patch
-Patch0089:      0089-man-document-the-sd-login-interfaces.patch
-Patch0090:      0090-sd-daemon-fix-include-lines-since-we-now-ship-a-shar.patch
-Patch0091:      0091-man-build-new-man-pages.patch
-Patch0092:      0092-man-sd_readahead-is-not-actually-available-in-libsys.patch
-Patch0093:      0093-build-sys-add-rules-for-man-page-aliases.patch
-Patch0094:      0094-man-add-sd-login-7-page.patch
-Patch0095:      0095-man-various-updates.patch
-Patch0096:      0096-man-extend-sd-login-7-in-regards-to-mixing-D-Bus-and.patch
-Patch0097:      0097-man-generate-HTML-instead-of-XHTML-with-XSL-docbook-.patch
-Patch0098:      0098-man-switch-to-UTF-8-output-to-work-around-charset-is.patch
-Patch0099:      0099-udev-exclude-loopback-device-from-udev-rule-based-sy.patch
-Patch0100:      0100-remount-api-vfs-handle-another-OOM-condition.patch
-Patch0101:      0101-socket-rename-the-PassCred-option-to-PassCredentials.patch
-Patch0102:      0102-socket-only-add-dependency-on-kmsg-socket-to-socket-.patch
-Patch0103:      0103-readahead-bring-export-definition-of-sd-readahead-in.patch
-Patch0104:      0104-nspawn-get-rid-of-BUFFER_SIZE-use-LINE_MAX-instead.patch
-Patch0105:      0105-namespace-remount-namespace-root-dir-for-SLAVE-to-av.patch
-Patch0106:      0106-logind-if-we-can-t-open-dev-tty0-assume-there-is-no-.patch
-Patch0107:      0107-logind-don-t-watch-vcsa-if-nobody-cares.patch
-Patch0108:      0108-man-fix-SEE-ALSO-in-hostname-5.patch
-Patch0109:      0109-logind-send-out-Lock-signal-when-locking.patch
-Patch0110:      0110-logind-add-needed-include-for-sd_notify.patch
-Patch0111:      0111-fix-compilation-error-with-PathSpec-redefined.patch
-Patch0112:      0112-util-when-printing-status-updates-during-boot-take-t.patch
-Patch0113:      0113-log-minor-optimization.patch
-Patch0114:      0114-util-never-ellipsize-welcome-message.patch
-Patch0115:      0115-headers-fix-git-URLs-for-source-files.patch
-Patch0116:      0116-README-correct-license-claims.patch
-Patch0117:      0117-util-fix-switching-to-console-unicode-mode.patch
-Patch0118:      0118-util-switch-the-console-to-text-mode-on-reset.patch
-Patch0119:      0119-service-add-dependencies-on-configured-sockets.patch
-Patch0120:      0120-unit-properly-update-references-to-units-which-are-m.patch
-Patch0121:      0121-main-fix-spelling.patch
-Patch0122:      0122-load-fragment-fix-parsing-of-Socket-setting.patch
-Patch0123:      0123-fix-compiler-warning.patch
-Patch0124:      0124-shutdown-exclude-processes-with-argv-0-0-from-killin.patch
-Patch0125:      0125-shutdown-add-link-to-root-storage-daemon-text.patch
-Patch0126:      0126-unit-implement-new-PropagateReloadTo-PropagateReload.patch
-# from v39:
-Patch0127:      0127-tmpfiles-fix-parsing-of-proc-net-unix-on-32Bit-machi.patch
-Patch0128:      0128-pam-work-correctly-if-a-seat-is-specified-but-not-vt.patch
-Patch0129:      0129-pam-fix-build.patch
-Patch0130:      0130-mount-fix-quota.patch
-Patch0131:      0131-logind-downgrade-login-message-to-debug.patch
-Patch0132:      0132-service-add-missing-pid-file-unwatch-in-the-destruct.patch
-Patch0133:      0133-socket-don-t-fail-the-socket-on-ENOTCONN.patch
-# from v40:
-Patch0134:      0134-mount-fix-automount-regression.patch
-Patch0135:      0135-logind-make-sure-we-create-var-lib-systemd-before-us.patch
-Patch0136:      0136-logind-add-sys_tty_config-capability-to-let-it-use-V.patch
-Patch0137:      0137-main-don-t-force-text-mode-in-console_setup.patch
-Patch0138:      0138-load-fragment-properly-parse-size-values-denoted-in-.patch
-Patch0139:      0139-socket-typo-in-dump-output.patch
-Patch0140:      0140-man-document-that-we-support-tcpwrappers-only-for-ac.patch
-Patch0141:      0141-manager-tell-correctly-if-the-manager-is-booting.patch
-Patch0142:      0142-hashmap-add-hashmap_first_key.patch
-Patch0143:      0143-util-prevent-daemon-reload-from-reaping-service-proc.patch
-# from v41:
-Patch0144:      0144-logind-fix-introspection-data.patch
-Patch0145:      0145-man-document-x-systemd-device-timeout.patch
-# from v42:
-Patch0146:      0146-systemctl-check-for-no-more-work-after-chkconfig.patch
-Patch0147:      0147-install-fix-incorrect-Access-denied-message-with-a-n.patch
-Patch0148:      0148-man-Clarify-man-page-with-respect-to-automatic-fstab.patch
-Patch0149:      0149-logind-Allow-PowerOff-Reboot-in-default-context.patch
-Patch0150:      0150-util-fix-handling-of-empty-files-in-read_one_line_fi.patch
-# from v43:
-Patch0151:      0151-Fix-broken-Git-repository-URLs.patch
-Patch0152:      0152-timedate-don-t-fail-if-NTP-is-not-installed.patch
-Patch0153:      0153-namespace-temporaily-reset-umask-when-creating-priva.patch
-Patch0154:      0154-logind-move-X11-socket.patch
-# from v44:
-Patch0155:      0155-fix-sparse-warnings.patch
-Patch0156:      0156-socket-fail-the-socket-if-the-service-keeps-dying-on.patch
-Patch0157:      0157-socket-rename-broken-failure-result-to-failed-perman.patch
-Patch0158:      0158-nspawn-be-less-cryptic-when-clone-fails.patch
-Patch0159:      0159-bash-completion-get-rid-of-awk-sed-and-grep.patch
-Patch0160:      0160-mount-properly-check-return-for-mount_add_.patch
+# Stop-gap, just to ensure things work fine with rsyslog without having to change the package right-away
+Source4:        listen.conf
+Patch0:         systemd-PAGE_SIZE.patch
 
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
@@ -225,9 +66,12 @@ Obsoletes:      upstart-sysvinit < 1.2-3
 Conflicts:      upstart-sysvinit
 Obsoletes:      readahead < 1:1.5.7-3
 Provides:       readahead = 1:1.5.7-3
-
-# since 37-6 we rely more strongly on PIDFile= being correct (BZ#783108)
-Conflicts:      spamassassin < 3.3.2-9
+Provides:       /bin/systemctl
+Provides:       /sbin/shutdown
+Obsoletes:      systemd-units < 38-5
+Provides:       systemd-units = %{version}-%{release}
+# for the systemd-analyze split:
+Obsoletes:      systemd < 38-5
 
 %description
 systemd is a system and service manager for Linux, compatible with
@@ -239,34 +83,13 @@ state, maintains mount and automount points and implements an
 elaborate transactional dependency-based service control logic. It can
 work as a drop-in replacement for sysvinit.
 
-%package units
-Group:          System Environment/Base
-Summary:        Configuration files, directories and installation tool for systemd
-Requires:       pkgconfig
-Requires(post): coreutils
-Requires(post): gawk
-
-%description units
-Basic configuration files, directories and installation tool for the systemd
-system and service manager.
-
 %package devel
 Group:          System Environment/Base
 Summary:        Development headers for systemd
 Requires:       %{name} = %{version}-%{release}
-Requires:       pkgconfig
 
 %description devel
 Development headers and auxiliary files for developing applications for systemd.
-
-%package gtk
-Group:          System Environment/Base
-Summary:        Graphical frontend for systemd
-Requires:       %{name} = %{version}-%{release}
-Requires:       polkit
-
-%description gtk
-Graphical front-end for systemd.
 
 %package sysv
 Group:          System Environment/Base
@@ -276,35 +99,45 @@ Requires:       %{name} = %{version}-%{release}
 %description sysv
 SysV compatibility tools for systemd
 
+%package analyze
+Group:          System Environment/Base
+Summary:        Tool for processing systemd profiling information
+Requires:       %{name} = %{version}-%{release}
+Requires:       dbus-python
+Requires:       pycairo
+# for the systemd-analyze split:
+Obsoletes:      systemd < 38-5
+
+%description analyze
+'systemd-analyze blame' lists which systemd unit needed how much time to finish
+initialization at boot.
+'systemd-analyze plot' renders an SVG visualizing the parallel start of units
+at boot.
+
 %prep
-%setup -q
-set +x
-for p in %{patches}; do
-	echo "Applying $p"
-	patch -p1 < $p
-done
-set -x
+%setup -q %{?gitcommit:-n %{name}-git%{gitcommit}}
+%patch0 -p1
 
 %build
-autoreconf -i
-%configure --with-rootdir= --with-distro=fedora --with-rootlibdir=/%{_lib}
+%{?gitcommit: ./autogen.sh }
+%configure --with-distro=fedora --disable-static
 make %{?_smp_mflags}
 
 %install
-rm -rf %{buildroot}
 make DESTDIR=%{buildroot} install
 find %{buildroot} \( -name '*.a' -o -name '*.la' \) -exec rm {} \;
 
 # Create SysV compatibility symlinks. systemctl/systemd are smart
 # enough to detect in which way they are called.
-mkdir -p %{buildroot}/sbin
-ln -s ../bin/systemd %{buildroot}/sbin/init
-ln -s ../bin/systemctl %{buildroot}/sbin/reboot
-ln -s ../bin/systemctl %{buildroot}/sbin/halt
-ln -s ../bin/systemctl %{buildroot}/sbin/poweroff
-ln -s ../bin/systemctl %{buildroot}/sbin/shutdown
-ln -s ../bin/systemctl %{buildroot}/sbin/telinit
-ln -s ../bin/systemctl %{buildroot}/sbin/runlevel
+mkdir -p %{buildroot}/%{_sbindir}
+ln -s ../lib/systemd/systemd %{buildroot}%{_sbindir}/init
+ln -s ../lib/systemd/systemd %{buildroot}%{_bindir}/systemd
+ln -s ../bin/systemctl %{buildroot}%{_sbindir}/reboot
+ln -s ../bin/systemctl %{buildroot}%{_sbindir}/halt
+ln -s ../bin/systemctl %{buildroot}%{_sbindir}/poweroff
+ln -s ../bin/systemctl %{buildroot}%{_sbindir}/shutdown
+ln -s ../bin/systemctl %{buildroot}%{_sbindir}/telinit
+ln -s ../bin/systemctl %{buildroot}%{_sbindir}/runlevel
 
 # We create all wants links manually at installation time to make sure
 # they are not owned and hence overriden by rpm after the used deleted
@@ -318,16 +151,18 @@ touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel4.target
 touch %{buildroot}%{_sysconfdir}/systemd/system/runlevel5.target
 
 # Make sure these directories are properly owned
-mkdir -p %{buildroot}/lib/systemd/system/basic.target.wants
-mkdir -p %{buildroot}/lib/systemd/system/default.target.wants
-mkdir -p %{buildroot}/lib/systemd/system/dbus.target.wants
-mkdir -p %{buildroot}/lib/systemd/system/syslog.target.wants
+mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/basic.target.wants
+mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/default.target.wants
+mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/dbus.target.wants
+mkdir -p %{buildroot}%{_prefix}/lib/systemd/system/syslog.target.wants
+
+# Make sure the user generators dir exists too
+mkdir -p %{buildroot}%{_prefix}/lib/systemd/user-generators
 
 # Create new-style configuration files so that we can ghost-own them
 touch %{buildroot}%{_sysconfdir}/hostname
 touch %{buildroot}%{_sysconfdir}/vconsole.conf
 touch %{buildroot}%{_sysconfdir}/locale.conf
-touch %{buildroot}%{_sysconfdir}/os-release
 touch %{buildroot}%{_sysconfdir}/machine-id
 touch %{buildroot}%{_sysconfdir}/machine-info
 touch %{buildroot}%{_sysconfdir}/timezone
@@ -345,11 +180,23 @@ install -m 0755 %{SOURCE2} %{buildroot}%{_bindir}/
 mkdir -p %{buildroot}%{_sysconfdir}/modprobe.d/
 install -m 0644 %{SOURCE3} %{buildroot}%{_sysconfdir}/modprobe.d/
 
-%clean
-rm -rf $RPM_BUILD_ROOT
+# Install rsyslog fragment
+mkdir -p %{buildroot}%{_sysconfdir}/rsyslog.d/
+install -m 0644 %{SOURCE4} %{buildroot}%{_sysconfdir}/rsyslog.d/
+
+# To avoid making life hard for Rawhide-using developers, don't package the
+# kernel.core_pattern setting until systemd-coredump is a part of an actual
+# systemd release and it's made clear how to get the core dumps out of the
+# journal.
+rm -f %{buildroot}%{_prefix}/lib/sysctl.d/coredump.conf
+
+# Let rsyslog read from /proc/kmsg for now
+sed -i -e 's/\#ImportKernel=yes/ImportKernel=no/' %{buildroot}%{_sysconfdir}/systemd/systemd-journald.conf
 
 %post
-/bin/systemd-machine-id-setup > /dev/null 2>&1 || :
+/sbin/ldconfig
+/usr/bin/systemd-machine-id-setup > /dev/null 2>&1 || :
+/usr/lib/systemd/systemd-random-seed save > /dev/null 2>&1 || :
 /bin/systemctl daemon-reexec > /dev/null 2>&1 || :
 
 # Make sure pam_systemd is enabled
@@ -360,19 +207,17 @@ if ! /bin/grep -q pam_systemd /etc/pam.d/system-auth-ac >/dev/null 2>&1 || ! [ -
         /bin/grep -q pam_systemd /etc/pam.d/system-auth-ac >/dev/null 2>&1 || /usr/sbin/authconfig --updateall --nostart >/dev/null 2>&1 || :
 fi
 
-%postun
-if [ $1 -ge 1 ] ; then
-        /bin/systemctl try-restart systemd-logind.service >/dev/null 2>&1 || :
-fi
+# Stop-gap until rsyslog.rpm does this on its own. (This is supposed
+# to fail when the link already exists)
+/bin/ln -s /usr/lib/systemd/system/rsyslog.service /etc/systemd/system/syslog.service >/dev/null 2>&1 || :
 
-%post units
 if [ $1 -eq 1 ] ; then
         # Try to read default runlevel from the old inittab if it exists
         runlevel=$(/bin/awk -F ':' '$3 == "initdefault" && $1 !~ "^#" { print $2 }' /etc/inittab 2> /dev/null)
         if [ -z "$runlevel" ] ; then
-                target="/lib/systemd/system/graphical.target"
+                target="/usr/lib/systemd/system/graphical.target"
         else
-                target="/lib/systemd/system/runlevel$runlevel.target"
+                target="/usr/lib/systemd/system/runlevel$runlevel.target"
         fi
 
         # And symlink what we found to the new-style default.target
@@ -390,7 +235,14 @@ else
         /bin/rm -f /etc/systemd/system/sysinit.target.wants/hwclock-load.service >/dev/null 2>&1 || :
 fi
 
-%preun units
+%postun
+/sbin/ldconfig
+if [ $1 -ge 1 ] ; then
+        /bin/systemctl daemon-reload > /dev/null 2>&1 || :
+        /bin/systemctl try-restart systemd-logind.service >/dev/null 2>&1 || :
+fi
+
+%preun
 if [ $1 -eq 0 ] ; then
         /bin/systemctl disable \
                 getty@.service \
@@ -401,13 +253,25 @@ if [ $1 -eq 0 ] ; then
         /bin/rm -f /etc/systemd/system/default.target >/dev/null 2>&1 || :
 fi
 
-%postun units
-if [ $1 -ge 1 ] ; then
-        /bin/systemctl daemon-reload > /dev/null 2>&1 || :
-fi
-
 %files
-%defattr(-,root,root,-)
+%doc %{_docdir}/systemd
+%dir %{_sysconfdir}/systemd
+%dir %{_sysconfdir}/systemd/system
+%dir %{_sysconfdir}/systemd/user
+%dir %{_sysconfdir}/tmpfiles.d
+%dir %{_sysconfdir}/sysctl.d
+%dir %{_sysconfdir}/modules-load.d
+%dir %{_sysconfdir}/binfmt.d
+%dir %{_sysconfdir}/bash_completion.d
+%dir %{_prefix}/lib/systemd
+%dir %{_prefix}/lib/systemd/system-generators
+%dir %{_prefix}/lib/systemd/user-generators
+%dir %{_prefix}/lib/systemd/system-shutdown
+%dir %{_prefix}/lib/tmpfiles.d
+%dir %{_prefix}/lib/sysctl.d
+%dir %{_prefix}/lib/modules-load.d
+%dir %{_prefix}/lib/binfmt.d
+%dir %{_datadir}/systemd
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.systemd1.conf
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.hostname1.conf
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.login1.conf
@@ -416,52 +280,61 @@ fi
 %config(noreplace) %{_sysconfdir}/systemd/system.conf
 %config(noreplace) %{_sysconfdir}/systemd/user.conf
 %config(noreplace) %{_sysconfdir}/systemd/systemd-logind.conf
+%config(noreplace) %{_sysconfdir}/systemd/systemd-journald.conf
+%{_sysconfdir}/bash_completion.d/systemd-bash-completion.sh
+%{_sysconfdir}/rpm/macros.systemd
 %{_sysconfdir}/xdg/systemd
-%{_libdir}/../lib/tmpfiles.d/systemd.conf
-%{_libdir}/../lib/tmpfiles.d/x11.conf
-%{_libdir}/../lib/tmpfiles.d/legacy.conf
-%{_libdir}/../lib/tmpfiles.d/tmp.conf
+%{_prefix}/lib/tmpfiles.d/systemd.conf
+%{_prefix}/lib/tmpfiles.d/x11.conf
+%{_prefix}/lib/tmpfiles.d/legacy.conf
+%{_prefix}/lib/tmpfiles.d/tmp.conf
 %ghost %config(noreplace) %{_sysconfdir}/hostname
 %ghost %config(noreplace) %{_sysconfdir}/vconsole.conf
 %ghost %config(noreplace) %{_sysconfdir}/locale.conf
-%ghost %config(noreplace) %{_sysconfdir}/os-release
 %ghost %config(noreplace) %{_sysconfdir}/machine-id
 %ghost %config(noreplace) %{_sysconfdir}/machine-info
 %ghost %config(noreplace) %{_sysconfdir}/timezone
 %ghost %config(noreplace) %{_sysconfdir}/X11/xorg.conf.d/00-keyboard.conf
-/bin/systemd
-/bin/systemd-notify
-/bin/systemd-ask-password
-/bin/systemd-tty-ask-password-agent
-/bin/systemd-machine-id-setup
-/bin/systemd-loginctl
-/usr/bin/systemd-nspawn
-/usr/bin/systemd-stdio-bridge
-/usr/bin/systemd-analyze
-/lib/systemd/systemd-*
-/lib/udev/rules.d/*.rules
-/lib/systemd/system-generators/systemd-cryptsetup-generator
-/lib/systemd/system-generators/systemd-getty-generator
-/lib/systemd/system-generators/systemd-rc-local-generator
-/%{_lib}/security/pam_systemd.so
-/%{_lib}/libsystemd-daemon.so.*
-/%{_lib}/libsystemd-login.so.*
-/sbin/init
-/sbin/reboot
-/sbin/halt
-/sbin/poweroff
-/sbin/shutdown
-/sbin/telinit
-/sbin/runlevel
+%config(noreplace) %{_sysconfdir}/rsyslog.d/listen.conf
+%{_prefix}/lib/systemd/systemd
+%{_bindir}/systemd
+%{_bindir}/systemctl
+%{_bindir}/systemd-notify
+%{_bindir}/systemd-ask-password
+%{_bindir}/systemd-tty-ask-password-agent
+%{_bindir}/systemd-machine-id-setup
+%{_bindir}/systemd-loginctl
+%{_bindir}/systemd-journalctl
+%{_bindir}/systemd-tmpfiles
+%{_bindir}/systemd-nspawn
+%{_bindir}/systemd-stdio-bridge
+%{_bindir}/systemd-cat
 %{_bindir}/systemd-cgls
+%{_bindir}/systemd-cgtop
+%{_prefix}/lib/systemd/system
+%{_prefix}/lib/systemd/user
+%{_prefix}/lib/systemd/systemd-*
+%{_prefix}/lib/udev/rules.d/*.rules
+%{_prefix}/lib/systemd/system-generators/systemd-cryptsetup-generator
+%{_prefix}/lib/systemd/system-generators/systemd-getty-generator
+%{_prefix}/lib/systemd/system-generators/systemd-rc-local-generator
+%{_libdir}/security/pam_systemd.so
+%{_libdir}/libsystemd-daemon.so.*
+%{_libdir}/libsystemd-login.so.*
+%{_libdir}/libsystemd-journal.so.*
+%{_libdir}/libsystemd-id128.so.*
+%{_sbindir}/init
+%{_sbindir}/reboot
+%{_sbindir}/halt
+%{_sbindir}/poweroff
+%{_sbindir}/shutdown
+%{_sbindir}/telinit
+%{_sbindir}/runlevel
 %{_mandir}/man1/*
-%exclude %{_mandir}/man1/systemctl.*
 %exclude %{_mandir}/man1/systemadm.*
-%{_mandir}/man3/*
 %{_mandir}/man5/*
 %{_mandir}/man7/*
 %{_mandir}/man8/*
-%{_libdir}/../lib/systemd
 %{_datadir}/systemd/kbd-model-map
 %{_datadir}/dbus-1/services/org.freedesktop.systemd1.service
 %{_datadir}/dbus-1/system-services/org.freedesktop.systemd1.service
@@ -473,39 +346,13 @@ fi
 %{_datadir}/dbus-1/interfaces/org.freedesktop.hostname1.xml
 %{_datadir}/dbus-1/interfaces/org.freedesktop.locale1.xml
 %{_datadir}/dbus-1/interfaces/org.freedesktop.timedate1.xml
-%{_docdir}/systemd
 %{_datadir}/polkit-1/actions/org.freedesktop.systemd1.policy
 %{_datadir}/polkit-1/actions/org.freedesktop.hostname1.policy
 %{_datadir}/polkit-1/actions/org.freedesktop.login1.policy
 %{_datadir}/polkit-1/actions/org.freedesktop.locale1.policy
 %{_datadir}/polkit-1/actions/org.freedesktop.timedate1.policy
-%config(noreplace) %{_sysconfdir}/modprobe.d/udlfb.conf
-
-%files units
-%defattr(-,root,root,-)
-%dir %{_sysconfdir}/systemd
-%dir %{_sysconfdir}/systemd/system
-%dir %{_sysconfdir}/systemd/user
-%dir %{_sysconfdir}/tmpfiles.d
-%dir %{_sysconfdir}/sysctl.d
-%dir %{_sysconfdir}/modules-load.d
-%dir %{_sysconfdir}/binfmt.d
-%dir %{_sysconfdir}/bash_completion.d
-%dir /lib/systemd
-%dir /lib/systemd/system-generators
-%dir /lib/systemd/system-shutdown
-%dir %{_libdir}/../lib/tmpfiles.d
-%dir %{_libdir}/../lib/sysctl.d
-%dir %{_libdir}/../lib/modules-load.d
-%dir %{_libdir}/../lib/binfmt.d
-/lib/systemd/system
-/bin/systemctl
-/bin/systemd-tmpfiles
-%{_sysconfdir}/bash_completion.d/systemd-bash-completion.sh
-%{_sysconfdir}/rpm/macros.systemd
-%{_mandir}/man1/systemctl.*
 %{_datadir}/pkgconfig/systemd.pc
-%{_docdir}/systemd/LICENSE
+%config(noreplace) %{_sysconfdir}/modprobe.d/udlfb.conf
 
 # Make sure we don't remove runlevel targets from F14 alpha installs,
 # but make sure we don't create then anew.
@@ -514,72 +361,104 @@ fi
 %ghost %config(noreplace) %{_sysconfdir}/systemd/system/runlevel4.target
 %ghost %config(noreplace) %{_sysconfdir}/systemd/system/runlevel5.target
 
-%files gtk
-%defattr(-,root,root,-)
-%{_bindir}/systemadm
-%{_bindir}/systemd-gnome-ask-password-agent
-%{_mandir}/man1/systemadm.*
-
 %files devel
-%defattr(-,root,root,-)
 %{_libdir}/libsystemd-daemon.so
 %{_libdir}/libsystemd-login.so
-%{_includedir}/systemd/sd-login.h
+%{_libdir}/libsystemd-journal.so
+%{_libdir}/libsystemd-id128.so
 %{_includedir}/systemd/sd-daemon.h
+%{_includedir}/systemd/sd-login.h
+%{_includedir}/systemd/sd-journal.h
+%{_includedir}/systemd/sd-id128.h
+%{_includedir}/systemd/sd-messages.h
 %{_libdir}/pkgconfig/libsystemd-daemon.pc
 %{_libdir}/pkgconfig/libsystemd-login.pc
+%{_libdir}/pkgconfig/libsystemd-journal.pc
+%{_libdir}/pkgconfig/libsystemd-id128.pc
+%{_mandir}/man3/*
 
 %files sysv
-%defattr(-,root,root,-)
 %{_bindir}/systemd-sysv-convert
 
+%files analyze
+%{_bindir}/systemd-analyze
+
 %changelog
-* Tue Mar 06 2012 Michal Schmidt <mschmidt@redhat.com> - 37-16
-- From upstream:
-  - avoid socket tarpits when the service keeps failing
-  - get rid of awk, sed, grep in bash completion
-  - and minor fixes
+* Mon Mar 26 2012 Dennis Gilmore <dennis@ausil.us> - 44-3
+- apply patch from upstream so we can build systemd on arm and ppc
+- and likely the rest of the secondary arches
 
-* Thu Mar 01 2012 Michal Schmidt <mschmidt@redhat.com> - 37-15
-- logind: move X11 socket
+* Tue Mar 20 2012 Michal Schmidt <mschmidt@redhat.com> - 44-2
+- Don't build the gtk parts anymore. They're moving into systemd-ui.
+- Remove a dead patch file.
 
-* Mon Feb 27 2012 Michal Schmidt <mschmidt@redhat.com> - 37-14
-- A few fixes from upstream:
-  - PrivateTmp permissions (#790522)
-  - timedated without ntp installed (#790260)
-  - logind: allow PowerOff and Reboot via polkit
-  - loading empty files in read_one_line_file() (fdo#45362)
-  - fix cgit URLs in manpages
+* Fri Mar 16 2012 Lennart Poettering <lpoetter@redhat.com> - 44-1
+- New upstream release
+- Closes #798760, #784921, #783134, #768523, #781735
 
-* Thu Feb 09 2012 Michal Schmidt <mschmidt@redhat.com> - 37-13
-- Minor fixes and some manpage updates from upstream.
+* Mon Feb 27 2012 Dennis Gilmore <dennis@ausil.us> - 43-2
+- don't conflict with fedora-release systemd never actually provided
+- /etc/os-release so there is no actual conflict
 
-* Sun Jan 29 2012 Michal Schmidt <mschmidt@redhat.com> - 37-12
-- Avoid a glitch with plymouth (#785548).
-- Fix logind capabilities.
+* Wed Feb 15 2012 Lennart Poettering <lpoetter@redhat.com> - 43-1
+- New upstream release
+- Closes #789758, #790260, #790522
 
-* Thu Jan 26 2012 Michal Schmidt <mschmidt@redhat.com> - 37-11
-- Fix automount regression.
+* Sat Feb 11 2012 Lennart Poettering <lpoetter@redhat.com> - 42-1
+- New upstream release
+- Save a bit of entropy during system installation (#789407)
+- Don't own /etc/os-release anymore, leave that to fedora-release
 
-* Sat Jan 21 2012 Michal Schmidt <mschmidt@redhat.com> - 37-10
-- Fix occasionally failing socket units with Accept=yes (#783344).
+* Thu Feb  9 2012 Adam Williamson <awilliam@redhat.com> - 41-2
+- rebuild for fixed binutils
 
-* Fri Jan 20 2012 Michal Schmidt <mschmidt@redhat.com> - 37-9
-- Fix a crash related to pid file watch and daemon-reload (#783118).
-- Added Conflicts with known broken spamassassin.
+* Thu Feb  9 2012 Lennart Poettering <lpoetter@redhat.com> - 41-1
+- New upstream release
 
-* Tue Jan 17 2012 Michal Schmidt <mschmidt@redhat.com> - 37-8
-- Shut up another logind message (#727315).
+* Tue Feb  7 2012 Lennart Poettering <lpoetter@redhat.com> - 40-1
+- New upstream release
 
-* Sat Jan 14 2012 Michal Schmidt <mschmidt@redhat.com> - 37-7
-- Fix for quota and a couple of other issues.
+* Thu Jan 26 2012 Kay Sievers <kay@redhat.com> - 39-3
+- provide /sbin/shutdown
 
-* Wed Jan 11 2012 Michal Schmidt <mschmidt@redhat.com> - 37-6
-- Fixes and low-risk enhancements (no journald) from upstream v38.
+* Wed Jan 25 2012 Harald Hoyer <harald@redhat.com> 39-2
+- increment release
 
-* Thu Dec 02 2011 Karsten Hopp <karsten@redhat.com> - 37-5
-- add upstream patch for bugzilla 744415, encrypted filesystem passphrases 
-  fail on runtime systems in hvc consoles
+* Wed Jan 25 2012 Kay Sievers <kay@redhat.com> - 39-1.1
+- install everything in /usr
+  https://fedoraproject.org/wiki/Features/UsrMove
+
+* Wed Jan 25 2012 Lennart Poettering <lpoetter@redhat.com> - 39-1
+- New upstream release
+
+* Sun Jan 22 2012 Michal Schmidt <mschmidt@redhat.com> - 38-6.git9fa2f41
+- Update to a current git snapshot.
+- Resolves: #781657
+
+* Sun Jan 22 2012 Michal Schmidt <mschmidt@redhat.com> - 38-5
+- Build against libgee06. Reenable gtk tools.
+- Delete unused patches.
+- Add easy building of git snapshots.
+- Remove legacy spec file elements.
+- Don't mention implicit BuildRequires.
+- Configure with --disable-static.
+- Merge -units into the main package.
+- Move section 3 manpages to -devel.
+- Fix unowned directory.
+- Run ldconfig in scriptlets.
+- Split systemd-analyze to a subpackage.
+
+* Sat Jan 21 2012 Dan Horák <dan[at]danny.cz> - 38-4
+- fix build on big-endians
+
+* Wed Jan 11 2012 Lennart Poettering <lpoetter@redhat.com> - 38-3
+- Disable building of gtk tools for now
+
+* Wed Jan 11 2012 Lennart Poettering <lpoetter@redhat.com> - 38-2
+- Fix a few (build) dependencies
+
+* Wed Jan 11 2012 Lennart Poettering <lpoetter@redhat.com> - 38-1
+- New upstream release
 
 * Tue Nov 15 2011 Michal Schmidt <mschmidt@redhat.com> - 37-4
 - Run authconfig if /etc/pam.d/system-auth is not a symlink.
