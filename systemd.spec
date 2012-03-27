@@ -3,7 +3,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        44
-Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        3.1%{?gitcommit:.git%{gitcommit}}%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -384,6 +384,9 @@ fi
 %{_bindir}/systemd-analyze
 
 %changelog
+* Tue Mar 27 2012 Daniel Mach <dmach@redhat.com> - 44-3.1
+- rebuild with cryptsetup
+
 * Mon Mar 26 2012 Dennis Gilmore <dennis@ausil.us> - 44-3
 - apply patch from upstream so we can build systemd on arm and ppc
 - and likely the rest of the secondary arches
