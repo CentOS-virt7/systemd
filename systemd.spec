@@ -3,7 +3,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        44
-Release:        3.1%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        6%{?gitcommit:.git%{gitcommit}}%{?dist}
 License:        GPLv2+
 Group:          System Environment/Base
 Summary:        A System and Service Manager
@@ -18,17 +18,22 @@ BuildRequires:  cryptsetup-devel
 BuildRequires:  dbus-devel
 BuildRequires:  libxslt
 BuildRequires:  docbook-style-xsl
+BuildRequires:  vala >= 0.11
 BuildRequires:  pkgconfig
+BuildRequires:  gtk2-devel
+BuildRequires:  glib2-devel
+BuildRequires:  libgee06-devel
+BuildRequires:  libnotify-devel >= 0.7
 BuildRequires:  libacl-devel
 BuildRequires:  intltool >= 0.40.0
 BuildRequires:  gperf
 BuildRequires:  xz-devel
 BuildRequires:  kmod-devel >= 5
-%if %{defined gitcommit}
+
 BuildRequires:  automake
 BuildRequires:  autoconf
 BuildRequires:  libtool
-%endif
+
 Requires(post): authconfig
 Requires(post): coreutils
 Requires(post): gawk
@@ -53,7 +58,9 @@ Source2:        systemd-sysv-convert
 Source3:        udlfb.conf
 # Stop-gap, just to ensure things work fine with rsyslog without having to change the package right-away
 Source4:        listen.conf
-Patch0:         systemd-PAGE_SIZE.patch
+Patch0001:      0001-util-never-follow-symlinks-in-rm_rf_children.patch
+Patch0002:      0002-journal-PAGE_SIZE-is-not-known-on-ppc-and-other-arch.patch
+Patch0003:      0003-service-place-control-command-in-subcgroup-control.patch
 
 # For sysvinit tools
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
@@ -91,6 +98,15 @@ Requires:       %{name} = %{version}-%{release}
 %description devel
 Development headers and auxiliary files for developing applications for systemd.
 
+%package gtk
+Group:          System Environment/Base
+Summary:        Graphical frontend for systemd
+Requires:       %{name} = %{version}-%{release}
+Requires:       polkit
+
+%description gtk
+Graphical front-end for systemd.
+
 %package sysv
 Group:          System Environment/Base
 Summary:        SysV tools for systemd
@@ -116,10 +132,16 @@ at boot.
 
 %prep
 %setup -q %{?gitcommit:-n %{name}-git%{gitcommit}}
-%patch0 -p1
+set +x
+for p in %{patches}; do
+        echo "Applying $p"
+        patch -p1 < $p
+done
+set -x
 
 %build
 %{?gitcommit: ./autogen.sh }
+autoreconf -i
 %configure --with-distro=fedora --disable-static
 make %{?_smp_mflags}
 
@@ -193,6 +215,11 @@ rm -f %{buildroot}%{_prefix}/lib/sysctl.d/coredump.conf
 # Let rsyslog read from /proc/kmsg for now
 sed -i -e 's/\#ImportKernel=yes/ImportKernel=no/' %{buildroot}%{_sysconfdir}/systemd/systemd-journald.conf
 
+# Add forward-compatible command names
+ln -s systemd-loginctl %{buildroot}%{_bindir}/loginctl
+ln -s systemd-journalctl %{buildroot}%{_bindir}/journalctl
+ln -s systemctl %{buildroot}%{_bindir}/systemd-systemctl
+
 %post
 /sbin/ldconfig
 /usr/bin/systemd-machine-id-setup > /dev/null 2>&1 || :
@@ -253,6 +280,17 @@ if [ $1 -eq 0 ] ; then
         /bin/rm -f /etc/systemd/system/default.target >/dev/null 2>&1 || :
 fi
 
+%triggerun -- systemd-units < 38-5
+mv /etc/systemd/system/default.target /etc/systemd/system/default.target.save >/dev/null 2>&1 || :
+
+%triggerpostun -- systemd-units < 38-5
+mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/dev/null 2>&1
+/bin/systemctl enable \
+        getty@.service \
+        remote-fs.target \
+        systemd-readahead-replay.service \
+        systemd-readahead-collect.service
+
 %files
 %doc %{_docdir}/systemd
 %dir %{_sysconfdir}/systemd
@@ -299,10 +337,13 @@ fi
 %{_prefix}/lib/systemd/systemd
 %{_bindir}/systemd
 %{_bindir}/systemctl
+%{_bindir}/loginctl
+%{_bindir}/journalctl
 %{_bindir}/systemd-notify
 %{_bindir}/systemd-ask-password
 %{_bindir}/systemd-tty-ask-password-agent
 %{_bindir}/systemd-machine-id-setup
+%{_bindir}/systemd-systemctl
 %{_bindir}/systemd-loginctl
 %{_bindir}/systemd-journalctl
 %{_bindir}/systemd-tmpfiles
@@ -361,6 +402,11 @@ fi
 %ghost %config(noreplace) %{_sysconfdir}/systemd/system/runlevel4.target
 %ghost %config(noreplace) %{_sysconfdir}/systemd/system/runlevel5.target
 
+%files gtk
+%{_bindir}/systemadm
+%{_bindir}/systemd-gnome-ask-password-agent
+%{_mandir}/man1/systemadm.*
+
 %files devel
 %{_libdir}/libsystemd-daemon.so
 %{_libdir}/libsystemd-login.so
@@ -384,8 +430,24 @@ fi
 %{_bindir}/systemd-analyze
 
 %changelog
-* Tue Mar 27 2012 Daniel Mach <dmach@redhat.com> - 44-3.1
-- rebuild with cryptsetup
+* Tue Apr 24 2012 Michal Schmidt <mschmidt@redhat.com> - 44-6
+- Revert most of the patches added in 44-5. F17 has 44-4 right now so let's
+  try to minimize the risk of breakage before GA release. Apply only:
+  - the fix for CVE-2012-1174
+  - the PAGE_SIZE build fix
+  - fix for a blocker bug (processes killed on libvirt restart, #805942)
+  Fixes for less important bugs will be pushed post F17 GA.
+
+* Fri Mar 30 2012 Michal Schmidt <mschmidt@redhat.com> - 44-5
+- Post-v44 patches from upstream git, except the changes of /media, /tmp
+  mountpoints and the gtk removal.
+
+* Wed Mar 28 2012 Michal Schmidt <mschmidt@redhat.com> - 44-4
+- Add triggers from Bill Nottingham to correct the damage done by
+  the obsoleted systemd-units's preun scriptlet (#807457).
+
+* Tue Mar 27 2012 Michal Schmidt <mschmidt@redhat.com> - 44-3.fc17.1
+- Undo "Don't build the gtk parts anymore". It's for F>=18 only.
 
 * Mon Mar 26 2012 Dennis Gilmore <dennis@ausil.us> - 44-3
 - apply patch from upstream so we can build systemd on arm and ppc
