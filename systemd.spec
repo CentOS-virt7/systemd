@@ -14,7 +14,7 @@ BuildRequires:  tcp_wrappers-devel
 BuildRequires:  pam-devel
 BuildRequires:  libselinux-devel
 BuildRequires:  audit-libs-devel
-BuildRequires:  cryptsetup-devel
+BuildRequires:  cryptsetup-luks-devel
 BuildRequires:  dbus-devel
 BuildRequires:  libxslt
 BuildRequires:  docbook-style-xsl
