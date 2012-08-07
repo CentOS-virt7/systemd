@@ -3,7 +3,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        187
-Release:        3.1%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        3.2%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Group:          System Environment/Base
@@ -99,6 +99,12 @@ Obsoletes:      libudev < 183
 Provides:       libudev = %{version}
 Obsoletes:      systemd < 185-4
 Conflicts:      systemd < 185-4
+
+%if %{_lib} == lib64
+Provides: libudev.so.0(64bit)
+%else
+Provides: libudev.so.0
+%endif
 
 %description libs
 Libraries for systemd and udev. systemd PAM module.
@@ -251,6 +257,10 @@ install -m 0644 %{SOURCE4} %{buildroot}%{_sysconfdir}/rsyslog.d/
 # systemd release and it's made clear how to get the core dumps out of the
 # journal.
 rm -f %{buildroot}%{_prefix}/lib/sysctl.d/coredump.conf
+
+# libudev.so.0 -> libudev.so.1
+mkdir -p $RPM_BUILD_ROOT%{_libdir}
+ln -s libudev.so.1 $RPM_BUILD_ROOT%{_libdir}/libudev.so.0
 
 %pre
 getent group cdrom >/dev/null || /usr/sbin/groupadd -g 11 cdrom || :
@@ -502,6 +512,9 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %attr(0644,root,root) %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Thu Aug  7 2012 Daniel Mach <dmach@redhat.com> - 187-3.2
+- Provide libudev.so.0
+
 * Thu Aug  7 2012 Daniel Mach <dmach@redhat.com> - 187-3.1
 - Provide libudev
 
