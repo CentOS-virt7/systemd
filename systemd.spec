@@ -3,7 +3,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        187
-Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        3.1%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Group:          System Environment/Base
@@ -96,6 +96,7 @@ Group:          System Environment/Base
 Summary:        systemd libraries
 License:        LGPLv2+ and MIT
 Obsoletes:      libudev < 183
+Provides:       libudev = %{version}
 Obsoletes:      systemd < 185-4
 Conflicts:      systemd < 185-4
 
@@ -501,6 +502,9 @@ mv /etc/systemd/system/default.target.save /etc/systemd/system/default.target >/
 %attr(0644,root,root) %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Thu Aug  7 2012 Daniel Mach <dmach@redhat.com> - 187-3.1
+- Provide libudev
+
 * Mon Jul 30 2012 Kay Sievers <kay@redhat.com> - 187-3
 - Obsolete: system-setup-keyboard
 
