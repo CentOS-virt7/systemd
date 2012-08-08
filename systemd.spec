@@ -96,15 +96,8 @@ Group:          System Environment/Base
 Summary:        systemd libraries
 License:        LGPLv2+ and MIT
 Obsoletes:      libudev < 183
-Provides:       libudev = %{version}
 Obsoletes:      systemd < 185-4
 Conflicts:      systemd < 185-4
-
-%if %{_lib} == lib64
-Provides: libudev.so.0(64bit)
-%else
-Provides: libudev.so.0
-%endif
 
 %description libs
 Libraries for systemd and udev. systemd PAM module.
@@ -260,10 +253,6 @@ glib-based applications using libudev functionality.
 # systemd release and it's made clear how to get the core dumps out of the
 # journal.
 /usr/bin/rm -f %{buildroot}%{_prefix}/lib/sysctl.d/coredump.conf
-
-# libudev.so.0 -> libudev.so.1
-mkdir -p $RPM_BUILD_ROOT%{_libdir}
-ln -s libudev.so.1 $RPM_BUILD_ROOT%{_libdir}/libudev.so.0
 
 %pre
 /usr/bin/getent group cdrom >/dev/null 2>&1 || /usr/sbin/groupadd -r -g 11 cdrom >/dev/null 2>&1 || :
