@@ -1,12 +1,13 @@
 #global gitcommit e7aee75
 
+%global _hardened_build 1
+
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
-Version:        187
-Release:        4%{?gitcommit:.git%{gitcommit}}%{?dist}
+Version:        188
+Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
-Group:          System Environment/Base
 Summary:        A System and Service Manager
 BuildRequires:  libcap-devel
 BuildRequires:  tcp_wrappers-devel
@@ -38,7 +39,8 @@ BuildRequires:  libtool
 Requires(post): coreutils
 Requires(post): gawk
 Requires(pre):  coreutils
-Requires(pre):  /usr/bin/getent /usr/sbin/groupadd
+Requires(pre):  /usr/bin/getent
+Requires(pre):  /usr/sbin/groupadd
 Requires:       dbus
 Requires:       hwdata
 Requires:       filesystem >= 3
@@ -57,6 +59,8 @@ Source2:        systemd-sysv-convert
 Source3:        udlfb.conf
 # Stop-gap, just to ensure things work fine with rsyslog without having to change the package right-away
 Source4:        listen.conf
+Patch0:         0001-shutdown-recursively-mark-root-as-private-before-piv.patch
+Patch1:         0001-switch-root-remount-to-MS_PRIVATE.patch
 
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
 Provides:       SysVinit = 2.86-24, sysvinit = 2.86-24
@@ -92,18 +96,17 @@ elaborate transactional dependency-based service control logic. It can
 work as a drop-in replacement for sysvinit.
 
 %package libs
-Group:          System Environment/Base
 Summary:        systemd libraries
 License:        LGPLv2+ and MIT
+Requires:       %{name} = %{version}-%{release}
 Obsoletes:      libudev < 183
 Obsoletes:      systemd < 185-4
 Conflicts:      systemd < 185-4
 
 %description libs
-Libraries for systemd and udev. systemd PAM module.
+Libraries for systemd and udev, as well as the systemd PAM module.
 
 %package devel
-Group:          System Environment/Base
 Summary:        Development headers for systemd
 License:        LGPLv2+ and MIT
 Requires:       %{name} = %{version}-%{release}
@@ -114,7 +117,6 @@ Obsoletes:      libudev-devel < 183
 Development headers and auxiliary files for developing applications for systemd.
 
 %package sysv
-Group:          System Environment/Base
 Summary:        SysV tools for systemd
 License:        LGPLv2+
 Requires:       %{name} = %{version}-%{release}
@@ -123,7 +125,6 @@ Requires:       %{name} = %{version}-%{release}
 SysV compatibility tools for systemd
 
 %package analyze
-Group:          System Environment/Base
 Summary:        Tool for processing systemd profiling information
 License:        LGPLv2+
 Requires:       %{name} = %{version}-%{release}
@@ -140,9 +141,9 @@ at boot.
 
 %package -n libgudev1
 Summary:        Libraries for adding libudev support to applications that use glib
-Group:          Development/Libraries
 Conflicts:      filesystem < 3
 License:        LGPLv2+
+Requires:       %{name} = %{version}-%{release}
 
 %description -n libgudev1
 This package contains the libraries that make it easier to use libudev
@@ -150,7 +151,6 @@ functionality from applications that use glib.
 
 %package -n libgudev1-devel
 Summary:        Header files for adding libudev support to applications that use glib
-Group:          Development/Libraries
 Requires:       libgudev1 = %{version}-%{release}
 License:        LGPLv2+
 
@@ -160,12 +160,13 @@ glib-based applications using libudev functionality.
 
 %prep
 %setup -q %{?gitcommit:-n %{name}-git%{gitcommit}}
+%patch0 -p1
+%patch1 -p1
 
 %build
 %{?gitcommit: ./autogen.sh }
 %configure \
         --with-distro=fedora \
-        --disable-plymouth \
         --libexecdir=%{_prefix}/lib \
         --enable-gtk-doc \
         --disable-static
@@ -302,29 +303,29 @@ fi
 # Convert old /etc/sysconfig/desktop settings
 preferred=
 if [ -f /etc/sysconfig/desktop ]; then
-	. /etc/sysconfig/desktop
-	if [ "$DISPLAYMANAGER" = GNOME ]; then
-		preferred=gdm
-	elif [ "$DISPLAYMANAGER" = KDE ]; then
-		preferred=kdm
-	elif [ "$DISPLAYMANAGER" = WDM ]; then
-		preferred=wdm
-	elif [ "$DISPLAYMANAGER" = XDM ]; then
-	        preferred=xdm
+        . /etc/sysconfig/desktop
+        if [ "$DISPLAYMANAGER" = GNOME ]; then
+                preferred=gdm
+        elif [ "$DISPLAYMANAGER" = KDE ]; then
+                preferred=kdm
+        elif [ "$DISPLAYMANAGER" = WDM ]; then
+                preferred=wdm
+        elif [ "$DISPLAYMANAGER" = XDM ]; then
+                preferred=xdm
         elif [ -n "$DISPLAYMANAGER" ]; then
-		preferred=${DISPLAYMANAGER##*/}
-	fi
+                preferred=${DISPLAYMANAGER##*/}
+        fi
 fi
 if [ -z "$preferred" ]; then
-	if [ -x /usr/sbin/gdm ]; then
-		preferred=gdm
-	elif [ -x /usr/bin/kdm ]; then
-		preferred=kdm
-	fi
+        if [ -x /usr/sbin/gdm ]; then
+                preferred=gdm
+        elif [ -x /usr/bin/kdm ]; then
+                preferred=kdm
+        fi
 fi
 if [ -n "$preferred" -a -r "/usr/lib/systemd/system/$preferred.service" ]; then
         # This is supposed to fail when the symlink already exists
-	/usr/bin/ln -s "/usr/lib/systemd/system/$preferred.service" /etc/systemd/system/display-manager.service >/dev/null 2>&1 || :
+        /usr/bin/ln -s "/usr/lib/systemd/system/$preferred.service" /etc/systemd/system/display-manager.service >/dev/null 2>&1 || :
 fi
 
 %postun
@@ -532,9 +533,18 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
-* Mon Aug  6 2012 Lennart Poettering <lpoetter@redhat.com> - 187-4
+* Sat Aug 11 2012 Lennart Poettering <lpoetter@redhat.com> - 188-3
+- Remount file systems MS_PRIVATE before switching roots
+- https://bugzilla.redhat.com/show_bug.cgi?id=847418
+
+* Wed Aug 08 2012 Rex Dieter <rdieter@fedoraproject.org> - 188-2
+- fix scriptlets
+
+* Wed Aug  8 2012 Lennart Poettering <lpoetter@redhat.com> - 188-1
+- New upstream release
 - Enable gdm and avahi by default via the preset file
 - Convert /etc/sysconfig/desktop to display-manager.service symlink
+- Enable hardened build
 
 * Mon Jul 30 2012 Kay Sievers <kay@redhat.com> - 187-3
 - Obsolete: system-setup-keyboard
