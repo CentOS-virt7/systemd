@@ -2,6 +2,11 @@
 
 %global _hardened_build 1
 
+# We ship a .pc file but don't want to have a dep on pkg-config. We
+# strip the automatically generated dep here and instead co-own the
+# directory.
+%global __requires_exclude pkg-config
+
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 
@@ -17,7 +22,7 @@ Url:            http://www.freedesktop.org/wiki/Software/systemd
 # THIS PACKAGE FOR A NON-RAWHIDE DEVELOPMENT DISTRIBUTION!
 
 Version:        189
-Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        4%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -66,7 +71,7 @@ Source0:        %{name}-git%{gitcommit}.tar.xz
 Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.tar.xz
 %endif
 # Fedora's default preset policy
-Source1:        99-default.preset
+Source1:        90-default.preset
 # Feodora's SysV convert script. meh.
 Source2:        systemd-sysv-convert
 # Stop-gap, just to ensure things work out-of-the-box for this driver.
@@ -398,6 +403,7 @@ fi
 %dir %{_prefix}/lib/firmware
 %dir %{_prefix}/lib/firmware/updates
 %dir %{_datadir}/systemd
+%dir %{_datadir}/pkgconfig
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.systemd1.conf
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.hostname1.conf
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.login1.conf
@@ -453,7 +459,7 @@ fi
 %{_prefix}/lib/tmpfiles.d/x11.conf
 %{_prefix}/lib/tmpfiles.d/legacy.conf
 %{_prefix}/lib/tmpfiles.d/tmp.conf
-%{_prefix}/lib/systemd/system-preset/99-default.preset
+%{_prefix}/lib/systemd/system-preset/90-default.preset
 %{_sbindir}/init
 %{_sbindir}/reboot
 %{_sbindir}/halt
@@ -543,6 +549,14 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Thu Sep 13 2012 Lennart Poettering <lpoetter@redhat.com> - 189-4
+- Don't pull in pkg-config as dep
+- https://bugzilla.redhat.com/show_bug.cgi?id=852828
+
+* Wed Sep 12 2012 Lennart Poettering <lpoetter@redhat.com> - 189-3
+- Update preset policy
+- Rename preset policy file from 99-default.preset to 90-default.preset so that people can order their own stuff after the Fedora default policy if they wish
+
 * Thu Aug 23 2012 Lennart Poettering <lpoetter@redhat.com> - 189-2
 - Update preset policy
 - https://bugzilla.redhat.com/show_bug.cgi?id=850814
