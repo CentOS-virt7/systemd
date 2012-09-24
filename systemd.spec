@@ -21,8 +21,8 @@ Url:            http://www.freedesktop.org/wiki/Software/systemd
 # AGAIN: DO NOT BLINDLY UPDATE RAWHIDE PACKAGES TOO WHEN YOU UPDATE
 # THIS PACKAGE FOR A NON-RAWHIDE DEVELOPMENT DISTRIBUTION!
 
-Version:        189
-Release:        4%{?gitcommit:.git%{gitcommit}}%{?dist}
+Version:        191
+Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -50,6 +50,7 @@ BuildRequires:  usbutils >= 0.82
 BuildRequires:  intltool >= 0.40.0
 BuildRequires:  gperf
 BuildRequires:  gtk-doc
+BuildRequires:  python2-devel
 %if %{defined gitcommit}
 BuildRequires:  automake
 BuildRequires:  autoconf
@@ -72,12 +73,15 @@ Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.t
 %endif
 # Fedora's default preset policy
 Source1:        90-default.preset
+Source5:        90-display-manager.preset
 # Feodora's SysV convert script. meh.
 Source2:        systemd-sysv-convert
 # Stop-gap, just to ensure things work out-of-the-box for this driver.
 Source3:        udlfb.conf
 # Stop-gap, just to ensure things work fine with rsyslog without having to change the package right-away
 Source4:        listen.conf
+
+Patch1:         0001-journal-bring-mmap-cache-prototype-in-sync.patch
 
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
 Provides:       SysVinit = 2.86-24, sysvinit = 2.86-24
@@ -156,6 +160,14 @@ initialization at boot.
 'systemd-analyze plot' renders an SVG visualizing the parallel start of units
 at boot.
 
+%package python
+Summary:        Python Bindings for systemd
+License:        LGPLv2+
+Requires:       %{name} = %{version}-%{release}
+
+%description python
+This package contains python binds for systemd APIs
+
 %package -n libgudev1
 Summary:        Libraries for adding libudev support to applications that use glib
 Conflicts:      filesystem < 3
@@ -177,6 +189,7 @@ glib-based applications using libudev functionality.
 
 %prep
 %setup -q %{?gitcommit:-n %{name}-git%{gitcommit}}
+%patch1 -p1
 
 %build
 %{?gitcommit: ./autogen.sh }
@@ -237,7 +250,7 @@ glib-based applications using libudev functionality.
 /usr/bin/touch %{buildroot}%{_sysconfdir}/locale.conf
 /usr/bin/touch %{buildroot}%{_sysconfdir}/machine-id
 /usr/bin/touch %{buildroot}%{_sysconfdir}/machine-info
-/usr/bin/touch %{buildroot}%{_sysconfdir}/timezone
+/usr/bin/touch %{buildroot}%{_sysconfdir}/localtime
 /usr/bin/mkdir -p %{buildroot}%{_sysconfdir}/X11/xorg.conf.d
 /usr/bin/touch %{buildroot}%{_sysconfdir}/X11/xorg.conf.d/00-keyboard.conf
 
@@ -245,6 +258,7 @@ glib-based applications using libudev functionality.
 /usr/bin/mkdir -p %{buildroot}%{_prefix}/lib/systemd/system-preset/
 /usr/bin/mkdir -p %{buildroot}%{_prefix}/lib/systemd/user-preset/
 /usr/bin/install -m 0644 %{SOURCE1} %{buildroot}%{_prefix}/lib/systemd/system-preset/
+/usr/bin/install -m 0644 %{SOURCE5} %{buildroot}%{_prefix}/lib/systemd/system-preset/
 
 # Make sure the shutdown/sleep drop-in dirs exist
 /usr/bin/mkdir -p %{buildroot}%{_prefix}/lib/systemd/system-shutdown/
@@ -315,6 +329,16 @@ else
         /usr/bin/rm -f /etc/systemd/system/sysinit.target.wants/hwclock-load.service >/dev/null 2>&1 || :
 fi
 
+# Migrate /etc/sysconfig/clock
+if [ ! -L /etc/localtime -a -e /etc/sysconfig/clock ] ; then
+       . /etc/sysconfig/clock 2>&1 || :
+       if [ -n "$ZONE" -a -e "/usr/share/zoneinfo/$ZONE" ] ; then
+              /usr/bin/ln -sf "../usr/share/zoneinfo/$ZONE" /etc/localtime >/dev/null 2>&1 || :
+       fi
+fi
+/usr/bin/rm -f /etc/sysconfig/clock >/dev/null 2>&1 || :
+
+%posttrans
 # Convert old /etc/sysconfig/desktop settings
 preferred=
 if [ -f /etc/sysconfig/desktop ]; then
@@ -420,11 +444,11 @@ fi
 %{_sysconfdir}/rpm/macros.systemd
 %{_sysconfdir}/xdg/systemd
 %ghost %config(noreplace) %{_sysconfdir}/hostname
+%ghost %config(noreplace) %{_sysconfdir}/localtime
 %ghost %config(noreplace) %{_sysconfdir}/vconsole.conf
 %ghost %config(noreplace) %{_sysconfdir}/locale.conf
 %ghost %config(noreplace) %{_sysconfdir}/machine-id
 %ghost %config(noreplace) %{_sysconfdir}/machine-info
-%ghost %config(noreplace) %{_sysconfdir}/timezone
 %ghost %config(noreplace) %{_sysconfdir}/X11/xorg.conf.d/00-keyboard.conf
 %{_bindir}/systemd
 %{_bindir}/systemctl
@@ -460,6 +484,7 @@ fi
 %{_prefix}/lib/tmpfiles.d/legacy.conf
 %{_prefix}/lib/tmpfiles.d/tmp.conf
 %{_prefix}/lib/systemd/system-preset/90-default.preset
+%{_prefix}/lib/systemd/system-preset/90-display-manager.preset
 %{_sbindir}/init
 %{_sbindir}/reboot
 %{_sbindir}/halt
@@ -534,6 +559,15 @@ fi
 %files analyze
 %{_bindir}/systemd-analyze
 
+%files python
+%{python_sitearch}/systemd/__init__.py
+%{python_sitearch}/systemd/__init__.pyc
+%{python_sitearch}/systemd/__init__.pyo
+%{python_sitearch}/systemd/_journal.so
+%{python_sitearch}/systemd/journal.py
+%{python_sitearch}/systemd/journal.pyc
+%{python_sitearch}/systemd/journal.pyo
+
 %files -n libgudev1
 %{_libdir}/libgudev-1.0.so.*
 %{_libdir}/girepository-1.0/GUdev-1.0.typelib
@@ -549,6 +583,50 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Fri Sep 21 2012 Lennart Poettering <lpoetter@redhat.com> - 191-2
+- Fix journal mmap header prototype definition to fix compilation on 32bit
+
+* Fri Sep 21 2012 Lennart Poettering <lpoetter@redhat.com> - 191-1
+- New upstream release
+- Enable all display managers by default, as discussed with Adam Williamson
+
+* Thu Sep 20 2012 Lennart Poettering <lpoetter@redhat.com> - 190-1
+- New upstream release
+- Take possession of /etc/localtime, and remove /etc/sysconfig/clock
+- https://bugzilla.redhat.com/show_bug.cgi?id=858780
+- https://bugzilla.redhat.com/show_bug.cgi?id=858787
+- https://bugzilla.redhat.com/show_bug.cgi?id=858771
+- https://bugzilla.redhat.com/show_bug.cgi?id=858754
+- https://bugzilla.redhat.com/show_bug.cgi?id=858746
+- https://bugzilla.redhat.com/show_bug.cgi?id=858266
+- https://bugzilla.redhat.com/show_bug.cgi?id=858224
+- https://bugzilla.redhat.com/show_bug.cgi?id=857670
+- https://bugzilla.redhat.com/show_bug.cgi?id=856975
+- https://bugzilla.redhat.com/show_bug.cgi?id=855863
+- https://bugzilla.redhat.com/show_bug.cgi?id=851970
+- https://bugzilla.redhat.com/show_bug.cgi?id=851275
+- https://bugzilla.redhat.com/show_bug.cgi?id=851131
+- https://bugzilla.redhat.com/show_bug.cgi?id=847472
+- https://bugzilla.redhat.com/show_bug.cgi?id=847207
+- https://bugzilla.redhat.com/show_bug.cgi?id=846483
+- https://bugzilla.redhat.com/show_bug.cgi?id=846085
+- https://bugzilla.redhat.com/show_bug.cgi?id=845973
+- https://bugzilla.redhat.com/show_bug.cgi?id=845194
+- https://bugzilla.redhat.com/show_bug.cgi?id=845028
+- https://bugzilla.redhat.com/show_bug.cgi?id=844630
+- https://bugzilla.redhat.com/show_bug.cgi?id=839736
+- https://bugzilla.redhat.com/show_bug.cgi?id=835848
+- https://bugzilla.redhat.com/show_bug.cgi?id=831740
+- https://bugzilla.redhat.com/show_bug.cgi?id=823485
+- https://bugzilla.redhat.com/show_bug.cgi?id=821813
+- https://bugzilla.redhat.com/show_bug.cgi?id=807886
+- https://bugzilla.redhat.com/show_bug.cgi?id=802198
+- https://bugzilla.redhat.com/show_bug.cgi?id=767795
+- https://bugzilla.redhat.com/show_bug.cgi?id=767561
+- https://bugzilla.redhat.com/show_bug.cgi?id=752774
+- https://bugzilla.redhat.com/show_bug.cgi?id=732874
+- https://bugzilla.redhat.com/show_bug.cgi?id=858735
+
 * Thu Sep 13 2012 Lennart Poettering <lpoetter@redhat.com> - 189-4
 - Don't pull in pkg-config as dep
 - https://bugzilla.redhat.com/show_bug.cgi?id=852828
@@ -563,6 +641,12 @@ fi
 
 * Thu Aug 23 2012 Lennart Poettering <lpoetter@redhat.com> - 189-1
 - New upstream release
+
+* Thu Aug 16 2012 Ray Strode <rstrode@redhat.com> 188-4
+- more scriptlet fixes
+  (move dm migration logic to %posttrans so the service
+   files it's looking for are available at the time
+   the logic is run)
 
 * Sat Aug 11 2012 Lennart Poettering <lpoetter@redhat.com> - 188-3
 - Remount file systems MS_PRIVATE before switching roots
