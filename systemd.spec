@@ -21,8 +21,8 @@ Url:            http://www.freedesktop.org/wiki/Software/systemd
 # AGAIN: DO NOT BLINDLY UPDATE RAWHIDE PACKAGES TOO WHEN YOU UPDATE
 # THIS PACKAGE FOR A NON-RAWHIDE DEVELOPMENT DISTRIBUTION!
 
-Version:        191
-Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
+Version:        193
+Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -42,6 +42,7 @@ BuildRequires:  xz-devel
 BuildRequires:  kmod-devel >= 5
 BuildRequires:  libgcrypt-devel
 BuildRequires:  qrencode-devel
+BuildRequires:  libmicrohttpd-devel
 BuildRequires:  hwdata
 BuildRequires:  libxslt
 BuildRequires:  docbook-style-xsl
@@ -80,8 +81,6 @@ Source2:        systemd-sysv-convert
 Source3:        udlfb.conf
 # Stop-gap, just to ensure things work fine with rsyslog without having to change the package right-away
 Source4:        listen.conf
-
-Patch1:         0001-journal-bring-mmap-cache-prototype-in-sync.patch
 
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
 Provides:       SysVinit = 2.86-24, sysvinit = 2.86-24
@@ -189,7 +188,6 @@ glib-based applications using libudev functionality.
 
 %prep
 %setup -q %{?gitcommit:-n %{name}-git%{gitcommit}}
-%patch1 -p1
 
 %build
 %{?gitcommit: ./autogen.sh }
@@ -515,6 +513,7 @@ fi
 %{_datadir}/polkit-1/actions/org.freedesktop.timedate1.policy
 %{_datadir}/pkgconfig/systemd.pc
 %{_datadir}/pkgconfig/udev.pc
+%{_datadir}/systemd/gatewayd/browse.html
 
 # Make sure we don't remove runlevel targets from F14 alpha installs,
 # but make sure we don't create then anew.
@@ -583,6 +582,12 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Fri Sep 28 2012 Lennart Poettering <lpoetter@redhat.com> - 193-1
+- New upstream release
+
+* Tue Sep 25 2012 Lennart Poettering <lpoetter@redhat.com> - 192-1
+- New upstream release
+
 * Fri Sep 21 2012 Lennart Poettering <lpoetter@redhat.com> - 191-2
 - Fix journal mmap header prototype definition to fix compilation on 32bit
 
