@@ -21,8 +21,8 @@ Url:            http://www.freedesktop.org/wiki/Software/systemd
 # AGAIN: DO NOT BLINDLY UPDATE RAWHIDE PACKAGES TOO WHEN YOU UPDATE
 # THIS PACKAGE FOR A NON-RAWHIDE DEVELOPMENT DISTRIBUTION!
 
-Version:        194
-Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
+Version:        195
+Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -104,6 +104,7 @@ Obsoletes:      systemd < 185-4
 Conflicts:      systemd < 185-4
 Obsoletes:      system-setup-keyboard < 0.9
 Provides:       system-setup-keyboard = 0.9
+Provides:       syslog
 
 %description
 systemd is a system and service manager for Linux, compatible with
@@ -282,6 +283,10 @@ glib-based applications using libudev functionality.
 # journal.
 /usr/bin/rm -f %{buildroot}%{_prefix}/lib/sysctl.d/coredump.conf
 
+# For now remove /var/log/README since we are not enabling persistant
+# logging yet.
+/usr/bin/rm -f %{buildroot}%{_localstatedir}/log/README
+
 %pre
 /usr/bin/getent group cdrom >/dev/null 2>&1 || /usr/sbin/groupadd -r -g 11 cdrom >/dev/null 2>&1 || :
 /usr/bin/getent group tape >/dev/null 2>&1 || /usr/sbin/groupadd -r -g 33 tape >/dev/null 2>&1 || :
@@ -372,7 +377,7 @@ else
                         /usr/bin/systemctl enable "$service" >/dev/null 2>&1 || :
                 done < /var/lib/rpm-state/systemd/ntp-units
                 /usr/bin/rm -r /var/lib/rpm-state/systemd/ntp-units
-	fi
+        fi
 fi
 
 # Migrate /etc/sysconfig/clock
@@ -383,6 +388,37 @@ if [ ! -L /etc/localtime -a -e /etc/sysconfig/clock ] ; then
        fi
 fi
 /usr/bin/rm -f /etc/sysconfig/clock >/dev/null 2>&1 || :
+
+# Migrate /etc/sysconfig/i18n
+if [ -e /etc/sysconfig/i18n -a ! -e /etc/locale.conf ]; then
+        unset LANG
+        . /etc/sysconfig/i18n 2>&1 || :
+        [ -n "$LANG" ] && echo LANG=$LANG > /etc/locale.conf 2>&1 || :
+fi
+
+# Migrate /etc/sysconfig/keyboard
+if [ -e /etc/sysconfig/keyboard -a ! -e /etc/vconsole.conf ]; then
+        unset SYSFONT
+        unset SYSFONTACM
+        unset UNIMAP
+        unset KEYMAP
+        [ -e /etc/sysconfig/i18n ] && . /etc/sysconfig/i18n 2>&1 || :
+        . /etc/sysconfig/keyboard 2>&1 || :
+        [ -n "$SYSFONT" ] && echo FONT=$SYSFONT > /etc/vconsole.conf 2>&1 || :
+        [ -n "$SYSFONTACM" ] && echo FONT_MAP=$SYSFONTACM >> /etc/vconsole.conf 2>&1 || :
+        [ -n "$UNIMAP" ] && echo FONT_UNIMAP=$UNIMAP >> /etc/vconsole.conf 2>&1 || :
+        [ -n "$KEYTABLE" ] && echo KEYMAP=$KEYTABLE >> /etc/vconsole.conf 2>&1 || :
+fi
+/usr/bin/rm -f /etc/sysconfig/i18n >/dev/null 2>&1 || :
+/usr/bin/rm -f /etc/sysconfig/keyboard >/dev/null 2>&1 || :
+
+# Migrate HOSTNAME= from /etc/sysconfig/network
+if [ -e /etc/sysconfig/network -a ! -e /etc/hostname ]; then
+        unset HOSTNAME
+        . /etc/sysconfig/network 2>&1 || :
+        [ -n "$HOSTNAME" ] && echo $HOSTNAME > /etc/hostname 2>&1 || :
+fi
+/usr/bin/sed -i '/HOSTNAME/d' /etc/sysconfig/network 2>&1 || :
 
 %posttrans
 # Convert old /etc/sysconfig/desktop settings
@@ -489,6 +525,7 @@ fi
 %{_sysconfdir}/bash_completion.d/systemd-bash-completion.sh
 %{_sysconfdir}/rpm/macros.systemd
 %{_sysconfdir}/xdg/systemd
+%{_sysconfdir}/rc.d/init.d/README
 %ghost %config(noreplace) %{_sysconfdir}/hostname
 %ghost %config(noreplace) %{_sysconfdir}/localtime
 %ghost %config(noreplace) %{_sysconfdir}/vconsole.conf
@@ -514,6 +551,10 @@ fi
 %{_bindir}/systemd-delta
 %caps(cap_dac_override,cap_sys_ptrace=pe) %{_bindir}/systemd-detect-virt
 %{_bindir}/systemd-inhibit
+%{_bindir}/hostnamectl
+%{_bindir}/localectl
+%{_bindir}/timedatectl
+%{_bindir}/systemd-coredumpctl
 %{_bindir}/udevadm
 %{_prefix}/lib/systemd/systemd
 %{_prefix}/lib/systemd/system
@@ -630,6 +671,27 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Wed Oct 24 2012 Kay Sievers <kay@redhat.com> - 195-3
+- Migrate /etc/sysconfig/ i18n, keyboard, network files/variables to
+  systemd native files
+
+* Tue Oct 23 2012 Lennart Poettering <lpoetter@redhat.com> - 195-2
+- Provide syslog because the journal is fine as a syslog implementation
+
+* Tue Oct 23 2012 Lennart Poettering <lpoetter@redhat.com> - 195-1
+- New upstream release
+- https://bugzilla.redhat.com/show_bug.cgi?id=831665
+- https://bugzilla.redhat.com/show_bug.cgi?id=847720
+- https://bugzilla.redhat.com/show_bug.cgi?id=858693
+- https://bugzilla.redhat.com/show_bug.cgi?id=863481
+- https://bugzilla.redhat.com/show_bug.cgi?id=864629
+- https://bugzilla.redhat.com/show_bug.cgi?id=864672
+- https://bugzilla.redhat.com/show_bug.cgi?id=864674
+- https://bugzilla.redhat.com/show_bug.cgi?id=865128
+- https://bugzilla.redhat.com/show_bug.cgi?id=866346
+- https://bugzilla.redhat.com/show_bug.cgi?id=867407
+- https://bugzilla.redhat.com/show_bug.cgi?id=868603
+
 * Wed Oct 10 2012 Michal Schmidt <mschmidt@redhat.com> - 194-2
 - Add scriptlets for migration away from systemd-timedated-ntp.target
 
