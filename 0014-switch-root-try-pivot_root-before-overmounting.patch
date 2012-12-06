@@ -1,4 +1,4 @@
-From 891a4918ef75fa81e22691156c050d061bd53dd3 Mon Sep 17 00:00:00 2001
+From bcfbedbd86ff73723c9887dd7c7525064b35c349 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Fri, 16 Nov 2012 18:15:30 +0100
 Subject: [PATCH] switch-root: try pivot_root() before overmounting /
@@ -16,6 +16,7 @@ makes that possible.
 The pivot_root() needs a directory in the "third" root dir, to move the
 "second" root dir to. We use /mnt for that, under the assumption that
 this directory is likely to exist, and is not itself a mount point.
+(cherry picked from commit 891a4918ef75fa81e22691156c050d061bd53dd3)
 ---
  src/core/switch-root.c | 27 ++++++++++++++++++++++++++-
  1 file changed, 26 insertions(+), 1 deletion(-)
@@ -76,6 +77,3 @@ index 150332a..ce0e41d 100644
                  r = -errno;
                  log_error("Failed to mount moving %s to /: %m", new_root);
                  goto fail;
--- 
-1.7.12.1
-

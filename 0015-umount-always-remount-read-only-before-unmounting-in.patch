@@ -1,8 +1,9 @@
-From 93bd157722c76b47d80742f290373c1ce2865070 Mon Sep 17 00:00:00 2001
+From a1810c2b3362396e219ed05c2b933d4299fe1510 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Fri, 16 Nov 2012 18:36:28 +0100
 Subject: [PATCH] umount: always remount read-only before unmounting in final
- shutdown loop
+ shutdown loop (cherry picked from commit
+ 93bd157722c76b47d80742f290373c1ce2865070)
 
 ---
  src/core/umount.c | 57 ++++++++++++++++++++++++++-----------------------------
@@ -90,6 +91,3 @@ index 83c9de3..e794057 100644
    end:
          mount_points_list_free(&mp_list_head);
  
--- 
-1.7.12.1
-

@@ -1,0 +1,63 @@
+From 0ae07d17bc7921c44b29019d2b1209f9341f4f3b Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 20 Nov 2012 21:25:26 +0100
+Subject: [PATCH] journal-send: always send SYSLOG_IDENTIFIER, if we have it
+
+https://bugzilla.redhat.com/show_bug.cgi?id=872193
+(cherry picked from commit ee55db41442ad8055f5a84a339b1e0e22bc037c4)
+---
+ src/journal/journal-send.c | 20 +++++++++++++++++++-
+ 1 file changed, 19 insertions(+), 1 deletion(-)
+
+diff --git a/src/journal/journal-send.c b/src/journal/journal-send.c
+index 8589d94..93549d6 100644
+--- a/src/journal/journal-send.c
++++ b/src/journal/journal-send.c
+@@ -208,6 +208,7 @@ _public_ int sd_journal_sendv(const struct iovec *iov, int n) {
+          * be a tmpfs, and one that is available from early boot on
+          * and where unprivileged users can create files. */
+         char path[] = "/dev/shm/journal.XXXXXX";
++        bool have_syslog_identifier = false;
+ 
+         if (_unlikely_(!iov))
+                 return -EINVAL;
+@@ -217,7 +218,7 @@ _public_ int sd_journal_sendv(const struct iovec *iov, int n) {
+ 
+         saved_errno = errno;
+ 
+-        w = alloca(sizeof(struct iovec) * n * 5);
++        w = alloca(sizeof(struct iovec) * n * 5 + 3);
+         l = alloca(sizeof(uint64_t) * n);
+ 
+         for (i = 0; i < n; i++) {
+@@ -234,6 +235,9 @@ _public_ int sd_journal_sendv(const struct iovec *iov, int n) {
+                         goto finish;
+                 }
+ 
++                have_syslog_identifier =
++                        have_syslog_identifier || (c == iov[i].iov_base + 17 && memcmp(iov[i].iov_base, "SYSLOG_IDENTIFIER", 17) == 0);
++
+                 nl = memchr(iov[i].iov_base, '\n', iov[i].iov_len);
+                 if (nl) {
+                         if (_unlikely_(nl < c)) {
+@@ -269,6 +273,20 @@ _public_ int sd_journal_sendv(const struct iovec *iov, int n) {
+                 IOVEC_SET_STRING(w[j++], "\n");
+         }
+ 
++        if (!have_syslog_identifier &&
++            string_is_safe(program_invocation_short_name)) {
++
++                /* Implicitly add program_invocation_short_name, if it
++                 * is not set explicitly. We only do this for
++                 * program_invocation_short_name, and nothing else
++                 * since everything else is much nicer to retrieve
++                 * from the outside. */
++
++                IOVEC_SET_STRING(w[j++], "SYSLOG_IDENTIFIER=");
++                IOVEC_SET_STRING(w[j++], program_invocation_short_name);
++                IOVEC_SET_STRING(w[j++], "\n");
++        }
++
+         fd = journal_fd();
+         if (_unlikely_(fd < 0)) {
+                 r = fd;

@@ -1,0 +1,405 @@
+From 2166299ca5d361e37ec263762f02affe12b5e029 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Tue, 30 Oct 2012 14:29:38 +0100
+Subject: [PATCH] shared, core: do not always accept numbers in string lookups
+
+The behaviour of the common name##_from_string conversion is surprising.
+It accepts not only the strings from name##_table but also any number
+that falls within the range of the table. The order of items in most of
+our tables is an internal affair. It should not be visible to the user.
+
+I know of a case where the surprising numeric conversion leads to a crash.
+
+We will allow the direct numeric conversion only for the tables where the
+mapping of strings to numeric values has an external meaning. This holds
+for the following lookup tables:
+ - netlink_family, ioprio_class, ip_tos, sched_policy - their numeric
+   values are stable as they are defined by the Linux kernel interface.
+ - log_level, log_facility_unshifted - the well-known syslog interface.
+
+We allow the user to use numeric values whose string names systemd does
+not know. For instance, the user may want to test a new kernel featuring
+a scheduling policy that did not exist when his systemd version was
+released. A slightly unpleasant effect of this is that the
+name##_to_string conversion cannot return pointers to constant strings
+anymore. The strings have to be allocated on demand and freed by the
+caller.
+(cherry picked from commit f8b69d1dfc307562a353f6aa923b7c2b915aaddb)
+---
+ src/core/dbus-manager.c  | 12 ++++++++----
+ src/core/execute.c       | 44 +++++++++++++++++++++++++++++++++++++-------
+ src/core/load-fragment.c | 16 +++++++++-------
+ src/shared/socket-util.c | 26 ++++++++++----------------
+ src/shared/socket-util.h |  2 +-
+ src/shared/util.c        | 10 +++++-----
+ src/shared/util.h        | 48 +++++++++++++++++++++++++++++++++++++++---------
+ 7 files changed, 109 insertions(+), 49 deletions(-)
+
+diff --git a/src/core/dbus-manager.c b/src/core/dbus-manager.c
+index ed9784b..2010241 100644
+--- a/src/core/dbus-manager.c
++++ b/src/core/dbus-manager.c
+@@ -352,17 +352,21 @@ static int bus_manager_set_log_target(DBusMessageIter *i, const char *property,
+ }
+ 
+ static int bus_manager_append_log_level(DBusMessageIter *i, const char *property, void *data) {
+-        const char *t;
++        char *t;
++        int r;
+ 
+         assert(i);
+         assert(property);
+ 
+-        t = log_level_to_string(log_get_max_level());
++        r = log_level_to_string_alloc(log_get_max_level(), &t);
++        if (r < 0)
++                return r;
+ 
+         if (!dbus_message_iter_append_basic(i, DBUS_TYPE_STRING, &t))
+-                return -ENOMEM;
++                r = -ENOMEM;
+ 
+-        return 0;
++        free(t);
++        return r;
+ }
+ 
+ static int bus_manager_set_log_level(DBusMessageIter *i, const char *property, void *data) {
+diff --git a/src/core/execute.c b/src/core/execute.c
+index e502c24..e236d38 100644
+--- a/src/core/execute.c
++++ b/src/core/execute.c
+@@ -1769,21 +1769,37 @@ void exec_context_dump(ExecContext *c, FILE* f, const char *prefix) {
+                 if (c->rlimit[i])
+                         fprintf(f, "%s%s: %llu\n", prefix, rlimit_to_string(i), (unsigned long long) c->rlimit[i]->rlim_max);
+ 
+-        if (c->ioprio_set)
++        if (c->ioprio_set) {
++                char *class_str;
++                int r;
++
++                r = ioprio_class_to_string_alloc(IOPRIO_PRIO_CLASS(c->ioprio), &class_str);
++                if (r < 0)
++                        class_str = NULL;
+                 fprintf(f,
+                         "%sIOSchedulingClass: %s\n"
+                         "%sIOPriority: %i\n",
+-                        prefix, ioprio_class_to_string(IOPRIO_PRIO_CLASS(c->ioprio)),
++                        prefix, strna(class_str),
+                         prefix, (int) IOPRIO_PRIO_DATA(c->ioprio));
++                free(class_str);
++        }
+ 
+-        if (c->cpu_sched_set)
++        if (c->cpu_sched_set) {
++                char *policy_str;
++                int r;
++
++                r = sched_policy_to_string_alloc(c->cpu_sched_policy, &policy_str);
++                if (r < 0)
++                        policy_str = NULL;
+                 fprintf(f,
+                         "%sCPUSchedulingPolicy: %s\n"
+                         "%sCPUSchedulingPriority: %i\n"
+                         "%sCPUSchedulingResetOnFork: %s\n",
+-                        prefix, sched_policy_to_string(c->cpu_sched_policy),
++                        prefix, strna(policy_str),
+                         prefix, c->cpu_sched_priority,
+                         prefix, yes_no(c->cpu_sched_reset_on_fork));
++                free(policy_str);
++	}
+ 
+         if (c->cpuset) {
+                 fprintf(f, "%sCPUAffinity:", prefix);
+@@ -1818,12 +1834,26 @@ void exec_context_dump(ExecContext *c, FILE* f, const char *prefix) {
+         if (c->std_output == EXEC_OUTPUT_SYSLOG || c->std_output == EXEC_OUTPUT_KMSG || c->std_output == EXEC_OUTPUT_JOURNAL ||
+             c->std_output == EXEC_OUTPUT_SYSLOG_AND_CONSOLE || c->std_output == EXEC_OUTPUT_KMSG_AND_CONSOLE || c->std_output == EXEC_OUTPUT_JOURNAL_AND_CONSOLE ||
+             c->std_error == EXEC_OUTPUT_SYSLOG || c->std_error == EXEC_OUTPUT_KMSG || c->std_error == EXEC_OUTPUT_JOURNAL ||
+-            c->std_error == EXEC_OUTPUT_SYSLOG_AND_CONSOLE || c->std_error == EXEC_OUTPUT_KMSG_AND_CONSOLE || c->std_error == EXEC_OUTPUT_JOURNAL_AND_CONSOLE)
++            c->std_error == EXEC_OUTPUT_SYSLOG_AND_CONSOLE || c->std_error == EXEC_OUTPUT_KMSG_AND_CONSOLE || c->std_error == EXEC_OUTPUT_JOURNAL_AND_CONSOLE) {
++                char *fac_str, *lvl_str;
++                int r;
++
++                r = log_facility_unshifted_to_string_alloc(c->syslog_priority >> 3, &fac_str);
++                if (r < 0)
++                        fac_str = NULL;
++
++                r = log_level_to_string_alloc(LOG_PRI(c->syslog_priority), &lvl_str);
++                if (r < 0)
++                        lvl_str = NULL;
++
+                 fprintf(f,
+                         "%sSyslogFacility: %s\n"
+                         "%sSyslogLevel: %s\n",
+-                        prefix, log_facility_unshifted_to_string(c->syslog_priority >> 3),
+-                        prefix, log_level_to_string(LOG_PRI(c->syslog_priority)));
++                        prefix, strna(fac_str),
++                        prefix, strna(lvl_str));
++                free(lvl_str);
++                free(fac_str);
++        }
+ 
+         if (c->capabilities) {
+                 char *t;
+diff --git a/src/core/load-fragment.c b/src/core/load-fragment.c
+index 2504d73..5803044 100644
+--- a/src/core/load-fragment.c
++++ b/src/core/load-fragment.c
+@@ -616,7 +616,8 @@ int config_parse_exec_io_class(
+         assert(rvalue);
+         assert(data);
+ 
+-        if ((x = ioprio_class_from_string(rvalue)) < 0) {
++        x = ioprio_class_from_string(rvalue);
++        if (x < 0) {
+                 log_error("[%s:%u] Failed to parse IO scheduling class, ignoring: %s", filename, line, rvalue);
+                 return 0;
+         }
+@@ -675,7 +676,8 @@ int config_parse_exec_cpu_sched_policy(
+         assert(rvalue);
+         assert(data);
+ 
+-        if ((x = sched_policy_from_string(rvalue)) < 0) {
++        x = sched_policy_from_string(rvalue);
++        if (x < 0) {
+                 log_error("[%s:%u] Failed to parse CPU scheduling policy, ignoring: %s", filename, line, rvalue);
+                 return 0;
+         }
+@@ -1452,11 +1454,11 @@ int config_parse_ip_tos(
+         assert(rvalue);
+         assert(data);
+ 
+-        if ((x = ip_tos_from_string(rvalue)) < 0)
+-                if (safe_atoi(rvalue, &x) < 0) {
+-                        log_error("[%s:%u] Failed to parse IP TOS value, ignoring: %s", filename, line, rvalue);
+-                        return 0;
+-                }
++        x = ip_tos_from_string(rvalue);
++        if (x < 0) {
++                log_error("[%s:%u] Failed to parse IP TOS value, ignoring: %s", filename, line, rvalue);
++                return 0;
++        }
+ 
+         *ip_tos = x;
+         return 0;
+diff --git a/src/shared/socket-util.c b/src/shared/socket-util.c
+index 4908403..8bc3729 100644
+--- a/src/shared/socket-util.c
++++ b/src/shared/socket-util.c
+@@ -194,7 +194,7 @@ int socket_address_parse(SocketAddress *a, const char *s) {
+ int socket_address_parse_netlink(SocketAddress *a, const char *s) {
+         int family;
+         unsigned group = 0;
+-        char* sfamily = NULL;
++        _cleanup_free_ char *sfamily = NULL;
+         assert(a);
+         assert(s);
+ 
+@@ -205,13 +205,9 @@ int socket_address_parse_netlink(SocketAddress *a, const char *s) {
+         if (sscanf(s, "%ms %u", &sfamily, &group) < 1)
+                 return errno ? -errno : -EINVAL;
+ 
+-        if ((family = netlink_family_from_string(sfamily)) < 0)
+-                if (safe_atoi(sfamily, &family) < 0) {
+-                        free(sfamily);
+-                        return -EINVAL;
+-                }
+-
+-        free(sfamily);
++        family = netlink_family_from_string(sfamily);
++        if (family < 0)
++                return -EINVAL;
+ 
+         a->sockaddr.nl.nl_family = AF_NETLINK;
+         a->sockaddr.nl.nl_groups = group;
+@@ -367,15 +363,13 @@ int socket_address_print(const SocketAddress *a, char **p) {
+         }
+ 
+         case AF_NETLINK: {
+-                const char *sfamily;
+-
+-                if ((sfamily = netlink_family_to_string(a->protocol)))
+-                        r = asprintf(p, "%s %u", sfamily, a->sockaddr.nl.nl_groups);
+-                else
+-                        r = asprintf(p, "%i %u", a->protocol, a->sockaddr.nl.nl_groups);
++                char *sfamily;
+ 
++                r = netlink_family_to_string_alloc(a->protocol, &sfamily);
+                 if (r < 0)
+-                        return -ENOMEM;
++                        return r;
++                r = asprintf(p, "%s %u", sfamily, a->sockaddr.nl.nl_groups);
++                free(sfamily);
+ 
+                 return 0;
+         }
+@@ -540,7 +534,7 @@ static const char* const netlink_family_table[] = {
+         [NETLINK_ECRYPTFS] = "ecryptfs"
+ };
+ 
+-DEFINE_STRING_TABLE_LOOKUP(netlink_family, int);
++DEFINE_STRING_TABLE_LOOKUP_WITH_FALLBACK(netlink_family, int, INT_MAX);
+ 
+ static const char* const socket_address_bind_ipv6_only_table[_SOCKET_ADDRESS_BIND_IPV6_ONLY_MAX] = {
+         [SOCKET_ADDRESS_DEFAULT] = "default",
+diff --git a/src/shared/socket-util.h b/src/shared/socket-util.h
+index 7cca2f5..04cfb83 100644
+--- a/src/shared/socket-util.h
++++ b/src/shared/socket-util.h
+@@ -93,7 +93,7 @@ bool socket_address_needs_mount(const SocketAddress *a, const char *prefix);
+ const char* socket_address_bind_ipv6_only_to_string(SocketAddressBindIPv6Only b);
+ SocketAddressBindIPv6Only socket_address_bind_ipv6_only_from_string(const char *s);
+ 
+-const char* netlink_family_to_string(int b);
++int netlink_family_to_string_alloc(int b, char **s);
+ int netlink_family_from_string(const char *s);
+ 
+ bool socket_ipv6_is_supported(void);
+diff --git a/src/shared/util.c b/src/shared/util.c
+index 8519c43..384c163 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -5208,7 +5208,7 @@ static const char *const ioprio_class_table[] = {
+         [IOPRIO_CLASS_IDLE] = "idle"
+ };
+ 
+-DEFINE_STRING_TABLE_LOOKUP(ioprio_class, int);
++DEFINE_STRING_TABLE_LOOKUP_WITH_FALLBACK(ioprio_class, int, INT_MAX);
+ 
+ static const char *const sigchld_code_table[] = {
+         [CLD_EXITED] = "exited",
+@@ -5244,7 +5244,7 @@ static const char *const log_facility_unshifted_table[LOG_NFACILITIES] = {
+         [LOG_FAC(LOG_LOCAL7)] = "local7"
+ };
+ 
+-DEFINE_STRING_TABLE_LOOKUP(log_facility_unshifted, int);
++DEFINE_STRING_TABLE_LOOKUP_WITH_FALLBACK(log_facility_unshifted, int, LOG_FAC(~0));
+ 
+ static const char *const log_level_table[] = {
+         [LOG_EMERG] = "emerg",
+@@ -5257,7 +5257,7 @@ static const char *const log_level_table[] = {
+         [LOG_DEBUG] = "debug"
+ };
+ 
+-DEFINE_STRING_TABLE_LOOKUP(log_level, int);
++DEFINE_STRING_TABLE_LOOKUP_WITH_FALLBACK(log_level, int, LOG_DEBUG);
+ 
+ static const char* const sched_policy_table[] = {
+         [SCHED_OTHER] = "other",
+@@ -5267,7 +5267,7 @@ static const char* const sched_policy_table[] = {
+         [SCHED_RR] = "rr"
+ };
+ 
+-DEFINE_STRING_TABLE_LOOKUP(sched_policy, int);
++DEFINE_STRING_TABLE_LOOKUP_WITH_FALLBACK(sched_policy, int, INT_MAX);
+ 
+ static const char* const rlimit_table[] = {
+         [RLIMIT_CPU] = "LimitCPU",
+@@ -5297,7 +5297,7 @@ static const char* const ip_tos_table[] = {
+         [IPTOS_LOWCOST] = "low-cost",
+ };
+ 
+-DEFINE_STRING_TABLE_LOOKUP(ip_tos, int);
++DEFINE_STRING_TABLE_LOOKUP_WITH_FALLBACK(ip_tos, int, 0xff);
+ 
+ static const char *const __signal_table[] = {
+         [SIGHUP] = "HUP",
+diff --git a/src/shared/util.h b/src/shared/util.h
+index a9c39b8..53bd4cb 100644
+--- a/src/shared/util.h
++++ b/src/shared/util.h
+@@ -291,6 +291,7 @@ int make_console_stdio(void);
+ 
+ unsigned long long random_ull(void);
+ 
++/* For basic lookup tables with strictly enumerated entries */
+ #define __DEFINE_STRING_TABLE_LOOKUP(name,type,scope)                   \
+         scope const char *name##_to_string(type i) {                    \
+                 if (i < 0 || i >= (type) ELEMENTSOF(name##_table))      \
+@@ -299,15 +300,11 @@ unsigned long long random_ull(void);
+         }                                                               \
+         scope type name##_from_string(const char *s) {                  \
+                 type i;                                                 \
+-                unsigned u = 0;                                         \
+                 assert(s);                                              \
+                 for (i = 0; i < (type)ELEMENTSOF(name##_table); i++)    \
+                         if (name##_table[i] &&                          \
+                             streq(name##_table[i], s))                  \
+                                 return i;                               \
+-                if (safe_atou(s, &u) >= 0 &&                            \
+-                    u < ELEMENTSOF(name##_table))                       \
+-                        return (type) u;                                \
+                 return (type) -1;                                       \
+         }                                                               \
+         struct __useless_struct_to_allow_trailing_semicolon__
+@@ -315,6 +312,39 @@ unsigned long long random_ull(void);
+ #define DEFINE_STRING_TABLE_LOOKUP(name,type) __DEFINE_STRING_TABLE_LOOKUP(name,type,)
+ #define DEFINE_PRIVATE_STRING_TABLE_LOOKUP(name,type) __DEFINE_STRING_TABLE_LOOKUP(name,type,static)
+ 
++/* For string conversions where numbers are also acceptable */
++#define DEFINE_STRING_TABLE_LOOKUP_WITH_FALLBACK(name,type,max)         \
++        int name##_to_string_alloc(type i, char **str) {                \
++                char *s;                                                \
++                int r;                                                  \
++                if (i < 0 || i > max)                                   \
++                        return -ERANGE;                                 \
++                if (i < (type) ELEMENTSOF(name##_table)) {              \
++                        s = strdup(name##_table[i]);                    \
++                        if (!s)                                         \
++                                return log_oom();                       \
++                } else {                                                \
++                        r = asprintf(&s, "%u", i);                      \
++                        if (r < 0)                                      \
++                                return log_oom();                       \
++                }                                                       \
++                *str = s;                                               \
++                return 0;                                               \
++        }                                                               \
++        type name##_from_string(const char *s) {                        \
++                type i;                                                 \
++                unsigned u = 0;                                         \
++                assert(s);                                              \
++                for (i = 0; i < (type)ELEMENTSOF(name##_table); i++)    \
++                        if (name##_table[i] &&                          \
++                            streq(name##_table[i], s))                  \
++                                return i;                               \
++                if (safe_atou(s, &u) >= 0 && u < max)                   \
++                        return (type) u;                                \
++                return (type) -1;                                       \
++        }                                                               \
++        struct __useless_struct_to_allow_trailing_semicolon__
++
+ int fd_nonblock(int fd, bool nonblock);
+ int fd_cloexec(int fd, bool cloexec);
+ 
+@@ -478,25 +508,25 @@ int strdup_or_null(const char *a, char **b);
+ #define NULSTR_FOREACH_PAIR(i, j, l)                             \
+         for ((i) = (l), (j) = strchr((i), 0)+1; (i) && *(i); (i) = strchr((j), 0)+1, (j) = *(i) ? strchr((i), 0)+1 : (i))
+ 
+-const char *ioprio_class_to_string(int i);
++int ioprio_class_to_string_alloc(int i, char **s);
+ int ioprio_class_from_string(const char *s);
+ 
+ const char *sigchld_code_to_string(int i);
+ int sigchld_code_from_string(const char *s);
+ 
+-const char *log_facility_unshifted_to_string(int i);
++int log_facility_unshifted_to_string_alloc(int i, char **s);
+ int log_facility_unshifted_from_string(const char *s);
+ 
+-const char *log_level_to_string(int i);
++int log_level_to_string_alloc(int i, char **s);
+ int log_level_from_string(const char *s);
+ 
+-const char *sched_policy_to_string(int i);
++int sched_policy_to_string_alloc(int i, char **s);
+ int sched_policy_from_string(const char *s);
+ 
+ const char *rlimit_to_string(int i);
+ int rlimit_from_string(const char *s);
+ 
+-const char *ip_tos_to_string(int i);
++int ip_tos_to_string_alloc(int i, char **s);
+ int ip_tos_from_string(const char *s);
+ 
+ const char *signal_to_string(int i);

@@ -1,0 +1,46 @@
+From c8a10bd30650ae036011fe508b7c594b27f1b3fe Mon Sep 17 00:00:00 2001
+From: Tony Camuso <tcamuso@redhat.com>
+Date: Mon, 22 Oct 2012 09:40:30 -0400
+Subject: [PATCH] rules: Remove HP iLO from USB HID PM rules
+
+HP iLO fw versions below 1.50 incorrectly report that HP iLO virtual
+Kbd/Mouse supports remote wakeup. With the rules change in commit
+3bfc7a97b1824fcdfb738617d9a5450a20a22a0f, the HP iLO was listed for
+power control.
+
+In iLO fw versions less than 1.50, the iLO Kbd/Mouse become unresponsive
+once they are suspended. HP iLO fw versions 1.50+ correctly report that
+they don't support remote wakeup, which makes the rules moot in any case.
+(cherry picked from commit ef421e4d55354148f1f1410cb50d1c0e734b90bd)
+---
+ rules/42-usb-hid-pm.rules | 10 ----------
+ 1 file changed, 10 deletions(-)
+
+diff --git a/rules/42-usb-hid-pm.rules b/rules/42-usb-hid-pm.rules
+index ac671f1..c9f67c7 100644
+--- a/rules/42-usb-hid-pm.rules
++++ b/rules/42-usb-hid-pm.rules
+@@ -12,12 +12,6 @@ ACTION=="add", SUBSYSTEM=="usb", ATTR{product}=="QEMU USB Mouse", ATTR{serial}==
+ ACTION=="add", SUBSYSTEM=="usb", ATTR{product}=="QEMU USB Tablet", ATTR{serial}=="42", TEST=="power/control", ATTR{power/control}="auto"
+ ACTION=="add", SUBSYSTEM=="usb", ATTR{product}=="QEMU USB Keyboard", ATTR{serial}=="42", TEST=="power/control", ATTR{power/control}="auto"
+ 
+-#
+-# Enable autosuspend for KVM and iLO usb hid devices. These are
+-# effectively self-powered (despite what some claim in their USB
+-# profiles) and so it's safe to do so.
+-#
+-
+ # AMI 046b:ff10
+ ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="046b", ATTR{idProduct}=="ff10", TEST=="power/control", ATTR{power/control}="auto"
+ 
+@@ -33,10 +27,6 @@ ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="413c", ATTR{idProduct}=="2500"
+ # Dell DRAC 5
+ ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="413c", ATTR{idProduct}=="0000", TEST=="power/control", ATTR{power/control}="auto"
+ 
+-# Hewlett Packard iLO
+-ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="03f0", ATTR{idProduct}=="7029", TEST=="power/control", ATTR{power/control}="auto"
+-ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="03f0", ATTR{idProduct}=="1027", TEST=="power/control", ATTR{power/control}="auto"
+-
+ # IBM remote access
+ ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="04b3", ATTR{idProduct}=="4001", TEST=="power/control", ATTR{power/control}="auto"
+ ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="04b3", ATTR{idProduct}=="4002", TEST=="power/control", ATTR{power/control}="auto"

@@ -10,19 +10,8 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 
-# Hey, you! So you are preparing an update for a Fedora version that
-# is not yet released, but is already forked off Rawhide? If so,
-# please think twice before commiting this also into Rawhide. In
-# almost all cases we simply let Koji do the work for us and let the
-# build system inherit the currently developed version into Rawhide,
-# and do not do this via explicit git cherry picks. Thank you very
-# much.
-
-# AGAIN: DO NOT BLINDLY UPDATE RAWHIDE PACKAGES TOO WHEN YOU UPDATE
-# THIS PACKAGE FOR A NON-RAWHIDE DEVELOPMENT DISTRIBUTION!
-
 Version:        195
-Release:        9%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        10%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -31,7 +20,7 @@ BuildRequires:  tcp_wrappers-devel
 BuildRequires:  pam-devel
 BuildRequires:  libselinux-devel
 BuildRequires:  audit-libs-devel
-BuildRequires:  cryptsetup-luks-devel
+BuildRequires:  cryptsetup-devel
 BuildRequires:  dbus-devel
 BuildRequires:  libacl-devel
 BuildRequires:  pciutils-devel
@@ -52,11 +41,9 @@ BuildRequires:  intltool >= 0.40.0
 BuildRequires:  gperf
 BuildRequires:  gtk-doc
 BuildRequires:  python2-devel
-%if %{defined gitcommit}
 BuildRequires:  automake
 BuildRequires:  autoconf
 BuildRequires:  libtool
-%endif
 Requires(post): coreutils
 Requires(post): gawk
 Requires(post): sed
@@ -86,15 +73,30 @@ Source4:        listen.conf
 # Prevent accidental removal of the systemd package
 Source6:        yum-protect-systemd.conf
 
-# Temporary workaround for build error https://bugzilla.redhat.com/show_bug.cgi?id=872638
-Patch0:         disable-broken-test-build.patch
-# F18Beta blocker workaround: https://bugzilla.redhat.com/show_bug.cgi?id=873576
-Patch1:         0001-revert-udev-killing.patch
+Patch0001:      0001-rules-Remove-HP-iLO-from-USB-HID-PM-rules.patch
+Patch0002:      0002-job-avoid-recursion-into-transaction-code-from-job-c.patch
+Patch0003:      0003-sysctl-parse-all-keys-in-a-config-file.patch
+Patch0004:      0004-journal-fix-parsing-of-monotonic-kernel-timestamps.patch
+Patch0005:      0005-hwclock-do-not-seal-the-kernel-s-time-warp-call-from.patch
+Patch0006:      0006-units-agetty-overrides-TERM.patch
+Patch0007:      0007-shared-libsystemd-daemon-check-for-empty-strings-in-.patch
+Patch0008:      0008-shared-core-do-not-always-accept-numbers-in-string-l.patch
+Patch0009:      0009-shared-max-in-the-string-number-conversion-is-meant-.patch
+Patch0010:      0010-strv-cleanup-error-path-loops.patch
+Patch0011:      0011-build-sys-store-journald-code-in-a-noinst-library.patch
+Patch0012:      0012-dbus-manager-fix-a-fatal-dbus-abort-in-bus_manager_m.patch
+Patch0013:      0013-shutdown-readd-explicit-sync-when-shutting-down.patch
+Patch0014:      0014-switch-root-try-pivot_root-before-overmounting.patch
+Patch0015:      0015-umount-always-remount-read-only-before-unmounting-in.patch
+Patch0016:      0016-shared-utils-systemd-cgls-shows-n-a-when-piping-outp.patch
+Patch0017:      0017-core-load-fragment-fix-potential-bad-memory-access.patch
+Patch0018:      0018-journald-fix-bad-memory-access.patch
+Patch0019:      0019-journal-send-always-send-SYSLOG_IDENTIFIER-if-we-hav.patch
 
-# https://bugzilla.redhat.com/show_bug.cgi?id=873459
-Patch2:         0001-shutdown-readd-explicit-sync-when-shutting-down.patch
-Patch3:         0001-umount-always-remount-read-only-before-unmounting-in.patch
-Patch4:         0001-switch-root-try-pivot_root-before-overmounting.patch
+# F18Beta blocker workaround: https://bugzilla.redhat.com/show_bug.cgi?id=873576
+# mdadm-3.2.6-2 contains the patch to escape from udev's cgroup,
+# but is not in updates yet (2012-12-05).
+Patch9999:      0001-revert-udev-killing.patch
 
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
 Provides:       SysVinit = 2.86-24, sysvinit = 2.86-24
@@ -202,20 +204,22 @@ glib-based applications using libudev functionality.
 
 %prep
 %setup -q %{?gitcommit:-n %{name}-git%{gitcommit}}
-%patch0 -p1
-%patch1 -p1
-%patch2 -p1
-%patch3 -p1
-%patch4 -p1
+git init
+git config user.email "systemd-owner@fedoraproject.org"
+git config user.name "systemd cabal"
+git add .
+git commit -m "base release %{version}"
+git am %{patches}
 
 %build
 %{?gitcommit: ./autogen.sh }
+autoreconf -i
 %configure \
         --with-distro=fedora \
         --libexecdir=%{_prefix}/lib \
         --enable-gtk-doc \
         --disable-static
-/usr/bin/make %{?_smp_mflags}
+/usr/bin/make %{?_smp_mflags} V=1
 
 %install
 %make_install
@@ -718,6 +722,17 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Wed Dec 05 2012 Michal Schmidt <mschmidt@redhat.com> - 195-10
+- Selected fixes from v196.
+- https://bugzilla.redhat.com/show_bug.cgi?id=869779
+- https://bugzilla.redhat.com/show_bug.cgi?id=870622
+- https://bugzilla.redhat.com/show_bug.cgi?id=870577
+- https://bugzilla.redhat.com/show_bug.cgi?id=858799
+- https://bugzilla.redhat.com/show_bug.cgi?id=875653
+- https://bugzilla.redhat.com/show_bug.cgi?id=872193
+- BR cryptsetup-devel instead of the legacy cryptsetup-luks-devel provide
+- verbose make
+
 * Wed Nov 21 2012 Lennart Poettering <lpoetter@redhat.com> - 195-9
 - Added vdagent to preset list
 - https://bugzilla.redhat.com/show_bug.cgi?id=876237

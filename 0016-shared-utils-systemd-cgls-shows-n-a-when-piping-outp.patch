@@ -1,0 +1,35 @@
+From 2e74b78fb2c1f135333339cd0d3001af2126c02d Mon Sep 17 00:00:00 2001
+From: Anders Olofsson <anders.olofsson@axis.com>
+Date: Mon, 19 Nov 2012 15:25:36 +0100
+Subject: [PATCH] shared/utils: systemd-cgls shows 'n/a' when piping output
+
+-1 was used to signal failure, but the type was unsigned.
+
+https://bugs.freedesktop.org/show_bug.cgi?id=56644
+(cherry picked from commit 7009eec20823add711e0aa452bdf9dfdd677fa4f)
+---
+ src/shared/util.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/shared/util.c b/src/shared/util.c
+index 384c163..45cb6fe 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -3796,7 +3796,7 @@ int fd_columns(int fd) {
+ 
+ unsigned columns(void) {
+         const char *e;
+-        unsigned c;
++        int c;
+ 
+         if (_likely_(cached_columns > 0))
+                 return cached_columns;
+@@ -3804,7 +3804,7 @@ unsigned columns(void) {
+         c = 0;
+         e = getenv("COLUMNS");
+         if (e)
+-                safe_atou(e, &c);
++                safe_atoi(e, &c);
+ 
+         if (c <= 0)
+                 c = fd_columns(STDOUT_FILENO);

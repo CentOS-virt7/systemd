@@ -1,0 +1,93 @@
+From 1ac378daaab131effa6a8354a9bbfa21e3ccd357 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Tue, 30 Oct 2012 10:29:40 +0100
+Subject: [PATCH] shared, libsystemd-daemon: check for empty strings in strto*l
+ conversions
+
+strtol() and friends may set EINVAL if no conversion was performed, but
+they are not required to do so. In practice they don't. We need to check
+for it.
+
+https://bugzilla.redhat.com/show_bug.cgi?id=870577
+(cherry picked from commit f3910003bce32ebdc1dbb71fd9ca2d4b8352b563)
+---
+ src/libsystemd-daemon/sd-daemon.c | 4 ++--
+ src/shared/conf-parser.c          | 2 +-
+ src/shared/util.c                 | 8 ++++----
+ 3 files changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/src/libsystemd-daemon/sd-daemon.c b/src/libsystemd-daemon/sd-daemon.c
+index 863ac75..480db3b 100644
+--- a/src/libsystemd-daemon/sd-daemon.c
++++ b/src/libsystemd-daemon/sd-daemon.c
+@@ -88,7 +88,7 @@ _sd_export_ int sd_listen_fds(int unset_environment) {
+                 goto finish;
+         }
+ 
+-        if (!p || *p || l <= 0) {
++        if (!p || p == e || *p || l <= 0) {
+                 r = -EINVAL;
+                 goto finish;
+         }
+@@ -112,7 +112,7 @@ _sd_export_ int sd_listen_fds(int unset_environment) {
+                 goto finish;
+         }
+ 
+-        if (!p || *p) {
++        if (!p || p == e || *p) {
+                 r = -EINVAL;
+                 goto finish;
+         }
+diff --git a/src/shared/conf-parser.c b/src/shared/conf-parser.c
+index 4bf3147..9f5c07c 100644
+--- a/src/shared/conf-parser.c
++++ b/src/shared/conf-parser.c
+@@ -865,7 +865,7 @@ int config_parse_mode(
+ 
+         errno = 0;
+         l = strtol(rvalue, &x, 8);
+-        if (!x || *x || errno) {
++        if (!x || x == rvalue || *x || errno) {
+                 log_error("[%s:%u] Failed to parse mode value, ignoring: %s", filename, line, rvalue);
+                 return 0;
+         }
+diff --git a/src/shared/util.c b/src/shared/util.c
+index 2f0aba8..8519c43 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -378,7 +378,7 @@ int safe_atou(const char *s, unsigned *ret_u) {
+         errno = 0;
+         l = strtoul(s, &x, 0);
+ 
+-        if (!x || *x || errno)
++        if (!x || x == s || *x || errno)
+                 return errno ? -errno : -EINVAL;
+ 
+         if ((unsigned long) (unsigned) l != l)
+@@ -398,7 +398,7 @@ int safe_atoi(const char *s, int *ret_i) {
+         errno = 0;
+         l = strtol(s, &x, 0);
+ 
+-        if (!x || *x || errno)
++        if (!x || x == s || *x || errno)
+                 return errno ? -errno : -EINVAL;
+ 
+         if ((long) (int) l != l)
+@@ -418,7 +418,7 @@ int safe_atollu(const char *s, long long unsigned *ret_llu) {
+         errno = 0;
+         l = strtoull(s, &x, 0);
+ 
+-        if (!x || *x || errno)
++        if (!x || x == s || *x || errno)
+                 return errno ? -errno : -EINVAL;
+ 
+         *ret_llu = l;
+@@ -435,7 +435,7 @@ int safe_atolli(const char *s, long long int *ret_lli) {
+         errno = 0;
+         l = strtoll(s, &x, 0);
+ 
+-        if (!x || *x || errno)
++        if (!x || x == s || *x || errno)
+                 return errno ? -errno : -EINVAL;
+ 
+         *ret_lli = l;
