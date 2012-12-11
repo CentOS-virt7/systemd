@@ -1,6 +1,9 @@
 #global gitcommit e7aee75
 
+# PIE is broken on s390 (#868839, #872148)
+%ifnarch s390 s390x
 %global _hardened_build 1
+%endif
 
 # We ship a .pc file but don't want to have a dep on pkg-config. We
 # strip the automatically generated dep here and instead co-own the
@@ -11,7 +14,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 
 Version:        195
-Release:        10%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        12%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -722,6 +725,13 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Mon Dec 10 2012 Michal Schmidt <mschmidt@redhat.com> - 195-12
+- Enable rngd.service by default (#857765).
+
+* Mon Dec 10 2012 Michal Schmidt <mschmidt@redhat.com> - 195-11
+- Disable hardening on s390(x) because PIE is broken there and produces
+  text relocations with __thread (#868839).
+
 * Wed Dec 05 2012 Michal Schmidt <mschmidt@redhat.com> - 195-10
 - Selected fixes from v196.
 - https://bugzilla.redhat.com/show_bug.cgi?id=869779
