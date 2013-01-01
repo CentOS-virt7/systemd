@@ -14,7 +14,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 
 Version:        195
-Release:        12%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        13%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -95,11 +95,12 @@ Patch0016:      0016-shared-utils-systemd-cgls-shows-n-a-when-piping-outp.patch
 Patch0017:      0017-core-load-fragment-fix-potential-bad-memory-access.patch
 Patch0018:      0018-journald-fix-bad-memory-access.patch
 Patch0019:      0019-journal-send-always-send-SYSLOG_IDENTIFIER-if-we-hav.patch
-
 # F18Beta blocker workaround: https://bugzilla.redhat.com/show_bug.cgi?id=873576
 # mdadm-3.2.6-2 contains the patch to escape from udev's cgroup,
 # but is not in updates yet (2012-12-05).
-Patch9999:      0001-revert-udev-killing.patch
+Patch0020:      0020-revert-udev-killing.patch
+# F18 NTH https://bugzilla.redhat.com/show_bug.cgi?id=882212
+Patch0021:      0021-localectl-fix-dbus-call-arguments-in-set_x11_keymap.patch
 
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
 Provides:       SysVinit = 2.86-24, sysvinit = 2.86-24
@@ -725,6 +726,9 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Thu Dec 20 2012 Michal Schmidt <mschmidt@redhat.com> - 195-13
+- localectl: fix dbus call arguments in set_x11_keymap (#882212)
+
 * Mon Dec 10 2012 Michal Schmidt <mschmidt@redhat.com> - 195-12
 - Enable rngd.service by default (#857765).
 

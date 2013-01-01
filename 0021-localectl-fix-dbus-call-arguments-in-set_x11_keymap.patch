@@ -1,0 +1,25 @@
+From 41f6888290376f02b446aa440f0a095531117bc1 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Wed, 12 Dec 2012 22:24:04 +0100
+Subject: [PATCH] localectl: fix dbus call arguments in set_x11_keymap
+
+Fixes an assertion failure in the dbus lib.
+https://bugzilla.redhat.com/show_bug.cgi?id=882212
+(cherry picked from commit 6b2b6f30e38d67b032d6bdc6b47ae05e143e96c5)
+---
+ src/locale/localectl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/locale/localectl.c b/src/locale/localectl.c
+index c05eba0..f27ed71 100644
+--- a/src/locale/localectl.c
++++ b/src/locale/localectl.c
+@@ -535,7 +535,7 @@ static int set_x11_keymap(DBusConnection *bus, char **args, unsigned n) {
+         layout = args[1];
+         model = n > 2 ? args[2] : "";
+         variant = n > 3 ? args[3] : "";
+-        options = n > 3 ? args[4] : "";
++        options = n > 4 ? args[4] : "";
+         b = arg_convert;
+ 
+         return bus_method_call_with_reply(

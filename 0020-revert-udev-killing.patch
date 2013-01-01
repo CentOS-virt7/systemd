@@ -1,15 +1,22 @@
-From 2b3509a898dcb65d6fba41f3c9cd484b00730017 Mon Sep 17 00:00:00 2001
+From cd866c1adc17f8c5ed82c71fb4b79fdab39ce06f Mon Sep 17 00:00:00 2001
 From: Michal Schmidt <mschmidt@redhat.com>
 Date: Thu, 15 Nov 2012 16:55:09 +0100
 Subject: [PATCH] revert udev killing
 
 revert of upstream commit 194bbe33382f5365be3865ed1779147cb680f1d3
+
+F18Beta blocker workaround:
+https://bugzilla.redhat.com/show_bug.cgi?id=873576
+mdadm-3.2.6-2 contains the patch to escape from udev's cgroup,
+but is not in updates yet (2012-12-05).
+
+The killing will be restored when mdadm gets the necessary update.
 ---
  src/udev/udevd.c | 32 ++++++++++++++++----------------
  1 file changed, 16 insertions(+), 16 deletions(-)
 
 diff --git a/src/udev/udevd.c b/src/udev/udevd.c
-index ebd601e..53322b0 100644
+index 9bbc8ec..d12aff4 100644
 --- a/src/udev/udevd.c
 +++ b/src/udev/udevd.c
 @@ -74,7 +74,6 @@ static int exec_delay;
@@ -115,6 +122,3 @@ index ebd601e..53322b0 100644
                          rules = udev_rules_unref(rules);
                          udev_builtin_exit(udev);
                          reload = false;
--- 
-1.7.11.7
-
