@@ -14,7 +14,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 
 Version:        195
-Release:        13%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        15%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -101,6 +101,13 @@ Patch0019:      0019-journal-send-always-send-SYSLOG_IDENTIFIER-if-we-hav.patch
 Patch0020:      0020-revert-udev-killing.patch
 # F18 NTH https://bugzilla.redhat.com/show_bug.cgi?id=882212
 Patch0021:      0021-localectl-fix-dbus-call-arguments-in-set_x11_keymap.patch
+# F18: https://bugs.freedesktop.org/show_bug.cgi?id=59000 https://bugzilla.redhat.com/show_bug.cgi?id=889562
+Patch0022:      0001-add-Belarussian-mapping-simple-by-and-by.patch
+Patch0023:      0002-French-Canadian-xlayout-is-just-ca-not-ca-fr-any-mor.patch
+Patch0024:      0003-add-Hebrew-Israel-simple-il-il.patch
+Patch0025:      0004-add-Kazakh-keyboard-mapping-kazakh-kz.patch
+Patch0026:      0005-add-Lithuanian-keyboard-mapping-lt-lt.patch
+Patch0027:      0006-correct-Macedonian-keyboard-mapping-X-layout-is-mk-n.patch
 
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
 Provides:       SysVinit = 2.86-24, sysvinit = 2.86-24
@@ -474,6 +481,13 @@ if [ -e /etc/sysconfig/network -a ! -e /etc/hostname ]; then
 fi
 /usr/bin/sed -i '/^HOSTNAME=/d' /etc/sysconfig/network >/dev/null 2>&1 || :
 
+# Migrate the old systemd-setup-keyboard X11 configuration fragment
+if [ ! -e /etc/X11/xorg.conf.d/00-keyboard.conf ] ; then
+        /usr/bin/mv /etc/X11/xorg.conf.d/00-system-setup-keyboard.conf /etc/X11/xorg.conf.d/00-keyboard.conf >/dev/null 2>&1 || :
+else
+        /usr/bin/rm -f /etc/X11/xorg.conf.d/00-system-setup-keyboard.conf >/dev/null 2>&1 || :
+fi
+
 %posttrans
 # Convert old /etc/sysconfig/desktop settings
 preferred=
@@ -588,6 +602,7 @@ fi
 %ghost %config(noreplace) %{_sysconfdir}/machine-id
 %ghost %config(noreplace) %{_sysconfdir}/machine-info
 %ghost %config(noreplace) %{_sysconfdir}/X11/xorg.conf.d/00-keyboard.conf
+%ghost %config(noreplace) %{_sysconfdir}/X11/xorg.conf.d/00-system-setup-keyboard.conf
 %{_bindir}/systemd
 %{_bindir}/systemctl
 %{_bindir}/systemd-notify
@@ -726,6 +741,13 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Thu Jan  3 2013 Lennart Poettering <lpoetter@redhat.com> - 195-15
+- https://bugs.freedesktop.org/show_bug.cgi?id=59000
+
+* Thu Jan  3 2013 Lennart Poettering <lpoetter@redhat.com> - 195-14
+- Migrate old s-s-k X11 keyboard configuration file
+- https://bugzilla.redhat.com/show_bug.cgi?id=889699
+
 * Thu Dec 20 2012 Michal Schmidt <mschmidt@redhat.com> - 195-13
 - localectl: fix dbus call arguments in set_x11_keymap (#882212)
 

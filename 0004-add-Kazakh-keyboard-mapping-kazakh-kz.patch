@@ -1,0 +1,21 @@
+From 177c11eddfb89066e31c6bcec28815e37b8c838b Mon Sep 17 00:00:00 2001
+From: Adam Williamson <awilliam@redhat.com>
+Date: Thu, 3 Jan 2013 13:25:36 -0800
+Subject: [PATCH 4/6] add Kazakh keyboard mapping (kazakh/kz)
+
+---
+ src/locale/kbd-model-map | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/locale/kbd-model-map b/src/locale/kbd-model-map
+index ee8f9c1..500b688 100644
+--- a/src/locale/kbd-model-map
++++ b/src/locale/kbd-model-map
+@@ -72,3 +72,4 @@ sr-cy			rs	pc105		-		terminate:ctrl_alt_bksp
+ gr			gr,us	pc105		-		terminate:ctrl_alt_bksp,grp:shifts_toggle,grp_led:scroll
+ by			by,us	pc105		-		terminate:ctrl_alt_bksp,grp:shifts_toggle,grp_led:scroll
+ il			il	pc105		-		terminate:ctrl_alt_bksp
++kazakh			kz,us	pc105		-		terminate:ctrl_alt_bksp,grp:shifts_toggle,grp_led:scroll
+-- 
+1.8.0.2
+

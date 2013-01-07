@@ -1,0 +1,26 @@
+From 768aa358713d3e28864d35ee1bb53355ecc894d7 Mon Sep 17 00:00:00 2001
+From: Adam Williamson <awilliam@redhat.com>
+Date: Thu, 3 Jan 2013 13:37:08 -0800
+Subject: [PATCH 6/6] correct Macedonian keyboard mapping (X layout is 'mk',
+ not 'mkd')
+
+---
+ src/locale/kbd-model-map | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/locale/kbd-model-map b/src/locale/kbd-model-map
+index 1688373..b0860ab 100644
+--- a/src/locale/kbd-model-map
++++ b/src/locale/kbd-model-map
+@@ -2,7 +2,7 @@
+ # consolelayout		xlayout	xmodel		xvariant	xoptions
+ sg			ch	pc105		de_nodeadkeys	terminate:ctrl_alt_bksp
+ nl			nl	pc105		-		terminate:ctrl_alt_bksp
+-mk-utf			mkd,us	pc105		-		terminate:ctrl_alt_bksp,grp:shifts_toggle,grp_led:scroll
++mk-utf			mk,us	pc105		-		terminate:ctrl_alt_bksp,grp:shifts_toggle,grp_led:scroll
+ trq			tr	pc105		-		terminate:ctrl_alt_bksp
+ guj			in,us	pc105		guj		terminate:ctrl_alt_bksp,grp:shifts_toggle,grp_led:scroll
+ uk			gb	pc105		-		terminate:ctrl_alt_bksp
+-- 
+1.8.0.2
+
