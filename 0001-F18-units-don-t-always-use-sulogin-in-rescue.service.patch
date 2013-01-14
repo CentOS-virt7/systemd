@@ -1,0 +1,28 @@
+From e08e3216df4db1f082fa667d559c0e5a17c3b4fb Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Fri, 11 Jan 2013 22:36:06 +0100
+Subject: [PATCH] (F18) units: don't always use sulogin in rescue.service
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Undo commit 7f0086f8c9307a9a62f31a4aa5c8d3de74abd06b. I don't want this
+changed within a Fedora release.
+---
+ units/rescue.service.m4.in | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/units/rescue.service.m4.in b/units/rescue.service.m4.in
+index 269797a..dde5271 100644
+--- a/units/rescue.service.m4.in
++++ b/units/rescue.service.m4.in
+@@ -18,7 +18,8 @@ Environment=HOME=/root
+ WorkingDirectory=/root
+ ExecStartPre=-/bin/plymouth quit
+ ExecStartPre=-/bin/echo -e 'Welcome to rescue mode! Type "systemctl default" or ^D to enter default mode.\\nType "journalctl -xb" to view system logs. Type "systemctl reboot" to reboot.'
+-ExecStart=-/sbin/sulogin
++EnvironmentFile=/etc/sysconfig/init
++ExecStart=-/bin/bash -c "exec ${SINGLE}"
+ ExecStopPost=-@SYSTEMCTL@ --fail --no-block default
+ Type=idle
+ StandardInput=tty-force

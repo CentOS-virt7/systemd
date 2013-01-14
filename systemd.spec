@@ -13,8 +13,8 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 
-Version:        195
-Release:        15%{?gitcommit:.git%{gitcommit}}%{?dist}
+Version:        197
+Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}.1
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -76,38 +76,20 @@ Source4:        listen.conf
 # Prevent accidental removal of the systemd package
 Source6:        yum-protect-systemd.conf
 
-Patch0001:      0001-rules-Remove-HP-iLO-from-USB-HID-PM-rules.patch
-Patch0002:      0002-job-avoid-recursion-into-transaction-code-from-job-c.patch
-Patch0003:      0003-sysctl-parse-all-keys-in-a-config-file.patch
-Patch0004:      0004-journal-fix-parsing-of-monotonic-kernel-timestamps.patch
-Patch0005:      0005-hwclock-do-not-seal-the-kernel-s-time-warp-call-from.patch
-Patch0006:      0006-units-agetty-overrides-TERM.patch
-Patch0007:      0007-shared-libsystemd-daemon-check-for-empty-strings-in-.patch
-Patch0008:      0008-shared-core-do-not-always-accept-numbers-in-string-l.patch
-Patch0009:      0009-shared-max-in-the-string-number-conversion-is-meant-.patch
-Patch0010:      0010-strv-cleanup-error-path-loops.patch
-Patch0011:      0011-build-sys-store-journald-code-in-a-noinst-library.patch
-Patch0012:      0012-dbus-manager-fix-a-fatal-dbus-abort-in-bus_manager_m.patch
-Patch0013:      0013-shutdown-readd-explicit-sync-when-shutting-down.patch
-Patch0014:      0014-switch-root-try-pivot_root-before-overmounting.patch
-Patch0015:      0015-umount-always-remount-read-only-before-unmounting-in.patch
-Patch0016:      0016-shared-utils-systemd-cgls-shows-n-a-when-piping-outp.patch
-Patch0017:      0017-core-load-fragment-fix-potential-bad-memory-access.patch
-Patch0018:      0018-journald-fix-bad-memory-access.patch
-Patch0019:      0019-journal-send-always-send-SYSLOG_IDENTIFIER-if-we-hav.patch
-# F18Beta blocker workaround: https://bugzilla.redhat.com/show_bug.cgi?id=873576
-# mdadm-3.2.6-2 contains the patch to escape from udev's cgroup,
-# but is not in updates yet (2012-12-05).
-Patch0020:      0020-revert-udev-killing.patch
-# F18 NTH https://bugzilla.redhat.com/show_bug.cgi?id=882212
-Patch0021:      0021-localectl-fix-dbus-call-arguments-in-set_x11_keymap.patch
-# F18: https://bugs.freedesktop.org/show_bug.cgi?id=59000 https://bugzilla.redhat.com/show_bug.cgi?id=889562
-Patch0022:      0001-add-Belarussian-mapping-simple-by-and-by.patch
-Patch0023:      0002-French-Canadian-xlayout-is-just-ca-not-ca-fr-any-mor.patch
-Patch0024:      0003-add-Hebrew-Israel-simple-il-il.patch
-Patch0025:      0004-add-Kazakh-keyboard-mapping-kazakh-kz.patch
-Patch0026:      0005-add-Lithuanian-keyboard-mapping-lt-lt.patch
-Patch0027:      0006-correct-Macedonian-keyboard-mapping-X-layout-is-mk-n.patch
+# Revert potentially incompatible changes in v195..v197.
+Patch0001:      0001-F18-units-don-t-always-use-sulogin-in-rescue.service.patch
+Patch0002:      0002-F18-do-not-enable-persistent-network-device-naming.patch
+Patch0003:      0003-F18-re-add-http-daemon.target.patch
+Patch0004:      0004-F18-bring-back-single.service.patch
+# post-v197 fixes:
+Patch0005:      0005-udev-net_id-skip-stacked-network-devices.patch
+Patch0006:      0006-dbus-fix-serialization-of-calendar-timers.patch
+Patch0007:      0007-udev-don-t-call-fclose-on-NULL-in-is_pci_multifuncti.patch
+Patch0008:      0008-bootchart-check-return-of-fopen-before-setvbuf-in-lo.patch
+Patch0009:      0009-man-systemd-bootchart.xml-fix-typo.patch
+Patch0010:      0010-man-systemd.unit.xml-fix-typos.patch
+Patch0011:      0011-dbus-properly-serialize-calendar-timer-data.patch
+Patch0012:      0012-udev-Fix-device-matching-in-the-accelerometer.patch
 
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
 Provides:       SysVinit = 2.86-24, sysvinit = 2.86-24
@@ -226,10 +208,12 @@ git am %{patches}
 %{?gitcommit: ./autogen.sh }
 autoreconf -i
 %configure \
-        --with-distro=fedora \
         --libexecdir=%{_prefix}/lib \
         --enable-gtk-doc \
-        --disable-static
+        --disable-static \
+        --with-sysvinit-path=/etc/rc.d/init.d \
+        --with-rc-local-script-path-start=/etc/rc.d/rc.local \
+        --disable-myhostname
 /usr/bin/make %{?_smp_mflags} V=1
 
 %install
@@ -372,10 +356,12 @@ migrate_ntp()
 return 0
 
 %post
-/usr/bin/systemd-machine-id-setup > /dev/null 2>&1 || :
-/usr/lib/systemd/systemd-random-seed save > /dev/null 2>&1 || :
-/usr/bin/systemctl daemon-reexec > /dev/null 2>&1 || :
+/usr/bin/systemd-machine-id-setup >/dev/null 2>&1 || :
+/usr/lib/systemd/systemd-random-seed save >/dev/null 2>&1 || :
+/usr/bin/systemctl daemon-reexec >/dev/null 2>&1 || :
 /usr/bin/systemctl start systemd-udevd.service >/dev/null 2>&1 || :
+/usr/bin/udevadm hwdb --update >/dev/null 2>&1 || :
+/usr/bin/journalctl --update-catalog >/dev/null 2>&1 || :
 
 # Stop-gap until rsyslog.rpm does this on its own. (This is supposed
 # to fail when the link already exists)
@@ -570,6 +556,8 @@ fi
 %dir %{_prefix}/lib/systemd/user-preset
 %dir %{_prefix}/lib/systemd/system-shutdown
 %dir %{_prefix}/lib/systemd/system-sleep
+%dir %{_prefix}/lib/systemd/catalog
+%dir %{_prefix}/lib/systemd/ntp-units.d
 %dir %{_prefix}/lib/tmpfiles.d
 %dir %{_prefix}/lib/sysctl.d
 %dir %{_prefix}/lib/modules-load.d
@@ -642,6 +630,7 @@ fi
 %{_prefix}/lib/tmpfiles.d/tmp.conf
 %{_prefix}/lib/systemd/system-preset/90-default.preset
 %{_prefix}/lib/systemd/system-preset/90-display-manager.preset
+%{_prefix}/lib/systemd/catalog/systemd.catalog
 %{_sbindir}/init
 %{_sbindir}/reboot
 %{_sbindir}/halt
@@ -741,6 +730,12 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Sat Jan 12 2013 Michal Schmidt <mschmidt@redhat.com> - 197-1.fc18.1
+- Pick post-v197 fixes.
+
+* Fri Jan 11 2013 Michal Schmidt <mschmidt@redhat.com> - 197-1
+- Rebase to new upstream release.
+
 * Thu Jan  3 2013 Lennart Poettering <lpoetter@redhat.com> - 195-15
 - https://bugs.freedesktop.org/show_bug.cgi?id=59000
 

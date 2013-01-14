@@ -1,0 +1,22 @@
+From f0f366a01ee4ba8261a5ee8f3a73d49834ff0141 Mon Sep 17 00:00:00 2001
+From: Michal Schmidt <mschmidt@redhat.com>
+Date: Fri, 11 Jan 2013 22:43:16 +0100
+Subject: [PATCH] (F18) do not enable persistent network device naming
+
+Not within a Fedora release.
+---
+ Makefile.am | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index 474110a..004945f 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -1840,7 +1840,6 @@ dist_udevrules_DATA += \
+ 	rules/75-net-description.rules \
+ 	rules/75-tty-description.rules \
+ 	rules/78-sound-card.rules \
+-	rules/80-net-name-slot.rules \
+ 	rules/95-udev-late.rules
+ 
+ if HAVE_KMOD

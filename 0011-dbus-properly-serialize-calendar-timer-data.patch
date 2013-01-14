@@ -1,0 +1,194 @@
+From a3c5fe158e2cb202ce03561a07ae4fed79180063 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 10 Jan 2013 00:54:46 +0100
+Subject: [PATCH] dbus: properly serialize calendar timer data
+
+As it turns out the bus properties for timer units wre really broken,
+so let's clean this up for good and properly add calendar timer
+serialization. We really should get that right before finalizing the
+bus API documentation in the wiki...
+(cherry picked from commit b719810db446244ff708a2f5f08566af67ddab61)
+---
+ src/core/dbus-timer.c  | 92 +++++++++++++++++++++++++++++++++++++-------------
+ src/core/timer.c       |  2 +-
+ src/core/timer.h       |  4 +--
+ src/shared/time-util.c |  2 ++
+ 4 files changed, 73 insertions(+), 27 deletions(-)
+
+diff --git a/src/core/dbus-timer.c b/src/core/dbus-timer.c
+index b22fcb5..75add81 100644
+--- a/src/core/dbus-timer.c
++++ b/src/core/dbus-timer.c
+@@ -30,8 +30,10 @@
+ #define BUS_TIMER_INTERFACE                                             \
+         " <interface name=\"org.freedesktop.systemd1.Timer\">\n"        \
+         "  <property name=\"Unit\" type=\"s\" access=\"read\"/>\n"      \
+-        "  <property name=\"Timers\" type=\"a(stt)\" access=\"read\"/>\n" \
+-        "  <property name=\"NextElapseUSec\" type=\"t\" access=\"read\"/>\n" \
++        "  <property name=\"TimersMonotonic\" type=\"a(stt)\" access=\"read\"/>\n" \
++        "  <property name=\"TimersCalendar\" type=\"a(sst)\" access=\"read\"/>\n" \
++        "  <property name=\"NextElapseUSecRealtime\" type=\"t\" access=\"read\"/>\n" \
++        "  <property name=\"NextElapseUSecMonotonic\" type=\"t\" access=\"read\"/>\n" \
+         "  <property name=\"Result\" type=\"s\" access=\"read\"/>\n"    \
+         " </interface>\n"
+ 
+@@ -52,11 +54,13 @@
+ const char bus_timer_interface[] _introspect_("Timer") = BUS_TIMER_INTERFACE;
+ 
+ const char bus_timer_invalidating_properties[] =
+-        "Timers\0"
+-        "NextElapseUSec\0"
++        "TimersMonotonic\0"
++        "TimersRealtime\0"
++        "NextElapseUSecRealtime\0"
++        "NextElapseUSecMonotonic\0"
+         "Result\0";
+ 
+-static int bus_timer_append_timers(DBusMessageIter *i, const char *property, void *data) {
++static int bus_timer_append_monotonic_timers(DBusMessageIter *i, const char *property, void *data) {
+         Timer *p = data;
+         DBusMessageIter sub, sub2;
+         TimerValue *k;
+@@ -74,23 +78,20 @@ static int bus_timer_append_timers(DBusMessageIter *i, const char *property, voi
+                 size_t l;
+                 bool b;
+ 
+-                t = timer_base_to_string(k->base);
++                if (k->base == TIMER_CALENDAR)
++                        continue;
+ 
+-                if (endswith(t, "Sec")) {
++                t = timer_base_to_string(k->base);
++                assert(endswith(t, "Sec"));
+ 
+-                        /* s/Sec/USec/ */
+-                        l = strlen(t);
+-                        buf = new(char, l+2);
+-                        if (!buf)
+-                                return -ENOMEM;
++                /* s/Sec/USec/ */
++                l = strlen(t);
++                buf = new(char, l+2);
++                if (!buf)
++                        return -ENOMEM;
+ 
+-                        memcpy(buf, t, l-3);
+-                        memcpy(buf+l-3, "USec", 5);
+-                } else {
+-                        buf = strdup(t);
+-                        if (!buf)
+-                                return -ENOMEM;
+-                }
++                memcpy(buf, t, l-3);
++                memcpy(buf+l-3, "USec", 5);
+ 
+                 b = dbus_message_iter_open_container(&sub, DBUS_TYPE_STRUCT, NULL, &sub2) &&
+                         dbus_message_iter_append_basic(&sub2, DBUS_TYPE_STRING, &buf) &&
+@@ -108,6 +109,48 @@ static int bus_timer_append_timers(DBusMessageIter *i, const char *property, voi
+         return 0;
+ }
+ 
++static int bus_timer_append_calendar_timers(DBusMessageIter *i, const char *property, void *data) {
++        Timer *p = data;
++        DBusMessageIter sub, sub2;
++        TimerValue *k;
++
++        assert(i);
++        assert(property);
++        assert(p);
++
++        if (!dbus_message_iter_open_container(i, DBUS_TYPE_ARRAY, "(sst)", &sub))
++                return -ENOMEM;
++
++        LIST_FOREACH(value, k, p->values) {
++                _cleanup_free_ char *buf = NULL;
++                const char *t;
++                bool b;
++                int j;
++
++                if (k->base != TIMER_CALENDAR)
++                        continue;
++
++                t = timer_base_to_string(k->base);
++                j = calendar_spec_to_string(k->calendar_spec, &buf);
++                if (j < 0)
++                        return j;
++
++                b = dbus_message_iter_open_container(&sub, DBUS_TYPE_STRUCT, NULL, &sub2) &&
++                        dbus_message_iter_append_basic(&sub2, DBUS_TYPE_STRING, &t) &&
++                        dbus_message_iter_append_basic(&sub2, DBUS_TYPE_STRING, &buf) &&
++                        dbus_message_iter_append_basic(&sub2, DBUS_TYPE_UINT64, &k->next_elapse) &&
++                        dbus_message_iter_close_container(&sub, &sub2);
++
++                if (!b)
++                        return -ENOMEM;
++        }
++
++        if (!dbus_message_iter_close_container(i, &sub))
++                return -ENOMEM;
++
++        return 0;
++}
++
+ static int bus_timer_append_unit(DBusMessageIter *i, const char *property, void *data) {
+         Unit *u = data;
+         Timer *timer = TIMER(u);
+@@ -125,11 +168,12 @@ static int bus_timer_append_unit(DBusMessageIter *i, const char *property, void
+ static DEFINE_BUS_PROPERTY_APPEND_ENUM(bus_timer_append_timer_result, timer_result, TimerResult);
+ 
+ static const BusProperty bus_timer_properties[] = {
+-        { "Unit",           bus_timer_append_unit,        "s", 0 },
+-        { "Timers",         bus_timer_append_timers, "a(stt)", 0 },
+-        { "NextElapseUSec", bus_property_append_usec,     "t", offsetof(Timer, next_elapse_monotonic) },
+-        { "NextElapseUSecRealtime", bus_property_append_usec, "t", offsetof(Timer, next_elapse_realtime) },
+-        { "Result",         bus_timer_append_timer_result,"s", offsetof(Timer, result)      },
++        { "Unit",                    bus_timer_append_unit,             "s",      0 },
++        { "TimersMonotonic",         bus_timer_append_monotonic_timers, "a(stt)", 0 },
++        { "TimersCalendar",          bus_timer_append_calendar_timers,  "a(sst)", 0 },
++        { "NextElapseUSecMonotonic", bus_property_append_usec,          "t",      offsetof(Timer, next_elapse_monotonic) },
++        { "NextElapseUSecRealtime",  bus_property_append_usec,          "t",      offsetof(Timer, next_elapse_realtime) },
++        { "Result",                  bus_timer_append_timer_result,     "s",      offsetof(Timer, result) },
+         { NULL, }
+ };
+ 
+diff --git a/src/core/timer.c b/src/core/timer.c
+index 31ef176..4453aa0 100644
+--- a/src/core/timer.c
++++ b/src/core/timer.c
+@@ -323,7 +323,7 @@ static void timer_enter_waiting(Timer *t, bool initial) {
+                 log_debug_unit(UNIT(t)->id,
+                                "%s: Monotonic timer elapses in %s the next time.",
+                                UNIT(t)->id,
+-                               format_timespan(buf, sizeof(buf), t->next_elapse_monotonic - ts.monotonic));
++                               format_timespan(buf, sizeof(buf), t->next_elapse_monotonic > ts.monotonic ? t->next_elapse_monotonic - ts.monotonic : 0));
+ 
+                 r = unit_watch_timer(UNIT(t), CLOCK_MONOTONIC, false, t->next_elapse_monotonic, &t->monotonic_watch);
+                 if (r < 0)
+diff --git a/src/core/timer.h b/src/core/timer.h
+index 57a514a..10d3ce1 100644
+--- a/src/core/timer.h
++++ b/src/core/timer.h
+@@ -52,8 +52,8 @@ typedef struct TimerValue {
+         bool disabled;
+         clockid_t clock_id;
+ 
+-        usec_t value;
+-        CalendarSpec *calendar_spec;
++        usec_t value; /* only for monotonic events */
++        CalendarSpec *calendar_spec; /* only for calendar events */
+         usec_t next_elapse;
+ 
+         LIST_FIELDS(struct TimerValue, value);
+diff --git a/src/shared/time-util.c b/src/shared/time-util.c
+index 4fd8f08..e192d5e 100644
+--- a/src/shared/time-util.c
++++ b/src/shared/time-util.c
+@@ -230,6 +230,8 @@ char *format_timespan(char *buf, size_t l, usec_t t) {
+                 const char *suffix;
+                 usec_t usec;
+         } table[] = {
++                { "y", USEC_PER_YEAR },
++                { "month", USEC_PER_MONTH },
+                 { "w", USEC_PER_WEEK },
+                 { "d", USEC_PER_DAY },
+                 { "h", USEC_PER_HOUR },

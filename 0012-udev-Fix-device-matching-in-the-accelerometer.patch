@@ -1,0 +1,49 @@
+From d6a83f50da40578db6712c341e48fa4bef88fd6e Mon Sep 17 00:00:00 2001
+From: Bastien Nocera <hadess@hadess.net>
+Date: Thu, 10 Jan 2013 14:23:23 +0100
+Subject: [PATCH] udev: Fix device matching in the accelerometer
+
+As we were searching by ID_PATH, it would have been possible
+for us to find a sibling device instead of the device we were
+looking for.
+
+This fixes device matching on the WeTab with the upstream kernel,
+as it was trying to use the "Asus Laptop extra buttons" device
+instead of the accelerometer.
+(cherry picked from commit 1d010426c01044350b2b32d8b3af5d064f7dfe27)
+---
+ src/udev/accelerometer/accelerometer.c | 11 +----------
+ 1 file changed, 1 insertion(+), 10 deletions(-)
+
+diff --git a/src/udev/accelerometer/accelerometer.c b/src/udev/accelerometer/accelerometer.c
+index 21f5193..2fea388 100644
+--- a/src/udev/accelerometer/accelerometer.c
++++ b/src/udev/accelerometer/accelerometer.c
+@@ -257,7 +257,6 @@ int main (int argc, char** argv)
+ 
+         char devpath[PATH_MAX];
+         char *devnode;
+-        const char *id_path;
+         struct udev_enumerate *enumerate;
+         struct udev_list_entry *list_entry;
+ 
+@@ -303,18 +302,10 @@ int main (int argc, char** argv)
+                 return 1;
+         }
+ 
+-        id_path = udev_device_get_property_value(dev, "ID_PATH");
+-        if (id_path == NULL) {
+-                fprintf (stderr, "unable to get property ID_PATH for '%s'", devpath);
+-                return 0;
+-        }
+-
+         /* Get the children devices and find the devnode */
+-        /* FIXME: use udev_enumerate_add_match_parent() instead */
+         devnode = NULL;
+         enumerate = udev_enumerate_new(udev);
+-        udev_enumerate_add_match_property(enumerate, "ID_PATH", id_path);
+-        udev_enumerate_add_match_subsystem(enumerate, "input");
++        udev_enumerate_add_match_parent(enumerate, dev);
+         udev_enumerate_scan_devices(enumerate);
+         udev_list_entry_foreach(list_entry, udev_enumerate_get_list_entry(enumerate)) {
+                 struct udev_device *device;

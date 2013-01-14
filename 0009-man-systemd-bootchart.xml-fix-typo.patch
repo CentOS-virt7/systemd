@@ -1,0 +1,23 @@
+From 7f0de4bf0c3a4471228dc55a14af7d43c411af4a Mon Sep 17 00:00:00 2001
+From: Thomas Hindoe Paaboel Andersen <phomes@gmail.com>
+Date: Wed, 9 Jan 2013 21:25:02 +0100
+Subject: [PATCH] man/systemd-bootchart.xml: fix typo (cherry picked from
+ commit 1959c6ce940786d33f91e19c41441bf4c9f6a768)
+
+---
+ man/systemd-bootchart.xml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/man/systemd-bootchart.xml b/man/systemd-bootchart.xml
+index 4d53824..8c4d7cc 100644
+--- a/man/systemd-bootchart.xml
++++ b/man/systemd-bootchart.xml
+@@ -100,7 +100,7 @@
+                 <title>Output</title>
+ 
+                 <para>Systemd-bootchart generates SVG graphs. In order to render these
+-                on a graphica display any SVG capable viewer can be used. It should be
++                on a graphical display any SVG capable viewer can be used. It should be
+                 noted that the SVG render engines in most browsers (including Chrome
+                 and Firefox) are many times faster than dedicated graphical applications
+                 like Gimp and Inkscape.  Just point your browser at "file:///var/log"!
