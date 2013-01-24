@@ -5,12 +5,6 @@
 %global _hardened_build 1
 %endif
 
-%define with_journal_gateway 1
-
-%if 0%{?rhel} > 0
-%define with_journal_gateway 0
-%endif
-
 # We ship a .pc file but don't want to have a dep on pkg-config. We
 # strip the automatically generated dep here and instead co-own the
 # directory.
@@ -19,7 +13,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        204
-Release:        9%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        9%{?gitcommit:.git%{gitcommit}}%{?dist}.1
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -46,6 +40,9 @@ Patch2:         0002-journal-remember-last-direction-of-search-and-keep-o.patch
 # kernel-install patch for grubby, drop if grubby is obsolete
 Patch1000:      kernel-install-grubby.patch
 
+# RHEL-specific:
+Patch9001:      9001-RHEL-units-add-Install-section-to-tmp.mount.patch
+
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
 
 BuildRequires:  libcap-devel
@@ -64,9 +61,6 @@ BuildRequires:  xz-devel
 BuildRequires:  kmod-devel
 BuildRequires:  libgcrypt-devel
 BuildRequires:  qrencode-devel
-%if %{with_journal_gateway}
-BuildRequires:  libmicrohttpd-devel
-%endif
 BuildRequires:  libxslt
 BuildRequires:  docbook-style-xsl
 BuildRequires:  pkgconfig
@@ -208,9 +202,7 @@ glib-based applications using libudev functionality.
         --libexecdir=%{_prefix}/lib \
         --enable-gtk-doc \
         --disable-static \
-%if !%{with_journal_gateway}
         --disable-microhttpd \
-%endif
         --with-sysvinit-path=/etc/rc.d/init.d \
         --with-rc-local-script-path-start=/etc/rc.d/rc.local
 make %{?_smp_mflags} V=1
@@ -310,17 +302,15 @@ rm -f %{buildroot}%{_prefix}/lib/sysctl.d/50-coredump.conf
 # logging yet.
 rm -f %{buildroot}%{_localstatedir}/log/README
 
+# No tmp-on-tmpfs by default in RHEL7. bz#876122
+rm -f %{buildroot}%{_prefix}/lib/systemd/system/local-fs.target.wants/tmp.mount
+
 %pre
 getent group cdrom >/dev/null 2>&1 || groupadd -r -g 11 cdrom >/dev/null 2>&1 || :
 getent group tape >/dev/null 2>&1 || groupadd -r -g 33 tape >/dev/null 2>&1 || :
 getent group dialout >/dev/null 2>&1 || groupadd -r -g 18 dialout >/dev/null 2>&1 || :
 getent group floppy >/dev/null 2>&1 || groupadd -r -g 19 floppy >/dev/null 2>&1 || :
 getent group systemd-journal >/dev/null 2>&1 || groupadd -r -g 190 systemd-journal 2>&1 || :
-
-%if %{with_journal_gateway}
-getent group systemd-journal-gateway >/dev/null 2>&1 || groupadd -r -g 191 systemd-journal-gateway 2>&1 || :
-getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g systemd-journal-gateway -d %{_localstatedir}/log/journal -s /usr/sbin/nologin -c "Journal Gateway" systemd-journal-gateway >/dev/null 2>&1 || :
-%endif
 
 systemctl stop systemd-udevd-control.socket systemd-udevd-kernel.socket systemd-udevd.service >/dev/null 2>&1 || :
 
@@ -578,9 +568,6 @@ fi
 %dir %{_prefix}/lib/modules-load.d
 %dir %{_prefix}/lib/binfmt.d
 %dir %{_datadir}/systemd
-%if %{with_journal_gateway}
-%dir %{_datadir}/systemd/gatewayd
-%endif
 %dir %{_datadir}/pkgconfig
 %dir %{_localstatedir}/log/journal
 %dir %{_localstatedir}/lib/systemd
@@ -690,9 +677,6 @@ fi
 %{_datadir}/polkit-1/actions/org.freedesktop.timedate1.policy
 %{_datadir}/pkgconfig/systemd.pc
 %{_datadir}/pkgconfig/udev.pc
-%if %{with_journal_gateway}
-%{_datadir}/systemd/gatewayd/browse.html
-%endif
 %{_datadir}/bash-completion/completions/hostnamectl
 %{_datadir}/bash-completion/completions/journalctl
 %{_datadir}/bash-completion/completions/localectl
@@ -776,6 +760,13 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Wed Jun 26 2013 Michal Schmidt <mschmidt@redhat.com> 204-9.el7.1
+- Re-add RHEL-specific change to disable tmp.mount by default,
+  which got removed by a reset from F19.
+- Resolves: #876122
+- Drop spec file conditionals on 'rhel', because we are not using the same
+  spec as Fedora anymore and we know we're building for RHEL.
+
 * Mon Jun 24 2013 Michal Schmidt <mschmidt@redhat.com> 204-9
 - Rename nm_dispatcher to NetworkManager-dispatcher in default preset (#977433)
 
