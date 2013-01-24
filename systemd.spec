@@ -14,7 +14,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 
 Version:        197
-Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}.1
+Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}.1.1
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -307,6 +307,10 @@ autoreconf -i
 # For now remove /var/log/README since we are not enabling persistant
 # logging yet.
 /usr/bin/rm -f %{buildroot}%{_localstatedir}/log/README
+
+# No tmp-on-tmpfs in RHEL7. bz#876122
+/usr/bin/rm -f %{buildroot}%{_prefix}/lib/systemd/system/tmp.mount
+/usr/bin/rm -f %{buildroot}%{_prefix}/lib/systemd/system/local-fs.target.wants/tmp.mount
 
 %pre
 /usr/bin/getent group cdrom >/dev/null 2>&1 || /usr/sbin/groupadd -r -g 11 cdrom >/dev/null 2>&1 || :
@@ -730,6 +734,10 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Thu Jan 24 2013 Michal Schmidt <mschmidt@redhat.com> - 197-1.el7.1.1
+- Remove tmp.mount (/tmp-on-tmpfs).
+- Resolves: #876122
+
 * Sat Jan 12 2013 Michal Schmidt <mschmidt@redhat.com> - 197-1.fc18.1
 - Pick post-v197 fixes.
 
