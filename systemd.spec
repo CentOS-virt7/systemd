@@ -14,7 +14,7 @@ Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 
 Version:        197
-Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}.1.1
+Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}.1.2
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -90,6 +90,8 @@ Patch0009:      0009-man-systemd-bootchart.xml-fix-typo.patch
 Patch0010:      0010-man-systemd.unit.xml-fix-typos.patch
 Patch0011:      0011-dbus-properly-serialize-calendar-timer-data.patch
 Patch0012:      0012-udev-Fix-device-matching-in-the-accelerometer.patch
+# RHEL-specific:
+Patch9001:      9001-RHEL-units-add-Install-section-to-tmp.mount.patch
 
 Obsoletes:      SysVinit < 2.86-24, sysvinit < 2.86-24
 Provides:       SysVinit = 2.86-24, sysvinit = 2.86-24
@@ -308,8 +310,7 @@ autoreconf -i
 # logging yet.
 /usr/bin/rm -f %{buildroot}%{_localstatedir}/log/README
 
-# No tmp-on-tmpfs in RHEL7. bz#876122
-/usr/bin/rm -f %{buildroot}%{_prefix}/lib/systemd/system/tmp.mount
+# No tmp-on-tmpfs by default in RHEL7. bz#876122
 /usr/bin/rm -f %{buildroot}%{_prefix}/lib/systemd/system/local-fs.target.wants/tmp.mount
 
 %pre
@@ -734,6 +735,10 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Fri Feb 15 2013 Michal Schmidt <mschmidt@redhat.com> - 197-1.el7.1.2
+- Ship tmp.mount, though unused by default. Have an [Install] section.
+- Related: #908253
+
 * Thu Jan 24 2013 Michal Schmidt <mschmidt@redhat.com> - 197-1.el7.1.1
 - Remove tmp.mount (/tmp-on-tmpfs).
 - Resolves: #876122
