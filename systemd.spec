@@ -53,9 +53,11 @@ BuildRequires:  intltool
 BuildRequires:  gperf
 BuildRequires:  gtk-doc
 BuildRequires:  python2-devel
+%if %{defined gitcommit}
 BuildRequires:  automake
 BuildRequires:  autoconf
 BuildRequires:  libtool
+%endif
 Requires(post): coreutils
 Requires(post): gawk
 Requires(post): sed
@@ -200,7 +202,6 @@ fi
 
 %build
 %{?gitcommit: ./autogen.sh }
-autoreconf -i
 %configure \
         --libexecdir=%{_prefix}/lib \
         --enable-gtk-doc \
