@@ -13,7 +13,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        204
-Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}.1
+Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -36,9 +36,6 @@ Source6:        yum-protect-systemd.conf
 
 # kernel-install patch for grubby, drop if grubby is obsolete
 Patch1000:      kernel-install-grubby.patch
-
-# RHEL-specific:
-Patch9001:      9001-RHEL-units-add-Install-section-to-tmp.mount.patch
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
 
@@ -297,9 +294,6 @@ rm -f %{buildroot}%{_prefix}/lib/sysctl.d/50-coredump.conf
 # For now remove /var/log/README since we are not enabling persistant
 # logging yet.
 rm -f %{buildroot}%{_localstatedir}/log/README
-
-# No tmp-on-tmpfs by default in RHEL7. bz#876122
-rm -f %{buildroot}%{_prefix}/lib/systemd/system/local-fs.target.wants/tmp.mount
 
 %pre
 getent group cdrom >/dev/null 2>&1 || groupadd -r -g 11 cdrom >/dev/null 2>&1 || :
