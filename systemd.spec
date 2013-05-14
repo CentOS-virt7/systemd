@@ -760,11 +760,6 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
-* Tue May 14 2013 Michal Schmidt <mschmidt@redhat.com> - 204-2.el7.1
-- Re-add RHEL-specific change to disable tmp.mount by default,
-  which got removed by a careless merge&reset from F19.
-- Resolves: #876122
-
 * Thu May  9 2013 Lennart Poettering <lpoetter@redhat.com> - 204-2
 - New upstream release
 - disable isdn by default (#959793)
