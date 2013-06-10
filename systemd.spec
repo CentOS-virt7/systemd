@@ -13,7 +13,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        204
-Release:        4%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        6%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -26,7 +26,8 @@ Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.t
 %endif
 # Fedora's default preset policy
 Source1:        90-default.preset
-Source5:        90-display-manager.preset
+Source7:        99-default-disable.preset
+Source5:        85-display-manager.preset
 # Feodora's SysV convert script. meh.
 Source2:        systemd-sysv-convert
 # Stop-gap, just to ensure things work fine with rsyslog without having to change the package right-away
@@ -259,6 +260,7 @@ mkdir -p %{buildroot}%{_prefix}/lib/systemd/system-preset/
 mkdir -p %{buildroot}%{_prefix}/lib/systemd/user-preset/
 install -m 0644 %{SOURCE1} %{buildroot}%{_prefix}/lib/systemd/system-preset/
 install -m 0644 %{SOURCE5} %{buildroot}%{_prefix}/lib/systemd/system-preset/
+install -m 0644 %{SOURCE7} %{buildroot}%{_prefix}/lib/systemd/system-preset/
 
 # Make sure the shutdown/sleep drop-in dirs exist
 mkdir -p %{buildroot}%{_prefix}/lib/systemd/system-shutdown/
@@ -634,8 +636,9 @@ fi
 %{_prefix}/lib/tmpfiles.d/legacy.conf
 %{_prefix}/lib/tmpfiles.d/tmp.conf
 %{_prefix}/lib/sysctl.d/50-default.conf
+%{_prefix}/lib/systemd/system-preset/85-display-manager.preset
 %{_prefix}/lib/systemd/system-preset/90-default.preset
-%{_prefix}/lib/systemd/system-preset/90-display-manager.preset
+%{_prefix}/lib/systemd/system-preset/99-default-disable.preset
 %{_prefix}/lib/systemd/catalog/systemd.catalog
 %{_prefix}/lib/kernel/install.d/50-depmod.install
 %{_prefix}/lib/kernel/install.d/90-loaderentry.install
@@ -679,7 +682,6 @@ fi
 %{_datadir}/bash-completion/completions/timedatectl
 %{_datadir}/bash-completion/completions/udevadm
 %{_datadir}/bash-completion/completions/systemd-analyze
-
 
 # Make sure we don't remove runlevel targets from F14 alpha installs,
 # but make sure we don't create then anew.
@@ -754,6 +756,12 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Thu Jun 06 2013 Harald Hoyer <harald@redhat.com> 204-6
+- introduce 99-default-disable.preset
+
+* Thu Jun  6 2013 Lennart Poettering <lpoetter@redhat.com> - 204-5
+- Rename 90-display-manager.preset to 85-display-manager.preset so that it actually takes precedence over 90-default.preset's "disable *" line (#903690)
+
 * Tue May 28 2013 Harald Hoyer <harald@redhat.com> 204-4
 - Fix kernel-install (#965897)
 
