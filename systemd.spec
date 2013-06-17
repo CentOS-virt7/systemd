@@ -13,7 +13,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        204
-Release:        6%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        8%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -35,6 +35,8 @@ Source4:        listen.conf
 # Prevent accidental removal of the systemd package
 Source6:        yum-protect-systemd.conf
 
+Patch1:         0001-journal-letting-interleaved-seqnums-go.patch
+Patch2:         0002-journal-remember-last-direction-of-search-and-keep-o.patch
 # kernel-install patch for grubby, drop if grubby is obsolete
 Patch1000:      kernel-install-grubby.patch
 
@@ -756,6 +758,14 @@ fi
 %{_libdir}/pkgconfig/gudev-1.0*
 
 %changelog
+* Fri Jun 14 2013 Harald Hoyer <harald@redhat.com> 204-8
+- fix, which helps to sucessfully browse journals with
+  duplicated seqnums
+
+* Fri Jun 14 2013 Harald Hoyer <harald@redhat.com> 204-7
+- fix duplicate message ID bug
+Resolves: rhbz#974132
+
 * Thu Jun 06 2013 Harald Hoyer <harald@redhat.com> 204-6
 - introduce 99-default-disable.preset
 
