@@ -12,8 +12,8 @@
 
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
-Version:        204
-Release:        9%{?gitcommit:.git%{gitcommit}}%{?dist}.1
+Version:        206
+Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -28,15 +28,11 @@ Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.t
 Source1:        90-default.preset
 Source7:        99-default-disable.preset
 Source5:        85-display-manager.preset
-# Feodora's SysV convert script. meh.
-Source2:        systemd-sysv-convert
 # Stop-gap, just to ensure things work fine with rsyslog without having to change the package right-away
 Source4:        listen.conf
 # Prevent accidental removal of the systemd package
 Source6:        yum-protect-systemd.conf
 
-Patch1:         0001-journal-letting-interleaved-seqnums-go.patch
-Patch2:         0002-journal-remember-last-direction-of-search-and-keep-o.patch
 # kernel-install patch for grubby, drop if grubby is obsolete
 Patch1000:      kernel-install-grubby.patch
 
@@ -61,6 +57,7 @@ BuildRequires:  xz-devel
 BuildRequires:  kmod-devel
 BuildRequires:  libgcrypt-devel
 BuildRequires:  qrencode-devel
+BuildRequires:  libmicrohttpd-devel
 BuildRequires:  libxslt
 BuildRequires:  docbook-style-xsl
 BuildRequires:  pkgconfig
@@ -97,8 +94,9 @@ Obsoletes:      udev < 183
 Conflicts:      dracut < 027
 # f18 version, drop at f20
 Conflicts:      plymouth < 0.8.5.1
+# For the journal-gateway split in F20, drop at F22
+Obsoletes:      systemd < 204-10
 # Ensures correct multilib updates added F18, drop at F20
-Obsoletes:      systemd < 185-4
 Conflicts:      systemd < 185-4
 # added F18, drop at F20
 Obsoletes:      system-setup-keyboard < 0.9
@@ -109,6 +107,9 @@ Provides:       nss-myhostname = 0.4
 # systemd-analyze got merged in F19, drop at F21
 Obsoletes:      systemd-analyze < 198
 Provides:       systemd-analyze = 198
+# systemd-sysv-convert was removed in f20: https://fedorahosted.org/fpc/ticket/308
+Obsoletes:      systemd-sysv < 206
+Provides:       systemd-sysv = 206
 
 %description
 systemd is a system and service manager for Linux, compatible with
@@ -175,6 +176,20 @@ License:        LGPLv2+
 This package contains the header and pkg-config files for developing
 glib-based applications using libudev functionality.
 
+%package journal-gateway
+Summary:        Gateway for serving journal events over the network using HTTP
+Requires:       %{name} = %{version}-%{release}
+License:        LGPLv2+
+Requires(pre):    /usr/bin/getent
+Requires(post):   systemd
+Requires(preun):  systemd
+Requires(postun): systemd
+# For the journal-gateway split in F20, drop at F22
+Obsoletes:      systemd < 204-10
+
+%description journal-gateway
+systemd-journal-gatewayd serves journal events over the network using HTTP.
+
 %prep
 %setup -q %{?gitcommit:-n %{name}-git%{gitcommit}}
 
@@ -202,7 +217,6 @@ glib-based applications using libudev functionality.
         --libexecdir=%{_prefix}/lib \
         --enable-gtk-doc \
         --disable-static \
-        --disable-microhttpd \
         --with-sysvinit-path=/etc/rc.d/init.d \
         --with-rc-local-script-path-start=/etc/rc.d/rc.local
 make %{?_smp_mflags} V=1
@@ -218,7 +232,6 @@ ln -sf ../bin/udevadm %{buildroot}%{_sbindir}/udevadm
 # Create SysV compatibility symlinks. systemctl/systemd are smart
 # enough to detect in which way they are called.
 ln -s ../lib/systemd/systemd %{buildroot}%{_sbindir}/init
-ln -s ../lib/systemd/systemd %{buildroot}%{_bindir}/systemd
 ln -s ../bin/systemctl %{buildroot}%{_sbindir}/reboot
 ln -s ../bin/systemctl %{buildroot}%{_sbindir}/halt
 ln -s ../bin/systemctl %{buildroot}%{_sbindir}/poweroff
@@ -280,9 +293,6 @@ mkdir -p %{buildroot}%{_localstatedir}/lib/systemd/catalog
 mkdir -p %{buildroot}%{_localstatedir}/log/journal
 touch %{buildroot}%{_localstatedir}/lib/systemd/catalog/database
 touch %{buildroot}%{_sysconfdir}/udev/hwdb.bin
-
-# Install SysV conversion tool for systemd
-install -m 0755 %{SOURCE2} %{buildroot}%{_bindir}/
 
 # Install rsyslog fragment
 mkdir -p %{buildroot}%{_sysconfdir}/rsyslog.d/
@@ -543,6 +553,19 @@ fi
 %post -n libgudev1 -p /sbin/ldconfig
 %postun -n libgudev1 -p /sbin/ldconfig
 
+%pre journal-gateway
+getent group systemd-journal-gateway >/dev/null 2>&1 || groupadd -r -g 191 systemd-journal-gateway 2>&1 || :
+getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g systemd-journal-gateway -d %{_localstatedir}/log/journal -s /usr/sbin/nologin -c "Journal Gateway" systemd-journal-gateway >/dev/null 2>&1 || :
+
+%post journal-gateway
+%systemd_post systemd-journal-gatewayd.socket systemd-journal-gatewayd.service
+
+%preun journal-gateway
+%systemd_preun systemd-journal-gatewayd.socket systemd-journal-gatewayd.service
+
+%postun journal-gateway
+%systemd_postun_with_restart systemd-journal-gatewayd.service
+
 %files
 %doc %{_docdir}/systemd
 %dir %{_sysconfdir}/systemd
@@ -578,6 +601,7 @@ fi
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.login1.conf
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.locale1.conf
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.timedate1.conf
+%config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.machine1.conf
 %config(noreplace) %{_sysconfdir}/systemd/system.conf
 %config(noreplace) %{_sysconfdir}/systemd/user.conf
 %config(noreplace) %{_sysconfdir}/systemd/logind.conf
@@ -587,7 +611,7 @@ fi
 %config(noreplace) %{_sysconfdir}/rsyslog.d/listen.conf
 %config(noreplace) %{_sysconfdir}/yum/protected.d/systemd.conf
 %ghost %{_sysconfdir}/udev/hwdb.bin
-%{_sysconfdir}/rpm/macros.systemd
+%{_rpmconfigdir}/macros.d/macros.systemd
 %{_sysconfdir}/xdg/systemd
 %{_sysconfdir}/rc.d/init.d/README
 %ghost %config(noreplace) %{_sysconfdir}/hostname
@@ -599,7 +623,6 @@ fi
 %ghost %config(noreplace) %{_sysconfdir}/X11/xorg.conf.d/00-keyboard.conf
 %ghost %config(noreplace) %{_sysconfdir}/X11/xorg.conf.d/00-system-setup-keyboard.conf
 %ghost %{_localstatedir}/lib/systemd/catalog/database
-%{_bindir}/systemd
 %{_bindir}/systemctl
 %{_bindir}/systemd-notify
 %{_bindir}/systemd-analyze
@@ -609,6 +632,7 @@ fi
 %{_bindir}/loginctl
 %{_bindir}/systemd-loginctl
 %{_bindir}/journalctl
+%{_bindir}/machinectl
 %{_bindir}/systemd-tmpfiles
 %{_bindir}/systemd-nspawn
 %{_bindir}/systemd-stdio-bridge
@@ -616,6 +640,7 @@ fi
 %{_bindir}/systemd-cgls
 %{_bindir}/systemd-cgtop
 %{_bindir}/systemd-delta
+%{_bindir}/systemd-run
 %caps(cap_dac_override,cap_sys_ptrace=pe) %{_bindir}/systemd-detect-virt
 %{_bindir}/systemd-inhibit
 %{_bindir}/hostnamectl
@@ -626,8 +651,10 @@ fi
 %{_bindir}/udevadm
 %{_bindir}/kernel-install
 %{_prefix}/lib/systemd/systemd
+%exclude %{_prefix}/lib/systemd/system/systemd-journal-gatewayd.*
 %{_prefix}/lib/systemd/system
 %{_prefix}/lib/systemd/user
+%exclude %{_prefix}/lib/systemd/systemd-journal-gatewayd
 %{_prefix}/lib/systemd/systemd-*
 %{_prefix}/lib/udev
 %{_prefix}/lib/systemd/system-generators/systemd-cryptsetup-generator
@@ -658,6 +685,7 @@ fi
 %{_mandir}/man1/*
 %{_mandir}/man5/*
 %{_mandir}/man7/*
+%exclude %{_mandir}/man8/systemd-journal-gatewayd.*
 %{_mandir}/man8/*
 %{_datadir}/systemd/kbd-model-map
 %{_datadir}/dbus-1/services/org.freedesktop.systemd1.service
@@ -666,6 +694,7 @@ fi
 %{_datadir}/dbus-1/system-services/org.freedesktop.login1.service
 %{_datadir}/dbus-1/system-services/org.freedesktop.locale1.service
 %{_datadir}/dbus-1/system-services/org.freedesktop.timedate1.service
+%{_datadir}/dbus-1/system-services/org.freedesktop.machine1.service
 %{_datadir}/dbus-1/interfaces/org.freedesktop.systemd1.*.xml
 %{_datadir}/dbus-1/interfaces/org.freedesktop.hostname1.xml
 %{_datadir}/dbus-1/interfaces/org.freedesktop.locale1.xml
@@ -726,9 +755,6 @@ fi
 %dir %{_datadir}/gtk-doc/html/libudev
 %{_datadir}/gtk-doc/html/libudev/*
 
-%files sysv
-%{_bindir}/systemd-sysv-convert
-
 %files python
 %{python_sitearch}/systemd/__init__.py
 %{python_sitearch}/systemd/__init__.pyc
@@ -759,13 +785,22 @@ fi
 %{_datadir}/gtk-doc/html/gudev/*
 %{_libdir}/pkgconfig/gudev-1.0*
 
+%files journal-gateway
+%{_prefix}/lib/systemd/system/systemd-journal-gatewayd.*
+%{_prefix}/lib/systemd/systemd-journal-gatewayd
+%{_mandir}/man8/systemd-journal-gatewayd.*
+%{_datadir}/systemd/gatewayd
+
 %changelog
-* Wed Jun 26 2013 Michal Schmidt <mschmidt@redhat.com> 204-9.el7.1
-- Re-add RHEL-specific change to disable tmp.mount by default,
-  which got removed by a reset from F19.
-- Resolves: #876122
-- Drop spec file conditionals on 'rhel', because we are not using the same
-  spec as Fedora anymore and we know we're building for RHEL.
+* Tue Jul 23 2013 Kay Sievers <kay@redhat.com> - 206-1
+- New upstream release
+  Resolves (#984152)
+
+* Wed Jul  3 2013 Lennart Poettering <lpoetter@redhat.com> - 205-1
+- New upstream release
+
+* Wed Jun 26 2013 Michal Schmidt <mschmidt@redhat.com> 204-10
+- Split systemd-journal-gateway subpackage (#908081).
 
 * Mon Jun 24 2013 Michal Schmidt <mschmidt@redhat.com> 204-9
 - Rename nm_dispatcher to NetworkManager-dispatcher in default preset (#977433)
