@@ -1,0 +1,34 @@
+Adding patches to systemd:
+
+optionally checkout original systemd:
+
+$ cd <yourgitrepocollectiondir>
+$ git clone git://anongit.freedesktop.org/systemd/systemd
+$ cd systemd
+
+add the RHEL-7 repo for systemd
+
+$ git remote add systemd-rhel-7 git+ssh://git.engineering.redhat.com/srv/git/users/harald/systemd-rhel7.git
+
+$ git fetch systemd-rhel-7
+...
+ * [new branch]      RHEL-7     -> systemd-rhel-7/RHEL-7
+
+$ git checkout RHEL-7
+Branch RHEL-7 set up to track remote branch RHEL-7 from systemd-rhel-7.
+Switched to a new branch 'RHEL-7'
+
+$ git cherry-pick <some-commit>
+
+ADD THE BUGZILLA NUMBER
+$ git commit --amend
+
+$ git push
+
+
+Now return to the rhpkg systemd git.
+
+$ ./gitpull.sh
+
+This modifies systemd.spec to contain the modifications to systemd-206 as a Patch.
+
