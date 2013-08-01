@@ -1,4 +1,6 @@
 #!/bin/bash
+export LANG=C
+export LC_MESSAGES=C
 
 if [[ "$(git remote)" != *systemd-rhel7* ]]; then
     git remote add systemd-rhel7 git+ssh://git.engineering.redhat.com/srv/git/users/harald/systemd-rhel7.git
