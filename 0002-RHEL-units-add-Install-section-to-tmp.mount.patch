@@ -1,22 +1,18 @@
-From 5615aba8d756666c2cb0c75f9daa1a6efd5dfa7d Mon Sep 17 00:00:00 2001
+From c453a8a8651ff31a6c713a748301541ab67a3c5f Mon Sep 17 00:00:00 2001
 From: Michal Schmidt <mschmidt@redhat.com>
 Date: Fri, 15 Feb 2013 09:07:57 +0100
 Subject: [PATCH] RHEL: units: add [Install] section to tmp.mount
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
 
 Related: #908253
-
 ---
  units/tmp.mount | 6 ++++++
  1 file changed, 6 insertions(+)
 
 diff --git a/units/tmp.mount b/units/tmp.mount
-index 94c41c2..6e85dd3 100644
+index 99a3ba3..79e1c76 100644
 --- a/units/tmp.mount
 +++ b/units/tmp.mount
-@@ -17,3 +17,9 @@ What=tmpfs
+@@ -18,3 +18,9 @@ What=tmpfs
  Where=/tmp
  Type=tmpfs
  Options=mode=1777,strictatime
@@ -26,6 +22,3 @@ index 94c41c2..6e85dd3 100644
 +# read-only root). Make 'systemctl enable tmp.mount' work:
 +[Install]
 +WantedBy=local-fs.target
--- 
-1.8.1.2
-

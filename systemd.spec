@@ -35,14 +35,10 @@ Source4:        listen.conf
 # Prevent accidental removal of the systemd package
 Source6:        yum-protect-systemd.conf
 
-# https://bugzilla.redhat.com/show_bug.cgi?id=988766
-Patch0001:      0001-80-net-name-slot.rules-only-rename-network-interface.patch
-
-# kernel-install patch for grubby, drop if grubby is obsolete
-Patch1000:      kernel-install-grubby.patch
-
 # RHEL-specific:
-Patch9001:      9001-RHEL-units-add-Install-section-to-tmp.mount.patch
+Patch0001: 0001-80-net-name-slot.rules-only-rename-network-interface.patch
+Patch0002: 0002-RHEL-units-add-Install-section-to-tmp.mount.patch
+Patch0003: 0003-kernel-install-add-fedora-specific-callouts-to-new-k.patch
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
 

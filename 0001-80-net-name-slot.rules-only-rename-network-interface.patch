@@ -1,4 +1,4 @@
-From b2af2dd26801103d60ca3eb61682cc7622daac9f Mon Sep 17 00:00:00 2001
+From 1848e58772105127f636d527dba028694d15ed15 Mon Sep 17 00:00:00 2001
 From: Harald Hoyer <harald@redhat.com>
 Date: Thu, 1 Aug 2013 12:31:38 +0200
 Subject: [PATCH] 80-net-name-slot.rules: only rename network interfaces on
@@ -37,6 +37,3 @@ index 15b5bc4..c5f1b38 100644
  SUBSYSTEM!="net", GOTO="net_name_slot_end"
  NAME!="", GOTO="net_name_slot_end"
  
--- 
-1.8.1.4
-
