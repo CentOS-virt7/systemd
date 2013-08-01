@@ -13,7 +13,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        206
-Release:        1%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -34,6 +34,9 @@ Source2:        systemd-sysv-convert
 Source4:        listen.conf
 # Prevent accidental removal of the systemd package
 Source6:        yum-protect-systemd.conf
+
+# https://bugzilla.redhat.com/show_bug.cgi?id=988766
+Patch0001:      0001-80-net-name-slot.rules-only-rename-network-interface.patch
 
 # kernel-install patch for grubby, drop if grubby is obsolete
 Patch1000:      kernel-install-grubby.patch
@@ -797,6 +800,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Thu Aug 01 2013 Lukáš Nykrýn <lnykryn@redhat.com> - 206-2
+- 80-net-name-slot.rules: only rename network interfaces on ACTION==add
+
 * Tue Jul 23 2013 Kay Sievers <kay@redhat.com> - 206-1
 - New upstream release
   Resolves (#984152)
