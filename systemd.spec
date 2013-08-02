@@ -13,7 +13,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        206
-Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -84,6 +84,7 @@ Requires(pre):  /usr/sbin/groupadd
 Requires:       dbus
 Requires:       nss-myhostname
 Requires:       %{name}-libs = %{version}-%{release}
+Requires:       kmod >= 14
 
 Provides:       /bin/systemctl
 Provides:       /sbin/shutdown
@@ -796,6 +797,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Fri Aug 02 2013 Lukáš Nykrýn <lnykryn@redhat.com> - 206-3
+- add dependency on kmod >= 14
+
 * Thu Aug 01 2013 Lukáš Nykrýn <lnykryn@redhat.com> - 206-2
 - 80-net-name-slot.rules: only rename network interfaces on ACTION==add
 
