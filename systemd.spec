@@ -289,7 +289,6 @@ mkdir -p %{buildroot}%{_prefix}/lib/systemd/ntp-units.d/
 # Make sure directories in /var exist
 mkdir -p %{buildroot}%{_localstatedir}/lib/systemd/coredump
 mkdir -p %{buildroot}%{_localstatedir}/lib/systemd/catalog
-mkdir -p %{buildroot}%{_localstatedir}/log/journal
 touch %{buildroot}%{_localstatedir}/lib/systemd/catalog/database
 touch %{buildroot}%{_sysconfdir}/udev/hwdb.bin
 
@@ -494,8 +493,6 @@ if [ -f /etc/nsswitch.conf ] ; then
                 ' /etc/nsswitch.conf >/dev/null 2>&1 || :
 fi
 
-setfacl -Rnm g:wheel:rx,d:g:wheel:rx,g:adm:rx,d:g:adm:rx /var/log/journal/ >/dev/null 2>&1 || :
-
 %posttrans
 # Convert old /etc/sysconfig/desktop settings
 preferred=
@@ -557,7 +554,7 @@ fi
 
 %pre journal-gateway
 getent group systemd-journal-gateway >/dev/null 2>&1 || groupadd -r -g 191 systemd-journal-gateway 2>&1 || :
-getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g systemd-journal-gateway -d %{_localstatedir}/log/journal -s /usr/sbin/nologin -c "Journal Gateway" systemd-journal-gateway >/dev/null 2>&1 || :
+getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g systemd-journal-gateway -d %{_prefix}/lib/systemd -s /usr/sbin/nologin -c "Journal Gateway" systemd-journal-gateway >/dev/null 2>&1 || :
 
 %post journal-gateway
 %systemd_post systemd-journal-gatewayd.socket systemd-journal-gatewayd.service
@@ -594,7 +591,6 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %dir %{_prefix}/lib/binfmt.d
 %dir %{_datadir}/systemd
 %dir %{_datadir}/pkgconfig
-%dir %{_localstatedir}/log/journal
 %dir %{_localstatedir}/lib/systemd
 %dir %{_localstatedir}/lib/systemd/catalog
 %dir %{_localstatedir}/lib/systemd/coredump
@@ -799,6 +795,7 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %changelog
 * Fri Aug 02 2013 Lukáš Nykrýn <lnykryn@redhat.com> - 206-3
 - add dependency on kmod >= 14
+- remove /var/log/journal to make journal non-persistant (#989750)
 
 * Thu Aug 01 2013 Lukáš Nykrýn <lnykryn@redhat.com> - 206-2
 - 80-net-name-slot.rules: only rename network interfaces on ACTION==add
