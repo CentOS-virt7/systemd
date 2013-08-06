@@ -81,6 +81,7 @@ enable uuidd.service
 enable xendomains.service
 enable xenstored.service
 enable xenconsoled.service
+enable hypervkvpd.service
 
 # Desktop stuff
 enable accounts-daemon.service

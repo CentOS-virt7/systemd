@@ -796,6 +796,7 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 * Fri Aug 02 2013 Lukáš Nykrýn <lnykryn@redhat.com> - 206-3
 - add dependency on kmod >= 14
 - remove /var/log/journal to make journal non-persistant (#989750)
+- add hypervkvpd.service to presets (#924321)
 
 * Thu Aug 01 2013 Lukáš Nykrýn <lnykryn@redhat.com> - 206-2
 - 80-net-name-slot.rules: only rename network interfaces on ACTION==add
