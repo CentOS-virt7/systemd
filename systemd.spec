@@ -1,5 +1,3 @@
-#global gitcommit e7aee75
-
 # PIE is broken on s390 (#868839, #872148)
 %ifnarch s390 s390x
 %global _hardened_build 1
@@ -13,17 +11,13 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        206
-Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        4%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
 
-%if %{defined gitcommit}
-# Snapshot tarball can be created using: ./make-git-shapshot.sh [gitcommit]
-Source0:        %{name}-git%{gitcommit}.tar.xz
-%else
 Source0:        http://www.freedesktop.org/software/systemd/%{name}-%{version}.tar.xz
-%endif
+
 # Fedora's default preset policy
 Source1:        90-default.preset
 Source7:        99-default-disable.preset
@@ -39,6 +33,27 @@ Source6:        yum-protect-systemd.conf
 Patch0001: 0001-80-net-name-slot.rules-only-rename-network-interface.patch
 Patch0002: 0002-RHEL-units-add-Install-section-to-tmp.mount.patch
 Patch0003: 0003-kernel-install-add-fedora-specific-callouts-to-new-k.patch
+Patch0004: 0004-journal-handle-multiline-syslog-messages.patch
+Patch0005: 0005-man-Fix-copy-paste-error.patch
+Patch0006: 0006-core-synchronously-block-when-logging.patch
+Patch0007: 0007-journal-immediately-sync-to-disk-as-soon-as-we-recei.patch
+Patch0008: 0008-initctl-use-irreversible-jobs-when-switching-runleve.patch
+Patch0009: 0009-udev-log-error-if-chmod-chown-of-static-dev-nodes-fa.patch
+Patch0010: 0010-udev-static_node-don-t-touch-permissions-uneccessari.patch
+Patch0011: 0011-tmpfiles-support-passing-prefix-multiple-times.patch
+Patch0012: 0012-tmpfiles-introduce-exclude-prefix.patch
+Patch0013: 0013-tmpfiles-setup-exclude-dev-prefixes-files.patch
+Patch0014: 0014-logind-update-state-file-after-generating-the-sessio.patch
+Patch0015: 0015-journalctl-use-_COMM-match-for-scripts.patch
+Patch0016: 0016-man-systemd.unit-fix-volatile-path.patch
+Patch0017: 0017-man-link-up-scope-slice-units-from-systemd.unit-5.patch
+Patch0018: 0018-man-there-is-no-session-mode-only-user-mode.patch
+Patch0019: 0019-journal-fix-hashmap-leak-in-mmap-cache.patch
+Patch0020: 0020-systemd-delta-Only-print-colors-when-on-a-tty.patch
+Patch0021: 0021-systemd-fix-segv-in-snapshot-creation.patch
+Patch0022: 0022-udev-hwdb-try-reading-modalias-for-usb-before-fallin.patch
+Patch0023: 0023-udevd-respect-the-log-level-set-in-etc-udev-udev.con.patch
+Patch0024: 0024-fstab-generator-respect-noauto-nofail-when-adding-sy.patch
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
 
@@ -66,12 +81,10 @@ BuildRequires:  intltool
 BuildRequires:  gperf
 BuildRequires:  gtk-doc
 BuildRequires:  python2-devel
-%if %{defined gitcommit}%{num_patches}
+%if %{num_patches}
 BuildRequires:  automake
 BuildRequires:  autoconf
 BuildRequires:  libtool
-%endif
-%if %{num_patches}
 BuildRequires:  git
 %endif
 Requires(post): coreutils
@@ -190,7 +203,7 @@ Obsoletes:      systemd < 204-10
 systemd-journal-gatewayd serves journal events over the network using HTTP.
 
 %prep
-%setup -q %{?gitcommit:-n %{name}-git%{gitcommit}}
+%setup -q 
 
 %if %{num_patches}
     git init
@@ -204,12 +217,8 @@ systemd-journal-gatewayd serves journal events over the network using HTTP.
 %endif
 
 %build
-%if %{defined gitcommit}
-    ./autogen.sh
-%else
-    %if %{num_patches}
-        autoreconf
-    %endif
+%if %{num_patches}
+    autoreconf
 %endif
 
 %configure \
@@ -793,6 +802,29 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Fri Aug 09 2013 Harald Hoyer <harald@redhat.com> 206-4
+- journal: handle multiline syslog messages
+- man: Fix copy&paste error
+- core: synchronously block when logging
+- journal: immediately sync to disk as soon as we receieve an EMERG/ALERT/CRIT message
+- initctl: use irreversible jobs when switching runlevels
+- udev: log error if chmod/chown of static dev nodes fails
+- udev: static_node - don't touch permissions uneccessarily
+- tmpfiles: support passing --prefix multiple times
+- tmpfiles: introduce --exclude-prefix
+- tmpfiles-setup: exclude /dev prefixes files
+- logind: update state file after generating the session fifo, not before
+- journalctl: use _COMM= match for scripts
+- man: systemd.unit: fix volatile path
+- man: link up scope+slice units from systemd.unit(5)
+- man: there is no session mode, only user mode
+- journal: fix hashmap leak in mmap-cache
+- systemd-delta: Only print colors when on a tty
+- systemd: fix segv in snapshot creation
+- udev: hwdb - try reading modalias for usb before falling back to the composed one
+- udevd: respect the log-level set in /etc/udev/udev.conf
+- fstab-generator: respect noauto/nofail when adding sysroot mount
+
 * Fri Aug 02 2013 Lukáš Nykrýn <lnykryn@redhat.com> - 206-3
 - add dependency on kmod >= 14
 - remove /var/log/journal to make journal non-persistant (#989750)
