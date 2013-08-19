@@ -61,6 +61,9 @@ enable initial-setup-text.service
 # https://bugzilla.redhat.com/show_bug.cgi?id=957135
 enable vmtoolsd.service
 
+#https://bugzilla.redhat.com/show_bug.cgi?id=995987
+enable kdump.service
+
 # Hardware
 enable gpm.*
 enable gpsd.*
