@@ -11,7 +11,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        206
-Release:        4%{?dist}
+Release:        5%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -54,6 +54,20 @@ Patch0021: 0021-systemd-fix-segv-in-snapshot-creation.patch
 Patch0022: 0022-udev-hwdb-try-reading-modalias-for-usb-before-fallin.patch
 Patch0023: 0023-udevd-respect-the-log-level-set-in-etc-udev-udev.con.patch
 Patch0024: 0024-fstab-generator-respect-noauto-nofail-when-adding-sy.patch
+Patch0025: 0025-service-always-unwatch-PIDs-before-forgetting-old-on.patch
+Patch0026: 0026-units-disable-kmod-static-nodes.service-in-container.patch
+Patch0027: 0027-use-CAP_MKNOD-ConditionCapability.patch
+Patch0028: 0028-fstab-generator-read-rd.fstab-on-off-switch-correctl.patch
+Patch0029: 0029-backlight-add-minimal-tool-to-save-restore-screen-br.patch
+Patch0030: 0030-backlight-instead-of-syspath-use-sysname-for-identif.patch
+Patch0031: 0031-sysctl-allow-overwriting-of-values-specified-in-late.patch
+Patch0032: 0032-systemd-python-fix-initialization-of-_Reader-objects.patch
+Patch0033: 0033-udevd-simplify-sigterm-check.patch
+Patch0034: 0034-libudev-fix-hwdb-validation-to-look-for-the-new-file.patch
+Patch0035: 0035-units-make-fsck-units-remain-after-exit.patch
+Patch0036: 0036-udev-replace-CAP_MKNOD-by-writable-sys-condition.patch
+Patch0037: 0037-libudev-enumerate.c-udev_enumerate_get_list_entry-fi.patch
+Patch0038: 0038-journal-fix-parsing-of-facility-in-syslog-messages.patch
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
 
@@ -122,6 +136,10 @@ Provides:       nss-myhostname = 0.4
 # systemd-analyze got merged in F19, drop at F21
 Obsoletes:      systemd-analyze < 198
 Provides:       systemd-analyze = 198
+Obsoletes:      upstart < 1.2-3
+Obsoletes:      upstart-sysvinit < 1.2-3
+Conflicts:      upstart-sysvinit
+Obsoletes:      hal
 
 %description
 systemd is a system and service manager for Linux, compatible with
@@ -213,7 +231,39 @@ systemd-journal-gatewayd serves journal events over the network using HTTP.
     git commit -a -q -m "%{version} baseline."
 
     # Apply all the patches.
-    git am %{patches}
+    git am \
+        --exclude .gitignore \
+        --exclude docs/.gitignore \
+        --exclude docs/gudev/.gitignore \
+        --exclude docs/libudev/.gitignore \
+        --exclude docs/sysvinit/.gitignore \
+        --exclude docs/var-log/.gitignore \
+        --exclude hwdb/.gitignore \
+        --exclude m4/.gitignore \
+        --exclude man/.gitignore \
+        --exclude po/.gitignore \
+        --exclude rules/.gitignore \
+        --exclude src/.gitignore \
+        --exclude src/analyze/.gitignore \
+        --exclude src/core/.gitignore \
+        --exclude src/gudev/.gitignore \
+        --exclude src/hostname/.gitignore \
+        --exclude src/journal/.gitignore \
+        --exclude src/libsystemd-daemon/.gitignore \
+        --exclude src/libsystemd-id128/.gitignore \
+        --exclude src/libudev/.gitignore \
+        --exclude src/locale/.gitignore \
+        --exclude src/login/.gitignore \
+        --exclude src/python-systemd/.gitignore \
+        --exclude src/python-systemd/docs/.gitignore \
+        --exclude src/timedate/.gitignore \
+        --exclude src/udev/.gitignore \
+        --exclude src/udev/scsi_id/.gitignore \
+        --exclude sysctl.d/.gitignore \
+        --exclude test/.gitignore \
+        --exclude units/.gitignore \
+        --exclude units/user/.gitignore \
+        %{patches}
 %endif
 
 %build
@@ -802,6 +852,27 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Thu Aug 22 2013 Harald Hoyer <harald@redhat.com> 206-5
+- obsolete upstart
+Resolves: rhbz#978014
+- obsolete hal
+Resolves: rhbz#975589
+- service: always unwatch PIDs before forgetting old ones
+Resolves: rhbz#995197
+- units: disable kmod-static-nodes.service in containers
+- use CAP_MKNOD ConditionCapability
+- fstab-generator: read rd.fstab=on/off switch correctly
+- backlight: add minimal tool to save/restore screen brightness
+- backlight: instead of syspath use sysname for identifying
+- sysctl: allow overwriting of values specified in "later"
+- systemd-python: fix initialization of _Reader objects
+- udevd: simplify sigterm check
+- libudev: fix hwdb validation to look for the *new* file
+- units: make fsck units remain after exit
+- udev: replace CAP_MKNOD by writable /sys condition
+- libudev-enumerate.c:udev_enumerate_get_list_entry() fixed
+- journal: fix parsing of facility in syslog messages
+
 * Fri Aug 09 2013 Harald Hoyer <harald@redhat.com> 206-4
 - journal: handle multiline syslog messages
 - man: Fix copy&paste error
