@@ -11,7 +11,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        206
-Release:        5%{?dist}
+Release:        6%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -68,6 +68,7 @@ Patch0035: 0035-units-make-fsck-units-remain-after-exit.patch
 Patch0036: 0036-udev-replace-CAP_MKNOD-by-writable-sys-condition.patch
 Patch0037: 0037-libudev-enumerate.c-udev_enumerate_get_list_entry-fi.patch
 Patch0038: 0038-journal-fix-parsing-of-facility-in-syslog-messages.patch
+Patch0039: 0039-cgroup.c-check-return-value-of-unit_realize_cgroup_n.patch
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
 
@@ -852,6 +853,10 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Fri Aug 23 2013 Harald Hoyer <harald@redhat.com> 206-6
+- cgroup.c: check return value of unit_realize_cgroup_now()
+Resolves: rhbz#997742 rhbz#995197
+
 * Thu Aug 22 2013 Harald Hoyer <harald@redhat.com> 206-5
 - obsolete upstart
 Resolves: rhbz#978014
