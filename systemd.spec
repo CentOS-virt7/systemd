@@ -11,7 +11,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        206
-Release:        6%{?dist}
+Release:        7%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -69,6 +69,8 @@ Patch0036: 0036-udev-replace-CAP_MKNOD-by-writable-sys-condition.patch
 Patch0037: 0037-libudev-enumerate.c-udev_enumerate_get_list_entry-fi.patch
 Patch0038: 0038-journal-fix-parsing-of-facility-in-syslog-messages.patch
 Patch0039: 0039-cgroup.c-check-return-value-of-unit_realize_cgroup_n.patch
+Patch0040: 0040-Revert-cgroup.c-check-return-value-of-unit_realize_c.patch
+Patch0041: 0041-Do-not-realloc-strings-which-are-already-in-the-hash.patch
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
 
@@ -853,6 +855,10 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Wed Aug 28 2013 Harald Hoyer <harald@redhat.com> 206-7
+- fixed cgroup hashmap corruption
+Resolves: rhbz#997742 rhbz#995197
+
 * Fri Aug 23 2013 Harald Hoyer <harald@redhat.com> 206-6
 - cgroup.c: check return value of unit_realize_cgroup_now()
 Resolves: rhbz#997742 rhbz#995197
