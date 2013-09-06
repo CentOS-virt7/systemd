@@ -11,7 +11,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        206
-Release:        7%{?dist}
+Release:        8%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -71,6 +71,13 @@ Patch0038: 0038-journal-fix-parsing-of-facility-in-syslog-messages.patch
 Patch0039: 0039-cgroup.c-check-return-value-of-unit_realize_cgroup_n.patch
 Patch0040: 0040-Revert-cgroup.c-check-return-value-of-unit_realize_c.patch
 Patch0041: 0041-Do-not-realloc-strings-which-are-already-in-the-hash.patch
+Patch0042: 0042-log-to-kmsg-when-debug-is-used-on-the-kernel-command.patch
+Patch0043: 0043-libudev-fix-memleak-when-enumerating-childs.patch
+Patch0044: 0044-cgtop-fixup-the-online-help.patch
+Patch0045: 0045-libudev-enumerate-fix-NULL-deref-for-subsystem-match.patch
+Patch0046: 0046-libudev-enumerate-do-not-try-to-match-against-an-emp.patch
+Patch0047: 0047-journald-fix-vacuuming-of-archived-journals.patch
+Patch0048: 0048-journald-fix-fd-leak-in-journal_file_empty.patch
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
 
@@ -855,6 +862,14 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Fri Sep 06 2013 Harald Hoyer <harald@redhat.com> 206-8
+- support "debug" kernel command line parameter
+- journald: fix fd leak in journal_file_empty
+- journald: fix vacuuming of archived journals
+- libudev: enumerate - do not try to match against an empty subsystem
+- cgtop: fixup the online help
+- libudev: fix memleak when enumerating childs
+
 * Wed Aug 28 2013 Harald Hoyer <harald@redhat.com> 206-7
 - fixed cgroup hashmap corruption
 Resolves: rhbz#997742 rhbz#995197
