@@ -10,8 +10,8 @@
 
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
-Version:        206
-Release:        8%{?dist}
+Version:        207
+Release:        1%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -30,54 +30,20 @@ Source4:        listen.conf
 Source6:        yum-protect-systemd.conf
 
 # RHEL-specific:
-Patch0001: 0001-80-net-name-slot.rules-only-rename-network-interface.patch
-Patch0002: 0002-RHEL-units-add-Install-section-to-tmp.mount.patch
-Patch0003: 0003-kernel-install-add-fedora-specific-callouts-to-new-k.patch
-Patch0004: 0004-journal-handle-multiline-syslog-messages.patch
-Patch0005: 0005-man-Fix-copy-paste-error.patch
-Patch0006: 0006-core-synchronously-block-when-logging.patch
-Patch0007: 0007-journal-immediately-sync-to-disk-as-soon-as-we-recei.patch
-Patch0008: 0008-initctl-use-irreversible-jobs-when-switching-runleve.patch
-Patch0009: 0009-udev-log-error-if-chmod-chown-of-static-dev-nodes-fa.patch
-Patch0010: 0010-udev-static_node-don-t-touch-permissions-uneccessari.patch
-Patch0011: 0011-tmpfiles-support-passing-prefix-multiple-times.patch
-Patch0012: 0012-tmpfiles-introduce-exclude-prefix.patch
-Patch0013: 0013-tmpfiles-setup-exclude-dev-prefixes-files.patch
-Patch0014: 0014-logind-update-state-file-after-generating-the-sessio.patch
-Patch0015: 0015-journalctl-use-_COMM-match-for-scripts.patch
-Patch0016: 0016-man-systemd.unit-fix-volatile-path.patch
-Patch0017: 0017-man-link-up-scope-slice-units-from-systemd.unit-5.patch
-Patch0018: 0018-man-there-is-no-session-mode-only-user-mode.patch
-Patch0019: 0019-journal-fix-hashmap-leak-in-mmap-cache.patch
-Patch0020: 0020-systemd-delta-Only-print-colors-when-on-a-tty.patch
-Patch0021: 0021-systemd-fix-segv-in-snapshot-creation.patch
-Patch0022: 0022-udev-hwdb-try-reading-modalias-for-usb-before-fallin.patch
-Patch0023: 0023-udevd-respect-the-log-level-set-in-etc-udev-udev.con.patch
-Patch0024: 0024-fstab-generator-respect-noauto-nofail-when-adding-sy.patch
-Patch0025: 0025-service-always-unwatch-PIDs-before-forgetting-old-on.patch
-Patch0026: 0026-units-disable-kmod-static-nodes.service-in-container.patch
-Patch0027: 0027-use-CAP_MKNOD-ConditionCapability.patch
-Patch0028: 0028-fstab-generator-read-rd.fstab-on-off-switch-correctl.patch
-Patch0029: 0029-backlight-add-minimal-tool-to-save-restore-screen-br.patch
-Patch0030: 0030-backlight-instead-of-syspath-use-sysname-for-identif.patch
-Patch0031: 0031-sysctl-allow-overwriting-of-values-specified-in-late.patch
-Patch0032: 0032-systemd-python-fix-initialization-of-_Reader-objects.patch
-Patch0033: 0033-udevd-simplify-sigterm-check.patch
-Patch0034: 0034-libudev-fix-hwdb-validation-to-look-for-the-new-file.patch
-Patch0035: 0035-units-make-fsck-units-remain-after-exit.patch
-Patch0036: 0036-udev-replace-CAP_MKNOD-by-writable-sys-condition.patch
-Patch0037: 0037-libudev-enumerate.c-udev_enumerate_get_list_entry-fi.patch
-Patch0038: 0038-journal-fix-parsing-of-facility-in-syslog-messages.patch
-Patch0039: 0039-cgroup.c-check-return-value-of-unit_realize_cgroup_n.patch
-Patch0040: 0040-Revert-cgroup.c-check-return-value-of-unit_realize_c.patch
-Patch0041: 0041-Do-not-realloc-strings-which-are-already-in-the-hash.patch
-Patch0042: 0042-log-to-kmsg-when-debug-is-used-on-the-kernel-command.patch
-Patch0043: 0043-libudev-fix-memleak-when-enumerating-childs.patch
-Patch0044: 0044-cgtop-fixup-the-online-help.patch
-Patch0045: 0045-libudev-enumerate-fix-NULL-deref-for-subsystem-match.patch
-Patch0046: 0046-libudev-enumerate-do-not-try-to-match-against-an-emp.patch
-Patch0047: 0047-journald-fix-vacuuming-of-archived-journals.patch
-Patch0048: 0048-journald-fix-fd-leak-in-journal_file_empty.patch
+Patch0001: 0001-RHEL-units-add-Install-section-to-tmp.mount.patch
+Patch0002: 0002-kernel-install-add-fedora-specific-callouts-to-new-k.patch
+Patch0003: 0003-core-cgroup-first-print-then-free.patch
+Patch0004: 0004-swap-fix-reverse-dependencies.patch
+Patch0005: 0005-update-TODO.patch
+Patch0006: 0006-cryptsetup-generator-don-t-create-tmp-swap-units.patch
+Patch0007: 0007-cryptsetup-generator-allow-specifying-options-in-pro.patch
+Patch0008: 0008-automount-rename-repeat_unmont-to-repeat_unmount.patch
+Patch0009: 0009-cgroup-add-the-missing-setting-of-variable-s-value.patch
+Patch0010: 0010-cgroup-correct-the-log-information.patch
+Patch0011: 0011-cgroup-fix-incorrectly-setting-memory-cgroup.patch
+Patch0012: 0012-random-seed-we-should-return-errno-of-failed-loop_wr.patch
+Patch0013: 0013-update-TODO.patch
+Patch0014: 0014-libudev-fix-move_later-comparison.patch
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
 
@@ -385,6 +351,9 @@ rm -f %{buildroot}%{_localstatedir}/log/README
 # No tmp-on-tmpfs by default in RHEL7. bz#876122
 rm -f %{buildroot}%{_prefix}/lib/systemd/system/local-fs.target.wants/tmp.mount
 
+# No gpt-auto-generator in RHEL7
+rm -f %{buildroot}%{_prefix}/lib/systemd/system-generators/systemd-gpt-auto-generator
+
 %pre
 getent group cdrom >/dev/null 2>&1 || groupadd -r -g 11 cdrom >/dev/null 2>&1 || :
 getent group tape >/dev/null 2>&1 || groupadd -r -g 33 tape >/dev/null 2>&1 || :
@@ -677,6 +646,7 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %config(noreplace) %{_sysconfdir}/udev/udev.conf
 %config(noreplace) %{_sysconfdir}/rsyslog.d/listen.conf
 %config(noreplace) %{_sysconfdir}/yum/protected.d/systemd.conf
+%config(noreplace) %{_sysconfdir}/pam.d/systemd-user
 %ghost %{_sysconfdir}/udev/hwdb.bin
 %{_rpmconfigdir}/macros.d/macros.systemd
 %{_sysconfdir}/xdg/systemd
@@ -782,6 +752,15 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/bash-completion/completions/timedatectl
 %{_datadir}/bash-completion/completions/udevadm
 %{_datadir}/bash-completion/completions/systemd-analyze
+%{_datadir}/bash-completion/completions/kernel-install
+%{_datadir}/bash-completion/completions/systemd-run
+%{_datadir}/zsh/site-functions/*
+%ghost %{_localstatedir}/lib/random-seed
+%ghost %dir %{_localstatedir}/var/lib/systemd/
+%ghost %dir %{_localstatedir}/var/lib/systemd/coredump
+%ghost %dir %{_localstatedir}/var/lib/systemd/catalog
+%ghost %{_localstatedir}/var/lib/systemd/catalog/database
+%ghost %dir %{_localstatedir}/var/lib/backlight/
 
 # Make sure we don't remove runlevel targets from F14 alpha installs,
 # but make sure we don't create then anew.
@@ -862,6 +841,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Fri Sep 13 2013 Harald Hoyer <harald@redhat.com> 207-1
+- version 207
+
 * Fri Sep 06 2013 Harald Hoyer <harald@redhat.com> 206-8
 - support "debug" kernel command line parameter
 - journald: fix fd leak in journal_file_empty

@@ -1,4 +1,4 @@
-From c453a8a8651ff31a6c713a748301541ab67a3c5f Mon Sep 17 00:00:00 2001
+From 2e987a0ac284a1cd1ab4f8e335abcae91c976f15 Mon Sep 17 00:00:00 2001
 From: Michal Schmidt <mschmidt@redhat.com>
 Date: Fri, 15 Feb 2013 09:07:57 +0100
 Subject: [PATCH] RHEL: units: add [Install] section to tmp.mount
