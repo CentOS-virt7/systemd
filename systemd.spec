@@ -11,7 +11,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        207
-Release:        1%{?dist}
+Release:        2%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -44,6 +44,19 @@ Patch0011: 0011-cgroup-fix-incorrectly-setting-memory-cgroup.patch
 Patch0012: 0012-random-seed-we-should-return-errno-of-failed-loop_wr.patch
 Patch0013: 0013-update-TODO.patch
 Patch0014: 0014-libudev-fix-move_later-comparison.patch
+Patch0015: 0015-man-document-luks.options-kernel-commandline.patch
+Patch0016: 0016-keymap-remove-some-commented-out-lines.patch
+Patch0017: 0017-Advertise-hibernation-only-if-there-s-enough-free-sw.patch
+Patch0018: 0018-README-add-SCSI-BSG-option.patch
+Patch0019: 0019-swap-create-.wants-symlink-to-auto-swap-devices.patch
+Patch0020: 0020-cgroup-add-missing-equals-for-BlockIOWeight.patch
+Patch0021: 0021-Assume-that-proc-meminfo-can-be-missing.patch
+Patch0022: 0022-transaction.c-do-not-point-users-to-logs-when-unit-n.patch
+Patch0023: 0023-Verify-validity-of-session-name-when-received-from-o.patch
+Patch0024: 0024-udev-rules-avoid-erroring-on-trailing-whitespace.patch
+Patch0025: 0025-keymap-Add-Samsung-Series-5-Ultra.patch
+Patch0026: 0026-login-fix-login_is_valid-test.patch
+Patch0027: 0027-polkit-Avoid-race-condition-in-scraping-proc.patch
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
 
@@ -841,6 +854,13 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Thu Sep 19 2013 Lukas Nykryn <lnykryn@redhat.com> - 207-2
+- Advertise hibernation only if there's enough free swap
+- swap: create .wants symlink to 'auto' swap devices
+- Verify validity of session name when received from outside
+- polkit: Avoid race condition in scraping /proc
+Resolves: rhbz#1005142
+
 * Fri Sep 13 2013 Harald Hoyer <harald@redhat.com> 207-1
 - version 207
 
