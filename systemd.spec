@@ -11,7 +11,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        207
-Release:        2%{?dist}
+Release:        3%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -854,6 +854,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Tue Oct 01 2013 Lukas Nykryn <lnykryn@redhat.com> - 207-3
+- presets: add tuned.service
+
 * Thu Sep 19 2013 Lukas Nykryn <lnykryn@redhat.com> - 207-2
 - Advertise hibernation only if there's enough free swap
 - swap: create .wants symlink to 'auto' swap devices
