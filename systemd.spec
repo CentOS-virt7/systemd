@@ -11,7 +11,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        207
-Release:        3%{?dist}
+Release:        4%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -57,6 +57,7 @@ Patch0024: 0024-udev-rules-avoid-erroring-on-trailing-whitespace.patch
 Patch0025: 0025-keymap-Add-Samsung-Series-5-Ultra.patch
 Patch0026: 0026-login-fix-login_is_valid-test.patch
 Patch0027: 0027-polkit-Avoid-race-condition-in-scraping-proc.patch
+Patch0028: 0028-core-whenever-a-new-PID-is-passed-to-us-make-sure-we.patch
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
 
@@ -854,6 +855,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Tue Oct 15 2013 Lukas Nykryn <lnykryn@redhat.com> - 207-4
+- core: whenever a new PID is passed to us, make sure we watch it
+
 * Tue Oct 01 2013 Lukas Nykryn <lnykryn@redhat.com> - 207-3
 - presets: add tuned.service
 
