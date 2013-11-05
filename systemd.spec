@@ -11,7 +11,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        207
-Release:        4%{?dist}
+Release:        5%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -28,6 +28,9 @@ Source2:        systemd-sysv-convert
 Source4:        listen.conf
 # Prevent accidental removal of the systemd package
 Source6:        yum-protect-systemd.conf
+# ship /etc/rc.d/rc.local https://bugzilla.redhat.com/show_bug.cgi?id=968401
+Source8:        rc.local
+
 
 # RHEL-specific:
 Patch0001: 0001-RHEL-units-add-Install-section-to-tmp.mount.patch
@@ -58,6 +61,11 @@ Patch0025: 0025-keymap-Add-Samsung-Series-5-Ultra.patch
 Patch0026: 0026-login-fix-login_is_valid-test.patch
 Patch0027: 0027-polkit-Avoid-race-condition-in-scraping-proc.patch
 Patch0028: 0028-core-whenever-a-new-PID-is-passed-to-us-make-sure-we.patch
+Patch0029: 0029-remove-user-.service.patch
+Patch0030: 0030-cgroup-always-enable-memory.use_hierarchy-for-all-cg.patch
+Patch0031: 0031-logind-return-EINVAL-when-PID-is-wrong.patch
+Patch0032: 0032-core-drop-some-out-of-date-references-to-cgroup-sett.patch
+Patch0033: 0033-man-explain-NAME-in-systemctl-man-page.patch
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
 
@@ -351,6 +359,11 @@ install -m 0644 %{SOURCE4} %{buildroot}%{_sysconfdir}/rsyslog.d/
 # Install yum protection fragment
 mkdir -p %{buildroot}%{_sysconfdir}/yum/protected.d/
 install -m 0644 %{SOURCE6} %{buildroot}%{_sysconfdir}/yum/protected.d/systemd.conf
+
+# Install rc.local
+mkdir -p %{buildroot}%{_sysconfdir}/rc.d/
+install -m 0644 %{SOURCE8} %{buildroot}%{_sysconfdir}/rc.d/rc.local
+ln -s rc.d/rc.local %{buildroot}%{_sysconfdir}/rc.local
 
 # To avoid making life hard for Rawhide-using developers, don't package the
 # kernel.core_pattern setting until systemd-coredump is a part of an actual
@@ -775,6 +788,8 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %ghost %dir %{_localstatedir}/var/lib/systemd/catalog
 %ghost %{_localstatedir}/var/lib/systemd/catalog/database
 %ghost %dir %{_localstatedir}/var/lib/backlight/
+%config(noreplace) %{_sysconfdir}/rc.d/rc.local
+%{_sysconfdir}/rc.local
 
 # Make sure we don't remove runlevel targets from F14 alpha installs,
 # but make sure we don't create then anew.
@@ -855,6 +870,13 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Tue Nov 05 2013 Lukas Nykryn <lnykryn@redhat.com> - 207-5
+- create /etc/rc.d/rc.local (#968401)
+- cgroup: always enable memory.use_hierarchy= for all cgroups (#1011575)
+- remove user@.service (#1019738)
+- drop some out-of-date references to cgroup settings (#1000004)
+- explain NAME in systemctl man page (#978954)
+
 * Tue Oct 15 2013 Lukas Nykryn <lnykryn@redhat.com> - 207-4
 - core: whenever a new PID is passed to us, make sure we watch it
 

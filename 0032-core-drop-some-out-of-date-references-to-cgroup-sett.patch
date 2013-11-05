@@ -1,0 +1,197 @@
+From 873b06ca6f97f7288c98647fa5e761847122a382 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 26 Sep 2013 22:49:44 +0200
+Subject: [PATCH] core: drop some out-of-date references to cgroup settings
+
+---
+ man/systemd-cgtop.xml       | 36 +++++++++++++++---------------------
+ man/systemd-system.conf.xml | 27 +--------------------------
+ man/systemd.unit.xml        |  5 ++++-
+ src/core/dbus-manager.c     | 27 ---------------------------
+ src/core/system.conf        |  3 +--
+ src/core/user.conf          |  1 -
+ 6 files changed, 21 insertions(+), 78 deletions(-)
+
+diff --git a/man/systemd-cgtop.xml b/man/systemd-cgtop.xml
+index 0e9e5e6..51549c4 100644
+--- a/man/systemd-cgtop.xml
++++ b/man/systemd-cgtop.xml
+@@ -73,30 +73,23 @@
+                 only accounted for control groups in the
+                 <literal>cpuacct</literal> hierarchy, memory usage
+                 only for those in <literal>memory</literal> and disk
+-                I/O usage for those in
+-                <literal>blkio</literal>. <citerefentry><refentrytitle>systemd</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+-                by default places all services in their own control
+-                group in the <literal>cpuacct</literal> hierarchy, but
+-                not in <literal>memory</literal> nor
+-                <literal>blkio</literal>. If resource monitoring for
+-                these resources is required, it is recommended to add
+-                <literal>blkio</literal> and <literal>memory</literal>
+-                to the <varname>DefaultControllers=</varname> setting
+-                in <filename>/etc/systemd/system.conf</filename> (see
+-                <citerefentry><refentrytitle>systemd-system.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+-                for details). Alternatively, it is possible to enable
+-                resource accounting individually for services, by
+-                making use of the <varname>ControlGroup=</varname>
+-                option in the unit files (See
+-                <citerefentry><refentrytitle>systemd.exec</refentrytitle><manvolnum>5</manvolnum></citerefentry>
++                I/O usage for those in <literal>blkio</literal>. If
++                resource monitoring for these resources is required,
++                it is recommended to add the
++                <varname>CPUAccounting=1</varname>,
++                <varname>MemoryAccounting=1</varname> and
++                <varname>BlockIOAccounting=1</varname> settings in the
++                unit files in question (See
++                <citerefentry><refentrytitle>systemd.cgroup</refentrytitle><manvolnum>5</manvolnum></citerefentry>
+                 for details).</para>
+ 
+                 <para>To emphasize this: unless
+-                <literal>blkio</literal> and <literal>memory</literal>
+-                are enabled for the services in question with either
+-                of the options suggested above no resource accounting
+-                will be available for system services and the data shown
+-                by <command>systemd-cgtop</command> will be
++                <literal>CPUAccounting=1</literal>,
++                <literal>MemoryAccounting=1</literal> and
++                <literal>BlockIOAccounting=1</literal> are enabled for
++                the services in question no resource accounting will
++                be available for system services and the data shown by
++                <command>systemd-cgtop</command> will be
+                 incomplete.</para>
+         </refsect1>
+ 
+@@ -281,6 +274,7 @@
+                         <citerefentry><refentrytitle>systemd</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+                         <citerefentry><refentrytitle>systemctl</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+                         <citerefentry><refentrytitle>systemd-cgls</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
++                        <citerefentry><refentrytitle>systemd.cgroup</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
+                         <citerefentry><refentrytitle>top</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+                 </para>
+         </refsect1>
+diff --git a/man/systemd-system.conf.xml b/man/systemd-system.conf.xml
+index c52e590..e8cf8a9 100644
+--- a/man/systemd-system.conf.xml
++++ b/man/systemd-system.conf.xml
+@@ -104,32 +104,7 @@
+                         </varlistentry>
+ 
+                         <varlistentry>
+-                                <term><varname>DefaultControllers=cpu</varname></term>
+-
+-                                <listitem><para>Configures in which
+-                                control group hierarchies to create
+-                                per-service cgroups automatically, in
+-                                addition to the
+-                                <literal>name=systemd</literal> named
+-                                hierarchy. Defaults to
+-                                <literal>cpu</literal>. Takes a
+-                                space-separated list of controller
+-                                names. Pass the empty string to ensure
+-                                that systemd does not touch any
+-                                hierarchies but its own.</para>
+-
+-                                <para>Note that the default value of
+-                                'cpu' will make realtime scheduling
+-                                unavailable to system services. See
+-                                <ulink
+-                                url="http://www.freedesktop.org/wiki/Software/systemd/MyServiceCantGetRealtime">My
+-                                Service Can't Get Realtime!</ulink>
+-                                for more
+-                                information.</para></listitem>
+-                        </varlistentry>
+-
+-                        <varlistentry>
+-                                <term><varname>JoinControllers=cpu,cpuacct,cpuset net_cls,netprio</varname></term>
++                                <term><varname>JoinControllers=cpu,cpuacct net_cls,netprio</varname></term>
+ 
+                                 <listitem><para>Configures controllers
+                                 that shall be mounted in a single
+diff --git a/man/systemd.unit.xml b/man/systemd.unit.xml
+index d61426a..5c8b8e8 100644
+--- a/man/systemd.unit.xml
++++ b/man/systemd.unit.xml
+@@ -1241,7 +1241,10 @@
+                       <row>
+                         <entry><literal>%R</literal></entry>
+                         <entry>Parent directory of the control group path where units are placed.</entry>
+-                        <entry>For system instances this usually resolves to <filename>/</filename>, except in containers, where this resolves to the container's root directory. This specifier is particularly useful in the <varname>ControlGroup=</varname> setting (see <citerefentry><refentrytitle>systemd.exec</refentrytitle><manvolnum>5</manvolnum></citerefentry>).</entry>
++                        <entry>For system instances this usually
++                        resolves to <filename>/</filename>, except in
++                        containers, where this resolves to the
++                        container's root directory.</entry>
+                       </row>
+                       <row>
+                         <entry><literal>%t</literal></entry>
+diff --git a/src/core/dbus-manager.c b/src/core/dbus-manager.c
+index 75e2e45..676a07f 100644
+--- a/src/core/dbus-manager.c
++++ b/src/core/dbus-manager.c
+@@ -103,32 +103,6 @@
+         "  <method name=\"ResetFailedUnit\">\n"                         \
+         "   <arg name=\"name\" type=\"s\" direction=\"in\"/>\n"         \
+         "  </method>\n"                                                 \
+-        "  <method name=\"SetUnitControlGroup\">\n"                     \
+-        "   <arg name=\"name\" type=\"s\" direction=\"in\"/>\n"         \
+-        "   <arg name=\"group\" type=\"s\" direction=\"in\"/>\n"        \
+-        "   <arg name=\"mode\" type=\"s\" direction=\"in\"/>\n"         \
+-        "  </method>\n"                                                 \
+-        "  <method name=\"UnsetUnitControlGroup\">\n"                   \
+-        "   <arg name=\"name\" type=\"s\" direction=\"in\"/>\n"         \
+-        "   <arg name=\"group\" type=\"s\" direction=\"in\"/>\n"        \
+-        "   <arg name=\"mode\" type=\"s\" direction=\"in\"\n/>"         \
+-        "  </method>\n"                                                 \
+-        "  <method name=\"GetUnitControlGroupAttribute\">\n"            \
+-        "   <arg name=\"name\" type=\"s\" direction=\"in\"/>\n"         \
+-        "   <arg name=\"attribute\" type=\"s\" direction=\"in\"/>\n"    \
+-        "   <arg name=\"values\" type=\"as\" direction=\"out\"/>\n"     \
+-        "  </method>\n"                                                 \
+-        "  <method name=\"SetUnitControlGroupAttribute\">\n"            \
+-        "   <arg name=\"name\" type=\"s\" direction=\"in\"/>\n"         \
+-        "   <arg name=\"attribute\" type=\"s\" direction=\"in\"/>\n"    \
+-        "   <arg name=\"values\" type=\"as\" direction=\"in\"/>\n"      \
+-        "   <arg name=\"mode\" type=\"s\" direction=\"in\"\n/>"         \
+-        "  </method>\n"                                                 \
+-        "  <method name=\"UnsetUnitControlGroupAttributes\">\n"         \
+-        "   <arg name=\"name\" type=\"s\" direction=\"in\"/>\n"         \
+-        "   <arg name=\"attribute\" type=\"s\" direction=\"in\"/>\n"    \
+-        "   <arg name=\"mode\" type=\"s\" direction=\"in\"/>\n"         \
+-        "  </method>\n"                                                 \
+         "  <method name=\"GetJob\">\n"                                  \
+         "   <arg name=\"id\" type=\"u\" direction=\"in\"/>\n"           \
+         "   <arg name=\"job\" type=\"o\" direction=\"out\"/>\n"         \
+@@ -316,7 +290,6 @@
+         "  <property name=\"ConfirmSpawn\" type=\"b\" access=\"read\"/>\n" \
+         "  <property name=\"ShowStatus\" type=\"b\" access=\"read\"/>\n" \
+         "  <property name=\"UnitPath\" type=\"as\" access=\"read\"/>\n" \
+-        "  <property name=\"DefaultControllers\" type=\"as\" access=\"read\"/>\n" \
+         "  <property name=\"DefaultStandardOutput\" type=\"s\" access=\"read\"/>\n" \
+         "  <property name=\"DefaultStandardError\" type=\"s\" access=\"read\"/>\n" \
+         "  <property name=\"RuntimeWatchdogUSec\" type=\"t\" access=\"readwrite\"/>\n" \
+diff --git a/src/core/system.conf b/src/core/system.conf
+index f2817bc..7b03c87 100644
+--- a/src/core/system.conf
++++ b/src/core/system.conf
+@@ -17,10 +17,9 @@
+ #ShowStatus=yes
+ #CrashChVT=1
+ #CPUAffinity=1 2
+-#DefaultControllers=cpu
+ #DefaultStandardOutput=journal
+ #DefaultStandardError=inherit
+-#JoinControllers=cpu,cpuacct,cpuset net_cls,net_prio
++#JoinControllers=cpu,cpuacct net_cls,net_prio
+ #RuntimeWatchdogSec=0
+ #ShutdownWatchdogSec=10min
+ #CapabilityBoundingSet=
+diff --git a/src/core/user.conf b/src/core/user.conf
+index 4252451..4a0129a 100644
+--- a/src/core/user.conf
++++ b/src/core/user.conf
+@@ -12,6 +12,5 @@
+ #LogTarget=console
+ #LogColor=yes
+ #LogLocation=no
+-#DefaultControllers=cpu
+ #DefaultStandardOutput=inherit
+ #DefaultStandardError=inherit
