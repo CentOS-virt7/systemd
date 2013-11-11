@@ -1,0 +1,22 @@
+From 07da21cf4de7428cc2016333f8ae774fcab6e9fd Mon Sep 17 00:00:00 2001
+From: Dave Reisner <dreisner@archlinux.org>
+Date: Tue, 24 Sep 2013 14:39:40 -0400
+Subject: [PATCH] journalctl(1): s/adm/systemd-journal/
+
+---
+ man/journalctl.xml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/man/journalctl.xml b/man/journalctl.xml
+index a5778bf..b5a0c53 100644
+--- a/man/journalctl.xml
++++ b/man/journalctl.xml
+@@ -104,7 +104,7 @@
+ 
+                 <para>All users are granted access to their private
+                 per-user journals. However, by default, only root and
+-                users who are members of the <literal>adm</literal>
++                users who are members of the <literal>systemd-journal</literal>
+                 group get access to the system journal and the
+                 journals of other users.</para>
+ 

@@ -1,0 +1,401 @@
+From 3fde78dba9ad834ab264ad6888672833874b9101 Mon Sep 17 00:00:00 2001
+From: Dave Reisner <dreisner@archlinux.org>
+Date: Wed, 18 Sep 2013 11:52:14 -0400
+Subject: [PATCH] shared/utf8: merge implementations, remove cruft
+
+This unifies the utf8 handling code which was previously duplicated in
+udev and systemd.
+---
+ TODO                 |   1 -
+ src/shared/utf8.c    | 279 +++++++++++++--------------------------------------
+ src/shared/utf8.h    |   3 +-
+ src/test/test-utf8.c |   9 ++
+ 4 files changed, 81 insertions(+), 211 deletions(-)
+
+diff --git a/TODO b/TODO
+index 4c3e14f..8b7325e 100644
+--- a/TODO
++++ b/TODO
+@@ -599,7 +599,6 @@ Features:
+ * udev:
+   - remove src/udev/udev-builtin-firmware.c (CONFIG_FW_LOADER_USER_HELPER=n)
+   - move to LGPL
+-  - unify utf8 validator code with shared/
+   - kill scsi_id
+   - add trigger --subsystem-match=usb/usb_device device
+ 
+diff --git a/src/shared/utf8.c b/src/shared/utf8.c
+index 1a68394..732f0f0 100644
+--- a/src/shared/utf8.c
++++ b/src/shared/utf8.c
+@@ -51,8 +51,6 @@
+ #include "utf8.h"
+ #include "util.h"
+ 
+-#define FILTER_CHAR '_'
+-
+ static inline bool is_unicode_valid(uint32_t ch) {
+ 
+         if (ch >= 0x110000) /* End of unicode space */
+@@ -67,17 +65,6 @@ static inline bool is_unicode_valid(uint32_t ch) {
+         return true;
+ }
+ 
+-static inline bool is_continuation_char(uint8_t ch) {
+-        if ((ch & 0xc0) != 0x80) /* 10xxxxxx */
+-                return false;
+-        return true;
+-}
+-
+-static inline void merge_continuation_char(uint32_t *u_ch, uint8_t ch) {
+-        *u_ch <<= 6;
+-        *u_ch |= ch & 0x3f;
+-}
+-
+ static bool is_unicode_control(uint32_t ch) {
+ 
+         /*
+@@ -90,163 +77,97 @@ static bool is_unicode_control(uint32_t ch) {
+                 (0x7F <= ch && ch <= 0x9F);
+ }
+ 
+-bool utf8_is_printable(const char* str, size_t length) {
+-        uint32_t val = 0;
+-        uint32_t min = 0;
+-        const uint8_t *p;
++/* count of characters used to encode one unicode char */
++static int utf8_encoded_expected_len(const char *str) {
++        unsigned char c = (unsigned char)str[0];
+ 
+-        assert(str);
++        if (c < 0x80)
++                return 1;
++        if ((c & 0xe0) == 0xc0)
++                return 2;
++        if ((c & 0xf0) == 0xe0)
++                return 3;
++        if ((c & 0xf8) == 0xf0)
++                return 4;
++        if ((c & 0xfc) == 0xf8)
++                return 5;
++        if ((c & 0xfe) == 0xfc)
++                return 6;
++        return 0;
++}
+ 
+-        for (p = (const uint8_t*) str; length; p++, length--) {
+-                if (*p < 128) {
+-                        val = *p;
+-                } else {
+-                        if ((*p & 0xe0) == 0xc0) { /* 110xxxxx two-char seq. */
+-                                min = 128;
+-                                val = (uint32_t) (*p & 0x1e);
+-                                goto ONE_REMAINING;
+-                        } else if ((*p & 0xf0) == 0xe0) { /* 1110xxxx three-char seq.*/
+-                                min = (1 << 11);
+-                                val = (uint32_t) (*p & 0x0f);
+-                                goto TWO_REMAINING;
+-                        } else if ((*p & 0xf8) == 0xf0) { /* 11110xxx four-char seq */
+-                                min = (1 << 16);
+-                                val = (uint32_t) (*p & 0x07);
+-                        } else
+-                                return false;
+-
+-                        p++;
+-                        length--;
+-                        if (!length || !is_continuation_char(*p))
+-                                return false;
+-                        merge_continuation_char(&val, *p);
+-
+-                TWO_REMAINING:
+-                        p++;
+-                        length--;
+-                        if (!is_continuation_char(*p))
+-                                return false;
+-                        merge_continuation_char(&val, *p);
+-
+-                ONE_REMAINING:
+-                        p++;
+-                        length--;
+-                        if (!is_continuation_char(*p))
+-                                return false;
+-                        merge_continuation_char(&val, *p);
+-
+-                        if (val < min)
+-                                return false;
+-                }
++/* decode one unicode char */
++static int utf8_encoded_to_unichar(const char *str) {
++        int unichar;
++        int len;
++        int i;
+ 
+-                if (is_unicode_control(val))
+-                        return false;
++        len = utf8_encoded_expected_len(str);
++        switch (len) {
++        case 1:
++                return (int)str[0];
++        case 2:
++                unichar = str[0] & 0x1f;
++                break;
++        case 3:
++                unichar = (int)str[0] & 0x0f;
++                break;
++        case 4:
++                unichar = (int)str[0] & 0x07;
++                break;
++        case 5:
++                unichar = (int)str[0] & 0x03;
++                break;
++        case 6:
++                unichar = (int)str[0] & 0x01;
++                break;
++        default:
++                return -1;
+         }
+ 
+-        return true;
++        for (i = 1; i < len; i++) {
++                if (((int)str[i] & 0xc0) != 0x80)
++                        return -1;
++                unichar <<= 6;
++                unichar |= (int)str[i] & 0x3f;
++        }
++
++        return unichar;
+ }
+ 
+-static char* utf8_validate(const char *str, char *output) {
+-        uint32_t val = 0;
+-        uint32_t min = 0;
+-        const uint8_t *p, *last;
+-        int size;
+-        uint8_t *o;
++bool utf8_is_printable(const char* str, size_t length) {
++        const uint8_t *p;
+ 
+         assert(str);
+ 
+-        o = (uint8_t*) output;
+-        for (p = (const uint8_t*) str; *p; p++) {
+-                if (*p < 128) {
+-                        if (o)
+-                                *o = *p;
+-                } else {
+-                        last = p;
+-
+-                        if ((*p & 0xe0) == 0xc0) { /* 110xxxxx two-char seq. */
+-                                size = 2;
+-                                min = 128;
+-                                val = (uint32_t) (*p & 0x1e);
+-                                goto ONE_REMAINING;
+-                        } else if ((*p & 0xf0) == 0xe0) { /* 1110xxxx three-char seq.*/
+-                                size = 3;
+-                                min = (1 << 11);
+-                                val = (uint32_t) (*p & 0x0f);
+-                                goto TWO_REMAINING;
+-                        } else if ((*p & 0xf8) == 0xf0) { /* 11110xxx four-char seq */
+-                                size = 4;
+-                                min = (1 << 16);
+-                                val = (uint32_t) (*p & 0x07);
+-                        } else
+-                                goto error;
+-
+-                        p++;
+-                        if (!is_continuation_char(*p))
+-                                goto error;
+-                        merge_continuation_char(&val, *p);
+-
+-                TWO_REMAINING:
+-                        p++;
+-                        if (!is_continuation_char(*p))
+-                                goto error;
+-                        merge_continuation_char(&val, *p);
+-
+-                ONE_REMAINING:
+-                        p++;
+-                        if (!is_continuation_char(*p))
+-                                goto error;
+-                        merge_continuation_char(&val, *p);
+-
+-                        if (val < min)
+-                                goto error;
+-
+-                        if (!is_unicode_valid(val))
+-                                goto error;
+-
+-                        if (o) {
+-                                memcpy(o, last, (size_t) size);
+-                                o += size;
+-                        }
+-
+-                        continue;
+-
+-                error:
+-                        if (o) {
+-                                *o = FILTER_CHAR;
+-                                p = last; /* We retry at the next character */
+-                        } else
+-                                goto failure;
+-                }
++        for (p = (const uint8_t*) str; length; p++) {
++                int encoded_len = utf8_encoded_valid_unichar((const char *)p);
++                int32_t val = utf8_encoded_to_unichar((const char*)p);
+ 
+-                if (o)
+-                        o++;
+-        }
++                if (encoded_len < 0 || val < 0 || is_unicode_control(val))
++                        return false;
+ 
+-        if (o) {
+-                *o = '\0';
+-                return output;
++                length -= encoded_len;
+         }
+ 
+-        return (char*) str;
+-
+-failure:
+-        return NULL;
+-}
+-
+-char* utf8_is_valid (const char *str) {
+-        return utf8_validate(str, NULL);
++        return true;
+ }
+ 
+-char* utf8_filter (const char *str) {
+-        char *new_str;
++const char *utf8_is_valid(const char *str) {
++        const uint8_t *p;
+ 
+         assert(str);
+ 
+-        new_str = malloc(strlen(str) + 1);
+-        if (!new_str)
+-                return NULL;
++        for (p = (const uint8_t*) str; *p; ) {
++                int len = utf8_encoded_valid_unichar((const char *)p);
++
++                if (len < 0)
++                        return NULL;
++
++                p += len;
++        }
+ 
+-        return utf8_validate(str, new_str);
++        return str;
+ }
+ 
+ char *ascii_is_valid(const char *str) {
+@@ -318,64 +239,6 @@ char *utf16_to_utf8(const void *s, size_t length) {
+         return r;
+ }
+ 
+-/* count of characters used to encode one unicode char */
+-static int utf8_encoded_expected_len(const char *str) {
+-        unsigned char c = (unsigned char)str[0];
+-
+-        if (c < 0x80)
+-                return 1;
+-        if ((c & 0xe0) == 0xc0)
+-                return 2;
+-        if ((c & 0xf0) == 0xe0)
+-                return 3;
+-        if ((c & 0xf8) == 0xf0)
+-                return 4;
+-        if ((c & 0xfc) == 0xf8)
+-                return 5;
+-        if ((c & 0xfe) == 0xfc)
+-                return 6;
+-        return 0;
+-}
+-
+-/* decode one unicode char */
+-static int utf8_encoded_to_unichar(const char *str) {
+-        int unichar;
+-        int len;
+-        int i;
+-
+-        len = utf8_encoded_expected_len(str);
+-        switch (len) {
+-        case 1:
+-                return (int)str[0];
+-        case 2:
+-                unichar = str[0] & 0x1f;
+-                break;
+-        case 3:
+-                unichar = (int)str[0] & 0x0f;
+-                break;
+-        case 4:
+-                unichar = (int)str[0] & 0x07;
+-                break;
+-        case 5:
+-                unichar = (int)str[0] & 0x03;
+-                break;
+-        case 6:
+-                unichar = (int)str[0] & 0x01;
+-                break;
+-        default:
+-                return -1;
+-        }
+-
+-        for (i = 1; i < len; i++) {
+-                if (((int)str[i] & 0xc0) != 0x80)
+-                        return -1;
+-                unichar <<= 6;
+-                unichar |= (int)str[i] & 0x3f;
+-        }
+-
+-        return unichar;
+-}
+-
+ /* expected size used to encode one unicode char */
+ static int utf8_unichar_to_encoded_len(int unichar) {
+         if (unichar < 0x80)
+diff --git a/src/shared/utf8.h b/src/shared/utf8.h
+index 7a5608c..22e1346 100644
+--- a/src/shared/utf8.h
++++ b/src/shared/utf8.h
+@@ -25,12 +25,11 @@
+ 
+ #include "macro.h"
+ 
+-char *utf8_is_valid(const char *s) _pure_;
++const char *utf8_is_valid(const char *s) _pure_;
+ char *ascii_is_valid(const char *s) _pure_;
+ 
+ bool utf8_is_printable(const char* str, size_t length) _pure_;
+ 
+-char *utf8_filter(const char *s);
+ char *ascii_filter(const char *s);
+ 
+ char *utf16_to_utf8(const void *s, size_t length);
+diff --git a/src/test/test-utf8.c b/src/test/test-utf8.c
+index d2b9771..26cc37b 100644
+--- a/src/test/test-utf8.c
++++ b/src/test/test-utf8.c
+@@ -47,6 +47,12 @@ static void test_udev_encode_string(void) {
+         assert_se(expect_encoded_as("s/ash/ng", "s\\x2fash\\x2fng"));
+ }
+ 
++static void test_utf8_is_printable(void) {
++        assert_se(utf8_is_printable("ascii is valid\tunicode", 22));
++        assert_se(utf8_is_printable("\342\204\242", 3));
++        assert_se(!utf8_is_printable("\341\204", 2));
++}
++
+ static void test_utf8_is_valid(void) {
+         assert_se(utf8_is_valid("ascii is valid unicode"));
+         assert_se(utf8_is_valid("\341\204\242"));
+@@ -55,5 +61,8 @@ static void test_utf8_is_valid(void) {
+ 
+ int main(int argc, char *argv[]) {
+         test_utf8_is_valid();
++        test_utf8_is_printable();
+         test_udev_encode_string();
++
++        return 0;
+ }

@@ -1,0 +1,418 @@
+From a6b1359b406410ca48160deb442a62f73f3b7508 Mon Sep 17 00:00:00 2001
+From: Dave Reisner <dreisner@archlinux.org>
+Date: Wed, 18 Sep 2013 12:12:04 -0400
+Subject: [PATCH] device-nodes: move device node specific code to own file
+
+In the process, rename udev_encode_string which is poorly named for what
+it does. It deals specifically with encoding names that udev creates and
+has its own rules: utf8 is valid but some ascii is not (e.g. path
+separators), and everything else is simply escaped. Rename it to
+encode_devnode_name.
+---
+ .gitignore                   |  1 +
+ Makefile.am                  | 14 ++++++++-
+ src/libudev/libudev-util.c   |  5 +--
+ src/shared/device-nodes.c    | 74 ++++++++++++++++++++++++++++++++++++++++++++
+ src/shared/device-nodes.h    | 23 ++++++++++++++
+ src/shared/utf8.c            | 46 ---------------------------
+ src/shared/utf8.h            |  2 --
+ src/shared/util.c            |  4 +--
+ src/test/test-device-nodes.c | 55 ++++++++++++++++++++++++++++++++
+ src/test/test-utf8.c         | 28 +----------------
+ 10 files changed, 172 insertions(+), 80 deletions(-)
+ create mode 100644 src/shared/device-nodes.c
+ create mode 100644 src/shared/device-nodes.h
+ create mode 100644 src/test/test-device-nodes.c
+
+diff --git a/.gitignore b/.gitignore
+index deeee53..8115d4d 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -101,6 +101,7 @@
+ /test-cgroup-util
+ /test-daemon
+ /test-date
++/test-device-nodes
+ /test-efivars
+ /test-engine
+ /test-env-replace
+diff --git a/Makefile.am b/Makefile.am
+index 6dd33ad..aa16522 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -640,6 +640,8 @@ libsystemd_shared_la_SOURCES = \
+ 	src/shared/list.h \
+ 	src/shared/macro.h \
+ 	src/shared/def.h \
++	src/shared/device-nodes.c \
++	src/shared/device-nodes.h \
+ 	src/shared/sparse-endian.h \
+ 	src/shared/util.c \
+ 	src/shared/util.h \
+@@ -1135,7 +1137,8 @@ tests += \
+ 	test-time \
+ 	test-hashmap \
+ 	test-list \
+-	test-tables
++	test-tables \
++	test-device-nodes
+ 
+ EXTRA_DIST += \
+ 	test/sched_idle_bad.service \
+@@ -1147,6 +1150,15 @@ EXTRA_DIST += \
+ EXTRA_DIST += \
+ 	src/test/test-helper.h
+ 
++test_device_nodes_SOURCES = \
++	src/test/test-device-nodes.c
++
++test_device_nodes_CFLAGS = \
++	$(AM_CFLAGS)
++
++test_device_nodes_LDADD = \
++	libsystemd-shared.la
++
+ test_engine_SOURCES = \
+ 	src/test/test-engine.c
+ 
+diff --git a/src/libudev/libudev-util.c b/src/libudev/libudev-util.c
+index d54430c..b5b9db6 100644
+--- a/src/libudev/libudev-util.c
++++ b/src/libudev/libudev-util.c
+@@ -32,6 +32,7 @@
+ #include <sys/stat.h>
+ #include <sys/param.h>
+ 
++#include "device-nodes.h"
+ #include "libudev.h"
+ #include "libudev-private.h"
+ #include "utf8.h"
+@@ -344,7 +345,7 @@ int util_replace_chars(char *str, const char *white)
+         while (str[i] != '\0') {
+                 int len;
+ 
+-                if (is_utf8_encoding_whitelisted(str[i], white)) {
++                if (whitelisted_char_for_devnode(str[i], white)) {
+                         i++;
+                         continue;
+                 }
+@@ -392,7 +393,7 @@ int util_replace_chars(char *str, const char *white)
+  **/
+ _public_ int udev_util_encode_string(const char *str, char *str_enc, size_t len)
+ {
+-        return udev_encode_string(str, str_enc, len);
++        return encode_devnode_name(str, str_enc, len);
+ }
+ 
+ /*
+diff --git a/src/shared/device-nodes.c b/src/shared/device-nodes.c
+new file mode 100644
+index 0000000..986553e
+--- /dev/null
++++ b/src/shared/device-nodes.c
+@@ -0,0 +1,74 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
++/***
++  This file is part of systemd.
++
++  Copyright 2012 Lennart Poettering
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU Lesser General Public License as published by
++  the Free Software Foundation; either version 2.1 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  Lesser General Public License for more details.
++
++  You should have received a copy of the GNU Lesser General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
++#include <stdlib.h>
++#include <stdio.h>
++#include <stdint.h>
++#include <sys/types.h>
++
++#include "device-nodes.h"
++#include "utf8.h"
++
++int whitelisted_char_for_devnode(char c, const char *white) {
++        if ((c >= '0' && c <= '9') ||
++            (c >= 'A' && c <= 'Z') ||
++            (c >= 'a' && c <= 'z') ||
++            strchr("#+-.:=@_", c) != NULL ||
++            (white != NULL && strchr(white, c) != NULL))
++                return 1;
++        return 0;
++}
++
++int encode_devnode_name(const char *str, char *str_enc, size_t len) {
++        size_t i, j;
++
++        if (str == NULL || str_enc == NULL)
++                return -1;
++
++        for (i = 0, j = 0; str[i] != '\0'; i++) {
++                int seqlen;
++
++                seqlen = utf8_encoded_valid_unichar(&str[i]);
++                if (seqlen > 1) {
++                        if (len-j < (size_t)seqlen)
++                                goto err;
++                        memcpy(&str_enc[j], &str[i], seqlen);
++                        j += seqlen;
++                        i += (seqlen-1);
++                } else if (str[i] == '\\' || !whitelisted_char_for_devnode(str[i], NULL)) {
++                        if (len-j < 4)
++                                goto err;
++                        sprintf(&str_enc[j], "\\x%02x", (unsigned char) str[i]);
++                        j += 4;
++                } else {
++                        if (len-j < 1)
++                                goto err;
++                        str_enc[j] = str[i];
++                        j++;
++                }
++        }
++        if (len-j < 1)
++                goto err;
++        str_enc[j] = '\0';
++        return 0;
++err:
++        return -1;
++}
+diff --git a/src/shared/device-nodes.h b/src/shared/device-nodes.h
+new file mode 100644
+index 0000000..a98195a
+--- /dev/null
++++ b/src/shared/device-nodes.h
+@@ -0,0 +1,23 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
++/***
++  This file is part of systemd.
++
++  Copyright 2012 Lennart Poettering
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU Lesser General Public License as published by
++  the Free Software Foundation; either version 2.1 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  Lesser General Public License for more details.
++
++  You should have received a copy of the GNU Lesser General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
++int encode_devnode_name(const char *str, char *str_enc, size_t len);
++int whitelisted_char_for_devnode(char c, const char *additional);
+diff --git a/src/shared/utf8.c b/src/shared/utf8.c
+index 732f0f0..c3d97cc 100644
+--- a/src/shared/utf8.c
++++ b/src/shared/utf8.c
+@@ -285,49 +285,3 @@ int utf8_encoded_valid_unichar(const char *str) {
+ 
+         return len;
+ }
+-
+-int is_utf8_encoding_whitelisted(char c, const char *white) {
+-        if ((c >= '0' && c <= '9') ||
+-            (c >= 'A' && c <= 'Z') ||
+-            (c >= 'a' && c <= 'z') ||
+-            strchr("#+-.:=@_", c) != NULL ||
+-            (white != NULL && strchr(white, c) != NULL))
+-                return 1;
+-        return 0;
+-}
+-
+-int udev_encode_string(const char *str, char *str_enc, size_t len) {
+-        size_t i, j;
+-
+-        if (str == NULL || str_enc == NULL)
+-                return -1;
+-
+-        for (i = 0, j = 0; str[i] != '\0'; i++) {
+-                int seqlen;
+-
+-                seqlen = utf8_encoded_valid_unichar(&str[i]);
+-                if (seqlen > 1) {
+-                        if (len-j < (size_t)seqlen)
+-                                goto err;
+-                        memcpy(&str_enc[j], &str[i], seqlen);
+-                        j += seqlen;
+-                        i += (seqlen-1);
+-                } else if (str[i] == '\\' || !is_utf8_encoding_whitelisted(str[i], NULL)) {
+-                        if (len-j < 4)
+-                                goto err;
+-                        sprintf(&str_enc[j], "\\x%02x", (unsigned char) str[i]);
+-                        j += 4;
+-                } else {
+-                        if (len-j < 1)
+-                                goto err;
+-                        str_enc[j] = str[i];
+-                        j++;
+-                }
+-        }
+-        if (len-j < 1)
+-                goto err;
+-        str_enc[j] = '\0';
+-        return 0;
+-err:
+-        return -1;
+-}
+diff --git a/src/shared/utf8.h b/src/shared/utf8.h
+index 22e1346..96a03ea 100644
+--- a/src/shared/utf8.h
++++ b/src/shared/utf8.h
+@@ -35,5 +35,3 @@ char *ascii_filter(const char *s);
+ char *utf16_to_utf8(const void *s, size_t length);
+ 
+ int utf8_encoded_valid_unichar(const char *str);
+-int is_utf8_encoding_whitelisted(char c, const char *white);
+-int udev_encode_string(const char *str, char *str_enc, size_t len);
+diff --git a/src/shared/util.c b/src/shared/util.c
+index 4f80cc8..4711d91 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -73,7 +73,7 @@
+ #include "hashmap.h"
+ #include "env-util.h"
+ #include "fileio.h"
+-#include "utf8.h"
++#include "device-nodes.h"
+ 
+ int saved_argc = 0;
+ char **saved_argv = NULL;
+@@ -3509,7 +3509,7 @@ static char *tag_to_udev_node(const char *tagvalue, const char *by) {
+         if (t == NULL)
+                 return NULL;
+ 
+-        if (udev_encode_string(u, t, enc_len) < 0)
++        if (encode_devnode_name(u, t, enc_len) < 0)
+                 return NULL;
+ 
+         if (asprintf(&dn, "/dev/disk/by-%s/%s", by, t) < 0)
+diff --git a/src/test/test-device-nodes.c b/src/test/test-device-nodes.c
+new file mode 100644
+index 0000000..2f3dedb
+--- /dev/null
++++ b/src/test/test-device-nodes.c
+@@ -0,0 +1,55 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
++/***
++  This file is part of systemd.
++
++  Copyright 2013 Dave Reisner
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU Lesser General Public License as published by
++  the Free Software Foundation; either version 2.1 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  Lesser General Public License for more details.
++
++  You should have received a copy of the GNU Lesser General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
++#include <sys/types.h>
++
++#include "device-nodes.h"
++#include "util.h"
++
++/* helpers for test_encode_devnode_name */
++static char *do_encode_string(const char *in) {
++        size_t out_len = strlen(in) * 4;
++        char *out = malloc(out_len);
++
++        assert_se(out);
++        assert_se(encode_devnode_name(in, out, out_len) >= 0);
++        puts(out);
++
++        return out;
++}
++
++static bool expect_encoded_as(const char *in, const char *expected) {
++        _cleanup_free_ char *encoded = do_encode_string(in);
++        return streq(encoded, expected);
++}
++
++static void test_encode_devnode_name(void) {
++        assert_se(expect_encoded_as("systemd sucks", "systemd\\x20sucks"));
++        assert_se(expect_encoded_as("pinkiepie", "pinkiepie"));
++        assert_se(expect_encoded_as("valíd\\ųtf8", "valíd\\x5cųtf8"));
++        assert_se(expect_encoded_as("s/ash/ng", "s\\x2fash\\x2fng"));
++}
++
++int main(int argc, char *argv[]) {
++        test_encode_devnode_name();
++
++        return 0;
++}
+diff --git a/src/test/test-utf8.c b/src/test/test-utf8.c
+index 26cc37b..b5a833e 100644
+--- a/src/test/test-utf8.c
++++ b/src/test/test-utf8.c
+@@ -19,34 +19,9 @@
+   along with systemd; If not, see <http://www.gnu.org/licenses/>.
+ ***/
+ 
+-
+ #include "utf8.h"
+ #include "util.h"
+ 
+-/* helpers for test_udev_encode_string */
+-static char *do_encode_string(const char *in) {
+-        size_t out_len = strlen(in) * 4;
+-        char *out = malloc(out_len);
+-
+-        assert_se(out);
+-        assert_se(udev_encode_string(in, out, out_len) >= 0);
+-        puts(out);
+-
+-        return out;
+-}
+-
+-static bool expect_encoded_as(const char *in, const char *expected) {
+-        _cleanup_free_ char *encoded = do_encode_string(in);
+-        return streq(encoded, expected);
+-}
+-
+-static void test_udev_encode_string(void) {
+-        assert_se(expect_encoded_as("systemd sucks", "systemd\\x20sucks"));
+-        assert_se(expect_encoded_as("pinkiepie", "pinkiepie"));
+-        assert_se(expect_encoded_as("valíd\\ųtf8", "valíd\\x5cųtf8"));
+-        assert_se(expect_encoded_as("s/ash/ng", "s\\x2fash\\x2fng"));
+-}
+-
+ static void test_utf8_is_printable(void) {
+         assert_se(utf8_is_printable("ascii is valid\tunicode", 22));
+         assert_se(utf8_is_printable("\342\204\242", 3));
+@@ -55,14 +30,13 @@ static void test_utf8_is_printable(void) {
+ 
+ static void test_utf8_is_valid(void) {
+         assert_se(utf8_is_valid("ascii is valid unicode"));
+-        assert_se(utf8_is_valid("\341\204\242"));
++        assert_se(utf8_is_valid("\342\204\242"));
+         assert_se(!utf8_is_valid("\341\204"));
+ }
+ 
+ int main(int argc, char *argv[]) {
+         test_utf8_is_valid();
+         test_utf8_is_printable();
+-        test_udev_encode_string();
+ 
+         return 0;
+ }

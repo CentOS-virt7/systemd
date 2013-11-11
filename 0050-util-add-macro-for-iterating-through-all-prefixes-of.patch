@@ -1,0 +1,119 @@
+From c9f59a78c0016b37730cec831e1eec139ca4a561 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 25 Sep 2013 20:58:23 +0200
+Subject: [PATCH] util: add macro for iterating through all prefixes of a path
+
+Syntactic sugar in a macro PATH_FOREACH_PREFIX.
+---
+ src/shared/cgroup-util.c  | 26 ++++----------------------
+ src/shared/path-util.h    |  3 +++
+ src/test/test-path-util.c | 27 +++++++++++++++++++++++++++
+ 3 files changed, 34 insertions(+), 22 deletions(-)
+
+diff --git a/src/shared/cgroup-util.c b/src/shared/cgroup-util.c
+index 2e630d4..dc0fe85 100644
+--- a/src/shared/cgroup-util.c
++++ b/src/shared/cgroup-util.c
+@@ -456,23 +456,14 @@ int cg_migrate_recursive_fallback(
+ 
+                 /* This didn't work? Then let's try all prefixes of the destination */
+ 
+-                strcpy(prefix, pto);
+-                for (;;) {
+-                        char *slash;
+-
+-                        slash = strrchr(prefix, '/');
+-                        if (!slash)
+-                                break;
+-
+-                        *slash = 0;
+-
++                PATH_FOREACH_PREFIX(prefix, pto) {
+                         r = cg_migrate_recursive(cfrom, pfrom, cto, prefix, ignore_self, rem);
+                         if (r >= 0)
+                                 break;
+                 }
+         }
+ 
+-        return r;
++        return 0;
+ }
+ 
+ static const char *normalize_controller(const char *controller) {
+@@ -661,23 +652,14 @@ int cg_attach_fallback(const char *controller, const char *path, pid_t pid) {
+                 /* This didn't work? Then let's try all prefixes of
+                  * the destination */
+ 
+-                strcpy(prefix, path);
+-                for (;;) {
+-                        char *slash;
+-
+-                        slash = strrchr(prefix, '/');
+-                        if (!slash)
+-                                break;
+-
+-                        *slash = 0;
+-
++                PATH_FOREACH_PREFIX(prefix, path) {
+                         r = cg_attach(controller, prefix, pid);
+                         if (r >= 0)
+                                 break;
+                 }
+         }
+ 
+-        return r;
++        return 0;
+ }
+ 
+ int cg_set_group_access(
+diff --git a/src/shared/path-util.h b/src/shared/path-util.h
+index 9452931..03f2cf2 100644
+--- a/src/shared/path-util.h
++++ b/src/shared/path-util.h
+@@ -51,3 +51,6 @@ int path_is_read_only_fs(const char *path);
+ int path_is_os_tree(const char *path);
+ 
+ int find_binary(const char *name, char **filename);
++
++#define PATH_FOREACH_PREFIX(prefix, path) \
++        for (char *_slash = strrchr(path_kill_slashes(strcpy(prefix, path)), '/'); _slash && !(*_slash = 0); _slash = strrchr((prefix), '/'))
+diff --git a/src/test/test-path-util.c b/src/test/test-path-util.c
+index b0aeb11..e303e48 100644
+--- a/src/test/test-path-util.c
++++ b/src/test/test-path-util.c
+@@ -106,8 +106,35 @@ static void test_find_binary(void) {
+         assert(find_binary("xxxx-xxxx", &p) == -ENOENT);
+ }
+ 
++static void test_prefixes(void) {
++        static const char* values[] = { "/a/b/c", "/a/b", "/a", "", NULL};
++        unsigned i = 0;
++        char s[PATH_MAX];
++
++        PATH_FOREACH_PREFIX(s, "/a/b/c/d") {
++                log_error("---%s---", s);
++                assert_se(streq(s, values[i++]));
++        }
++
++        assert_se(values[i] == NULL);
++
++        i = 0;
++        PATH_FOREACH_PREFIX(s, "////a////b////c///d///////")
++                assert_se(streq(s, values[i++]));
++
++        assert_se(values[i] == NULL);
++
++        PATH_FOREACH_PREFIX(s, "////")
++                assert_se(streq(s, ""));
++
++        PATH_FOREACH_PREFIX(s, "")
++                assert_not_reached("wut?");
++
++}
++
+ int main(void) {
+         test_path();
+         test_find_binary();
++        test_prefixes();
+         return 0;
+ }

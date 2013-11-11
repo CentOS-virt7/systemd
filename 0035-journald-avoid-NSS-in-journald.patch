@@ -1,0 +1,89 @@
+From 6359b8041144a0571853b1dcad55ad60922af55d Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Tue, 17 Sep 2013 16:42:36 -0500
+Subject: [PATCH] journald: avoid NSS in journald
+
+In order to avoid a deadlock between journald looking up the
+"systemd-journal" group name, and nscd (or anyother NSS backing daemon)
+logging something back to the journal avoid all NSS in journald the same
+way as we avoid it from PID 1.
+
+With this change we rely on the kernel file system logic to adjust the
+group of created journal files via the SETGID bit on the journal
+directory. To ensure that it is always set, even after the user created
+it with a simply "mkdir" on the shell we fix it up via tmpfiles on boot.
+---
+ src/journal/journald-server.c | 25 ++-----------------------
+ src/journal/journald-server.h |  3 ---
+ tmpfiles.d/systemd.conf       |  3 +++
+ 3 files changed, 5 insertions(+), 26 deletions(-)
+
+diff --git a/src/journal/journald-server.c b/src/journal/journald-server.c
+index c252710..8007b05 100644
+--- a/src/journal/journald-server.c
++++ b/src/journal/journald-server.c
+@@ -180,25 +180,6 @@ static uint64_t available_space(Server *s, bool verbose) {
+         return s->cached_available_space;
+ }
+ 
+-static void server_read_file_gid(Server *s) {
+-        const char *g = "systemd-journal";
+-        int r;
+-
+-        assert(s);
+-
+-        if (s->file_gid_valid)
+-                return;
+-
+-        r = get_group_creds(&g, &s->file_gid);
+-        if (r < 0)
+-                log_warning("Failed to resolve '%s' group: %s", g, strerror(-r));
+-
+-        /* if we couldn't read the gid, then it will be 0, but that's
+-         * fine and we shouldn't try to resolve the group again, so
+-         * let's just pretend it worked right-away. */
+-        s->file_gid_valid = true;
+-}
+-
+ void server_fix_perms(Server *s, JournalFile *f, uid_t uid) {
+         int r;
+ #ifdef HAVE_ACL
+@@ -209,11 +190,9 @@ void server_fix_perms(Server *s, JournalFile *f, uid_t uid) {
+ 
+         assert(f);
+ 
+-        server_read_file_gid(s);
+-
+-        r = fchmod_and_fchown(f->fd, 0640, 0, s->file_gid);
++        r = fchmod(f->fd, 0640);
+         if (r < 0)
+-                log_warning("Failed to fix access mode/rights on %s, ignoring: %s", f->path, strerror(-r));
++                log_warning("Failed to fix access mode on %s, ignoring: %s", f->path, strerror(-r));
+ 
+ #ifdef HAVE_ACL
+         if (uid <= 0)
+diff --git a/src/journal/journald-server.h b/src/journal/journald-server.h
+index e856ef2..0393e38 100644
+--- a/src/journal/journald-server.h
++++ b/src/journal/journald-server.h
+@@ -97,9 +97,6 @@ typedef struct Server {
+         usec_t max_file_usec;
+         usec_t oldest_file_usec;
+ 
+-        gid_t file_gid;
+-        bool file_gid_valid;
+-
+         LIST_HEAD(StdoutStream, stdout_streams);
+         unsigned n_stdout_streams;
+ 
+diff --git a/tmpfiles.d/systemd.conf b/tmpfiles.d/systemd.conf
+index 4924b4e..c397c71 100644
+--- a/tmpfiles.d/systemd.conf
++++ b/tmpfiles.d/systemd.conf
+@@ -23,3 +23,6 @@ d /run/systemd/machines 0755 root root -
+ d /run/systemd/shutdown 0755 root root -
+ 
+ F /run/nologin 0644 - - - "System is booting up."
++
++m /var/log/journal 2755 root systemd-journal - -
++m /var/log/journal/%m 2755 root systemd-journal - -

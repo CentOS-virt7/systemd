@@ -1,0 +1,29 @@
+From 2127292995c93c4324cc15a8034e009fb78eb5a5 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Fri, 27 Sep 2013 08:24:00 +0200
+Subject: [PATCH] build-sys: restore detection of sphinx
+
+---
+ configure.ac | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/configure.ac b/configure.ac
+index d3f853f..c7f4f1b 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -185,6 +185,7 @@ AS_IF([test "x$enable_python_devel" != "xno"], [
+                   [have_python_devel=no])])
+       AS_IF([test "x$have_python_devel" = xno -a "x$enable_python_devel" = xyes],
+             [AC_MSG_ERROR([*** python-devel support requested but libraries not found])])
++      AC_PATH_PROGS(SPHINX_BUILD, sphinx-build-${PYTHON_VERSION} sphinx-build)
+ ])
+ AM_CONDITIONAL([HAVE_PYTHON_DEVEL], [test "$have_python_devel" = "yes"])
+ 
+@@ -1051,6 +1052,7 @@ AC_MSG_RESULT([
+         SysV rc?.d directories:  ${SYSTEM_SYSVRCND_PATH}
+         Build Python:            ${PYTHON}
+         Installation Python:     ${PYTHON_BINARY}
++        sphinx binary:           ${SPHINX_BUILD}
+         firmware path:           ${FIRMWARE_PATH}
+         PAM modules dir:         ${with_pamlibdir}
+         PAM configuration dir:   ${with_pamconfdir}

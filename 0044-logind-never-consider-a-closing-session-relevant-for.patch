@@ -1,0 +1,23 @@
+From 48797bdc98bb45dbd1aa7150bac5eff0acd31d58 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 26 Sep 2013 21:32:47 +0200
+Subject: [PATCH] logind: never consider a closing session relevant for PK
+ checks
+
+https://bugzilla.redhat.com/show_bug.cgi?id=1010215
+---
+ src/login/logind-dbus.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/login/logind-dbus.c b/src/login/logind-dbus.c
+index 77dda10..9f4c120 100644
+--- a/src/login/logind-dbus.c
++++ b/src/login/logind-dbus.c
+@@ -957,6 +957,7 @@ static int have_multiple_sessions(
+          * count, and non-login sessions do not count either. */
+         HASHMAP_FOREACH(session, m->sessions, i)
+                 if (session->class == SESSION_USER &&
++                    !session->closing &&
+                     session->user->uid != uid)
+                         return true;
+ 

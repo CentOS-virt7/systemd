@@ -1,0 +1,38 @@
+From fc8c5e4ff8248fa5548de63a5b96d1d9cf2be425 Mon Sep 17 00:00:00 2001
+From: Eelco Dolstra <eelco.dolstra@logicblox.com>
+Date: Sun, 22 Sep 2013 20:38:24 +0200
+Subject: [PATCH] Fix obsolete references to systemd-random-seed-load.service
+
+This service was merged with systemd-random-seed-save.service in
+c35b956d34bbb8bb208e49e45de2c103ca11911c.
+---
+ src/cryptsetup/cryptsetup-generator.c | 2 +-
+ units/systemd-random-seed.service.in  | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/cryptsetup/cryptsetup-generator.c b/src/cryptsetup/cryptsetup-generator.c
+index ba6efa6..8792e6b 100644
+--- a/src/cryptsetup/cryptsetup-generator.c
++++ b/src/cryptsetup/cryptsetup-generator.c
+@@ -129,7 +129,7 @@ static int create_disk(
+                 if (streq(password, "/dev/urandom") ||
+                     streq(password, "/dev/random") ||
+                     streq(password, "/dev/hw_random"))
+-                        fputs("After=systemd-random-seed-load.service\n", f);
++                        fputs("After=systemd-random-seed.service\n", f);
+                 else if (!streq(password, "-") &&
+                          !streq(password, "none"))
+                         fprintf(f,
+diff --git a/units/systemd-random-seed.service.in b/units/systemd-random-seed.service.in
+index 0c21a04..1879b2f 100644
+--- a/units/systemd-random-seed.service.in
++++ b/units/systemd-random-seed.service.in
+@@ -7,7 +7,7 @@
+ 
+ [Unit]
+ Description=Load/Save Random Seed
+-Documentation=man:systemd-random-seed-load.service(8) man:random(4)
++Documentation=man:systemd-random-seed.service(8) man:random(4)
+ DefaultDependencies=no
+ RequiresMountsFor=@RANDOM_SEED@
+ Conflicts=shutdown.target

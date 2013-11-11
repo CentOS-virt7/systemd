@@ -1,0 +1,28 @@
+From 91d2bf71864a1cb9f1228b65b126f5d74d8e09b9 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 23 Sep 2013 16:02:31 -0500
+Subject: [PATCH] cgroup: always enable memory.use_hierarchy= for all cgroups
+ in the memory hierarchy
+
+The non-hierarchial mode contradicts the whole idea of a cgroup tree so
+let's not support this. In the future the kernel will only support the
+hierarchial logic anyway.
+---
+ src/core/cgroup.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/core/cgroup.c b/src/core/cgroup.c
+index 7f29afb..24a2306 100644
+--- a/src/core/cgroup.c
++++ b/src/core/cgroup.c
+@@ -256,8 +256,9 @@ void cgroup_context_apply(CGroupContext *c, CGroupControllerMask mask, const cha
+         }
+ 
+         if (mask & CGROUP_MEMORY) {
+-                char buf[DECIMAL_STR_MAX(uint64_t) + 1];
+                 if (c->memory_limit != (uint64_t) -1) {
++                        char buf[DECIMAL_STR_MAX(uint64_t) + 1];
++
+                         sprintf(buf, "%" PRIu64 "\n", c->memory_limit);
+                         r = cg_set_attribute("memory", path, "memory.limit_in_bytes", buf);
+                 } else

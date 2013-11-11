@@ -1,0 +1,25 @@
+From dd6fb603d74e958f6a24b07f8792f07a576111ee Mon Sep 17 00:00:00 2001
+From: Sebastian Ott <sebott@linux.vnet.ibm.com>
+Date: Tue, 17 Sep 2013 19:16:08 +0200
+Subject: [PATCH] udev: path_id - fix by-path link generation for scm devices
+
+Set some_transport = true to prevent scm devices from being ignored.
+
+Suggested-by: Harald Hoyer <harald@redhat.com>
+Signed-off-by: Sebastian Ott <sebott@linux.vnet.ibm.com>
+---
+ src/udev/udev-builtin-path_id.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/udev/udev-builtin-path_id.c b/src/udev/udev-builtin-path_id.c
+index da02731..0659967 100644
+--- a/src/udev/udev-builtin-path_id.c
++++ b/src/udev/udev-builtin-path_id.c
+@@ -531,6 +531,7 @@ static int builtin_path_id(struct udev_device *dev, int argc, char *argv[], bool
+                 } else if (streq(subsys, "scm")) {
+                         path_prepend(&path, "scm-%s", udev_device_get_sysname(parent));
+                         parent = skip_subsystem(parent, "scm");
++                        some_transport = true;
+                 }
+ 
+                 parent = udev_device_get_parent(parent);

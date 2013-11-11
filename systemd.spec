@@ -11,7 +11,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        207
-Release:        5%{?dist}
+Release:        6%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -66,6 +66,64 @@ Patch0030: 0030-cgroup-always-enable-memory.use_hierarchy-for-all-cg.patch
 Patch0031: 0031-logind-return-EINVAL-when-PID-is-wrong.patch
 Patch0032: 0032-core-drop-some-out-of-date-references-to-cgroup-sett.patch
 Patch0033: 0033-man-explain-NAME-in-systemctl-man-page.patch
+Patch0034: 0034-journald-accept-EPOLLERR-from-dev-kmsg.patch
+Patch0035: 0035-journald-avoid-NSS-in-journald.patch
+Patch0036: 0036-libudev-add-missing-global-to-symbol-export.patch
+Patch0037: 0037-gpt-auto-generator-do-not-assume-that-dev-block-u-u-.patch
+Patch0038: 0038-logind-put-correct-user-object-paths-in-introspectio.patch
+Patch0039: 0039-Fix-obsolete-references-to-systemd-random-seed-load..patch
+Patch0040: 0040-cgroup-always-enable-memory.use_hierarchy-for-all-cg.patch
+Patch0041: 0041-journalctl-1-s-adm-systemd-journal.patch
+Patch0042: 0042-cgroup-if-we-do-a-cgroup-operation-then-do-something.patch
+Patch0043: 0043-core-rework-how-we-match-mount-units-against-each-ot.patch
+Patch0044: 0044-logind-never-consider-a-closing-session-relevant-for.patch
+Patch0045: 0045-man-drop-references-to-cgroup-wher-appropriate.patch
+Patch0046: 0046-systemctl-make-sure-set-property-mangles-unit-names.patch
+Patch0047: 0047-dbus-fix-introspection-for-TimerSlackNSec.patch
+Patch0048: 0048-swap-properly-expose-timeout-property-on-the-bus.patch
+Patch0049: 0049-build-sys-restore-detection-of-sphinx.patch
+Patch0050: 0050-util-add-macro-for-iterating-through-all-prefixes-of.patch
+Patch0051: 0051-util-properly-handle-the-root-dir-in-PATH_FOREACH_PR.patch
+Patch0052: 0052-cgroup-get-rid-of-MemorySoftLimit.patch
+Patch0053: 0053-set-IgnoreOnIsolate-true-for-systemd-cryptsetup-.ser.patch
+Patch0054: 0054-main-don-t-free-fds-array-twice.patch
+Patch0055: 0055-local-fix-memory-leak-when-putting-together-locale-s.patch
+Patch0056: 0056-hashmap-size-hashmap-bucket-array-dynamically.patch
+Patch0057: 0057-smack-setup-fix-path-to-Smack-CIPSO-mappings.patch
+Patch0058: 0058-fix-lingering-references-to-var-lib-backlight-random.patch
+Patch0059: 0059-cryptsetup-fix-OOM-handling-when-parsing-mount-optio.patch
+Patch0060: 0060-journald-add-missing-error-check.patch
+Patch0061: 0061-bus-fix-potentially-uninitialized-memory-access.patch
+Patch0062: 0062-dbus-fix-return-value-of-dispatch_rqueue.patch
+Patch0063: 0063-modules-load-fix-error-handling.patch
+Patch0064: 0064-efi-never-call-qsort-on-potentially-NULL-arrays.patch
+Patch0065: 0065-strv-don-t-access-potentially-NULL-string-arrays.patch
+Patch0066: 0066-mkdir-pass-a-proper-function-pointer-to-mkdir_safe_i.patch
+Patch0067: 0067-tmpfiles.d-include-setgid-perms-for-run-log-journal.patch
+Patch0068: 0068-gpt-auto-generator-exit-immediately-if-in-container.patch
+Patch0069: 0069-systemd-order-remote-mounts-from-mountinfo-before-re.patch
+Patch0070: 0070-manager-when-verifying-whether-clients-may-change-en.patch
+Patch0071: 0071-mount-check-for-NULL-before-reading-pm-what.patch
+Patch0072: 0072-core-do-not-add-what-to-RequiresMountsFor-for-networ.patch
+Patch0073: 0073-systemd-serialize-deserialize-forbid_restart-value.patch
+Patch0074: 0074-core-unify-the-way-we-denote-serialization-attribute.patch
+Patch0075: 0075-journald-fix-minor-memory-leak.patch
+Patch0076: 0076-journald-remove-rotated-file-from-hashmap-when-rotat.patch
+Patch0077: 0077-udevadm.xml-document-resolve-names-option-for-test.patch
+Patch0078: 0078-dbus-common-avoid-leak-in-error-path.patch
+Patch0079: 0079-drop-ins-check-return-value.patch
+Patch0080: 0080-shared-util-Fix-glob_extend-argument.patch
+Patch0081: 0081-Fix-for-SIGSEGV-in-systemd-bootchart-on-short-living.patch
+Patch0082: 0082-man-document-the-b-special-boot-option.patch
+Patch0083: 0083-tmpfiles-log-unaccessible-FUSE-mount-points-only-as-.patch
+Patch0084: 0084-move-utf8-functions-from-libudev-private.h-to-utf8.h.patch
+Patch0085: 0085-Use-udev_encode_string-in-fstab_node_to_udev_node.patch
+Patch0086: 0086-Fix-buffer-overrun-when-enumerating-files.patch
+Patch0087: 0087-shared-utf8-merge-implementations-remove-cruft.patch
+Patch0088: 0088-device-nodes-move-device-node-specific-code-to-own-f.patch
+Patch0089: 0089-shared-util-fix-off-by-one-error-in-tag_to_udev_node.patch
+Patch0090: 0090-udev-path_id-fix-by-path-link-generation-for-scm-dev.patch
+Patch0091: 0091-hashmap-randomize-hash-functions-a-bit.patch
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
 
@@ -619,7 +677,7 @@ fi
 
 %pre journal-gateway
 getent group systemd-journal-gateway >/dev/null 2>&1 || groupadd -r -g 191 systemd-journal-gateway 2>&1 || :
-getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g systemd-journal-gateway -d %{_prefix}/lib/systemd -s /usr/sbin/nologin -c "Journal Gateway" systemd-journal-gateway >/dev/null 2>&1 || :
+getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g systemd-journal-gateway -d %{_prefix}/lib/systemd -s /sbin/nologin -c "Journal Gateway" systemd-journal-gateway >/dev/null 2>&1 || :
 
 %post journal-gateway
 %systemd_post systemd-journal-gatewayd.socket systemd-journal-gatewayd.service
@@ -870,6 +928,12 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Mon Nov 11 2013 Harald Hoyer <harald@redhat.com> 207-6
+- changed systemd-journal-gateway login shell to /sbin/nologin
+- backported a lot of bugfixes
+- udev: path_id - fix by-path link generation for scm devices
+Resolves: rhbz#888707
+
 * Tue Nov 05 2013 Lukas Nykryn <lnykryn@redhat.com> - 207-5
 - create /etc/rc.d/rc.local (#968401)
 - cgroup: always enable memory.use_hierarchy= for all cgroups (#1011575)
