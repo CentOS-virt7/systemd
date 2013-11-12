@@ -11,7 +11,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        207
-Release:        6%{?dist}
+Release:        7%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -124,6 +124,8 @@ Patch0088: 0088-device-nodes-move-device-node-specific-code-to-own-f.patch
 Patch0089: 0089-shared-util-fix-off-by-one-error-in-tag_to_udev_node.patch
 Patch0090: 0090-udev-path_id-fix-by-path-link-generation-for-scm-dev.patch
 Patch0091: 0091-hashmap-randomize-hash-functions-a-bit.patch
+Patch0092: 0092-Configurable-Timeouts-Restarts-default-values.patch
+Patch0093: 0093-manager-configurable-StartLimit-default-values.patch
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
 
@@ -928,6 +930,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Tue Nov 12 2013 Lukas Nykryn <lnykryn@redhat.com> - 207-7
+- introduce DefaultStartLimit (#821723)
+
 * Mon Nov 11 2013 Harald Hoyer <harald@redhat.com> 207-6
 - changed systemd-journal-gateway login shell to /sbin/nologin
 - backported a lot of bugfixes
