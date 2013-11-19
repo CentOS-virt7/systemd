@@ -11,7 +11,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        207
-Release:        7%{?dist}
+Release:        8%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -126,6 +126,8 @@ Patch0090: 0090-udev-path_id-fix-by-path-link-generation-for-scm-dev.patch
 Patch0091: 0091-hashmap-randomize-hash-functions-a-bit.patch
 Patch0092: 0092-Configurable-Timeouts-Restarts-default-values.patch
 Patch0093: 0093-manager-configurable-StartLimit-default-values.patch
+Patch0094: 0094-sysctl-bring-back-etc-sysctl.conf.patch
+Patch0095: 0095-tmpfiles-add-a-new-m-line-type-that-adjusts-user-gro.patch
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
 
@@ -930,6 +932,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Tue Nov 19 2013 Lukas Nykryn <lnykryn@redhat.com> - 207-8
+- tmpfiles: introduce m (#1030961)
+
 * Tue Nov 12 2013 Lukas Nykryn <lnykryn@redhat.com> - 207-7
 - introduce DefaultStartLimit (#821723)
 
