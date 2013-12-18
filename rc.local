@@ -10,4 +10,4 @@
 # Please note that you must run 'chmod +x /etc/rc.d/rc.local' to ensure
 # that this script will be executed during boot.
 
-exit 0
+touch /var/lock/subsys/local

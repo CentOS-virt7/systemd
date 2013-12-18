@@ -11,7 +11,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        207
-Release:        8%{?dist}
+Release:        9%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -128,6 +128,24 @@ Patch0092: 0092-Configurable-Timeouts-Restarts-default-values.patch
 Patch0093: 0093-manager-configurable-StartLimit-default-values.patch
 Patch0094: 0094-sysctl-bring-back-etc-sysctl.conf.patch
 Patch0095: 0095-tmpfiles-add-a-new-m-line-type-that-adjusts-user-gro.patch
+Patch0096: 0096-systemd-treat-reload-failure-as-failure.patch
+Patch0097: 0097-journal-when-appending-to-journal-file-allocate-larg.patch
+Patch0098: 0098-journal-optimize-bisection-logic-a-bit-by-caching-th.patch
+Patch0099: 0099-journal-fix-iteration-when-we-go-backwards-from-the-.patch
+Patch0100: 0100-journal-allow-journal_file_copy_entry-to-work-on-non.patch
+Patch0101: 0101-journal-simplify-pre-allocation-logic.patch
+Patch0102: 0102-journald-mention-how-long-we-needed-to-flush-to-var-.patch
+Patch0103: 0103-Never-call-qsort-on-potentially-NULL-arrays.patch
+Patch0104: 0104-localed-match-converted-keymaps-before-legacy.patch
+Patch0105: 0105-core-socket-fix-SO_REUSEPORT.patch
+Patch0106: 0106-activate-fix-crash-when-s-is-passed.patch
+Patch0107: 0107-systemd-python-fix-booted-and-add-two-functions-to-d.patch
+Patch0108: 0108-util.c-check-if-return-value-from-ttyname_r-is-0-ins.patch
+Patch0109: 0109-activate-mention-E-in-the-help-text.patch
+Patch0110: 0110-docs-remove-unneeded-the-s-in-gudev-docs.patch
+Patch0111: 0111-man-explicitly-say-when-multiple-units-can-be-specif.patch
+Patch0112: 0112-util-fix-handling-of-trailing-whitespace-in-split_qu.patch
+Patch0113: 0113-man-Improve-the-description-of-parameter-X-in-tmpfil.patch
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
 
@@ -200,6 +218,7 @@ Obsoletes:      upstart < 1.2-3
 Obsoletes:      upstart-sysvinit < 1.2-3
 Conflicts:      upstart-sysvinit
 Obsoletes:      hal
+Obsoletes:      ConsoleKit
 
 %description
 systemd is a system and service manager for Linux, compatible with
@@ -315,7 +334,7 @@ systemd-journal-gatewayd serves journal events over the network using HTTP.
         --exclude src/locale/.gitignore \
         --exclude src/login/.gitignore \
         --exclude src/python-systemd/.gitignore \
-        --exclude src/python-systemd/docs/.gitignore \
+        --exclude src/python-systemd/docs/* \
         --exclude src/timedate/.gitignore \
         --exclude src/udev/.gitignore \
         --exclude src/udev/scsi_id/.gitignore \
@@ -932,6 +951,16 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Wed Dec 18 2013 Lukas Nykryn <lnykryn@redhat.com> - 207-9
+- treat reload failure as failure (#1036848)
+- improve journal performance (#1029604)
+- backport bugfixes (#1043525)
+- fix handling of trailing whitespace in split_quoted (#984832)
+- localed: match converted keymaps before legacy (#903776)
+- improve the description of parameter X in tmpfiles.d page (#1029604)
+- obsolete ConsoleKit (#1039761)
+- make rc.local more backward comaptible (#1039465)
+
 * Tue Nov 19 2013 Lukas Nykryn <lnykryn@redhat.com> - 207-8
 - tmpfiles: introduce m (#1030961)
 
