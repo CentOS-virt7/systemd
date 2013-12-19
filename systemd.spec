@@ -11,7 +11,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        207
-Release:        9%{?dist}
+Release:        10%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -146,6 +146,7 @@ Patch0110: 0110-docs-remove-unneeded-the-s-in-gudev-docs.patch
 Patch0111: 0111-man-explicitly-say-when-multiple-units-can-be-specif.patch
 Patch0112: 0112-util-fix-handling-of-trailing-whitespace-in-split_qu.patch
 Patch0113: 0113-man-Improve-the-description-of-parameter-X-in-tmpfil.patch
+Patch0114: 0114-cgroup_show-don-t-call-show_pid_array-on-empty-array.patch
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
 
@@ -951,6 +952,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Thu Dec 19 2013 Lukas Nykryn <lnykryn@redhat.com> - 207-10
+- cgroup_show: don't call show_pid_array on empty arrays
+
 * Wed Dec 18 2013 Lukas Nykryn <lnykryn@redhat.com> - 207-9
 - treat reload failure as failure (#1036848)
 - improve journal performance (#1029604)

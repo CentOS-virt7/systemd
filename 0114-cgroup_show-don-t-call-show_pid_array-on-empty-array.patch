@@ -1,0 +1,23 @@
+From 70878d429195a032b6b535629a33460a9d112d1d Mon Sep 17 00:00:00 2001
+From: Lukas Nykryn <lnykryn@redhat.com>
+Date: Thu, 19 Dec 2013 18:04:34 +0100
+Subject: [PATCH] cgroup_show: don't call show_pid_array on empty arrays
+
+---
+ src/shared/cgroup-show.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/shared/cgroup-show.c b/src/shared/cgroup-show.c
+index cc44ab4..bba94aa 100644
+--- a/src/shared/cgroup-show.c
++++ b/src/shared/cgroup-show.c
+@@ -270,7 +270,8 @@ static int show_extra_pids(const char *controller, const char *path, const char
+                 copy[j++] = pids[i];
+         }
+ 
+-        show_pid_array(copy, j, prefix, n_columns, true, false, false, flags);
++        if (j > 0)
++                show_pid_array(copy, j, prefix, n_columns, true, false, false, flags);
+ 
+         return 0;
+ }
