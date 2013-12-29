@@ -11,7 +11,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        207
-Release:        10%{?dist}
+Release:        11%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -952,6 +952,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Fri Dec 27 2013 Daniel Mach <dmach@redhat.com> - 207-11
+- Mass rebuild 2013-12-27
+
 * Thu Dec 19 2013 Lukas Nykryn <lnykryn@redhat.com> - 207-10
 - cgroup_show: don't call show_pid_array on empty arrays
 
