@@ -1,0 +1,46 @@
+From 4a656b5523de379e9a6908aa904035be02fe8a28 Mon Sep 17 00:00:00 2001
+From: Lukas Nykryn <lnykryn@redhat.com>
+Date: Wed, 15 Jan 2014 15:31:07 +0100
+Subject: [PATCH] shell-completion: remove load from systemctl
+
+Conflicts:
+	shell-completion/bash/systemctl
+---
+ shell-completion/bash/systemctl | 2 +-
+ shell-completion/zsh/_systemctl | 3 +--
+ 2 files changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/shell-completion/bash/systemctl b/shell-completion/bash/systemctl
+index 7353210..464ad51 100644
+--- a/shell-completion/bash/systemctl
++++ b/shell-completion/bash/systemctl
+@@ -141,7 +141,7 @@ _systemctl () {
+                              emergency exit halt hibernate hybrid-sleep kexec list-jobs
+                              list-units list-unit-files poweroff reboot rescue
+                              show-environment suspend get-default'
+-                     [NAME]='snapshot load'
++                     [NAME]='snapshot'
+                      [FILE]='link'
+                   [TARGETS]='set-default'
+         )
+diff --git a/shell-completion/zsh/_systemctl b/shell-completion/zsh/_systemctl
+index fea16fc..0180dd0 100644
+--- a/shell-completion/zsh/_systemctl
++++ b/shell-completion/zsh/_systemctl
+@@ -23,7 +23,6 @@
+     "status:Show runtime status of one or more units"
+     "show:Show properties of one or more units/jobs or the manager"
+     "reset-failed:Reset failed state for all, one, or more units"
+-    "load:Load one or more units"
+     "list-unit-files:List installed unit files"
+     "enable:Enable one or more unit files"
+     "disable:Disable one or more unit files"
+@@ -265,7 +264,7 @@ done
+ #    [STANDALONE]='daemon-reexec daemon-reload default
+ #                  emergency exit halt kexec list-jobs list-units
+ #                  list-unit-files poweroff reboot rescue show-environment'
+-#         [NAME]='snapshot load'
++#         [NAME]='snapshot'
+ 
+ _systemctl_caching_policy()
+ {

@@ -11,7 +11,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        207
-Release:        11%{?dist}
+Release:        12%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -147,6 +147,12 @@ Patch0111: 0111-man-explicitly-say-when-multiple-units-can-be-specif.patch
 Patch0112: 0112-util-fix-handling-of-trailing-whitespace-in-split_qu.patch
 Patch0113: 0113-man-Improve-the-description-of-parameter-X-in-tmpfil.patch
 Patch0114: 0114-cgroup_show-don-t-call-show_pid_array-on-empty-array.patch
+Patch0115: 0115-coredumpctl-in-case-of-error-free-pattern-after-prin.patch
+Patch0116: 0116-udev-net_id-Introduce-predictable-network-names-for-.patch
+Patch0117: 0117-tmpfiles-don-t-allow-label_fix-to-print-ENOENT-when-.patch
+Patch0118: 0118-delta-ensure-that-d_type-will-be-set-on-every-fs.patch
+Patch0119: 0119-shell-completion-dump-has-moved-to-systemd-analyze.patch
+Patch0120: 0120-shell-completion-remove-load-from-systemctl.patch
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
 
@@ -952,6 +958,13 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Wed Jan 15 2014 Lukáš Nykrýn <lnykryn@redhat.com> - 207-12
+- shell-completion: remove load and dump from systemctl (#1048066)
+- delta: ensure that d_type will be set on every fs (#1050795)
+- tmpfiles: don't allow label_fix to print ENOENT when we want to ignore it (#1044871)
+- udev/net_id: Introduce predictable network names for Linux on System z (#870859)
+- coredumpctl: in case of error free pattern after print (#1052786)
+
 * Fri Dec 27 2013 Daniel Mach <dmach@redhat.com> - 207-11
 - Mass rebuild 2013-12-27
 
