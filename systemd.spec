@@ -11,7 +11,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        207
-Release:        12%{?dist}
+Release:        13%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -153,6 +153,7 @@ Patch0117: 0117-tmpfiles-don-t-allow-label_fix-to-print-ENOENT-when-.patch
 Patch0118: 0118-delta-ensure-that-d_type-will-be-set-on-every-fs.patch
 Patch0119: 0119-shell-completion-dump-has-moved-to-systemd-analyze.patch
 Patch0120: 0120-shell-completion-remove-load-from-systemctl.patch
+Patch0121: 0121-Fix-SELinux-check-for-transient-units.-1008864.patch
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
 
@@ -958,6 +959,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Thu Jan 16 2014 Lukáš Nykrýn <lnykryn@redhat.com> - 207-13
+- fix SELinux check for transient units (#1008864)
+
 * Wed Jan 15 2014 Lukáš Nykrýn <lnykryn@redhat.com> - 207-12
 - shell-completion: remove load and dump from systemctl (#1048066)
 - delta: ensure that d_type will be set on every fs (#1050795)
