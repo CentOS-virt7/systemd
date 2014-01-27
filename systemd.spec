@@ -11,7 +11,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        207
-Release:        13%{?dist}
+Release:        14%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -959,6 +959,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Fri Jan 24 2014 Daniel Mach <dmach@redhat.com> - 207-14
+- Mass rebuild 2014-01-24
+
 * Thu Jan 16 2014 Lukáš Nykrýn <lnykryn@redhat.com> - 207-13
 - fix SELinux check for transient units (#1008864)
 
