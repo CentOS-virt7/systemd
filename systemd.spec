@@ -11,7 +11,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        1%{?dist}
+Release:        2%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -20,17 +20,15 @@ Summary:        A System and Service Manager
 # https://github.com/lnykryn/systemd-208-stable
 Source0:        %{name}-%{version}-20140211gitfb729a4.tar.xz
 # RHEL7 default preset policy
-Source1:        90-default.preset
-Source7:        99-default-disable.preset
-Source5:        85-display-manager.preset
+Source1:        99-default-disable.preset
 # SysV convert script.
 Source2:        systemd-sysv-convert
 # Stop-gap, just to ensure things work fine with rsyslog without having to change the package right-away
-Source4:        listen.conf
+Source3:        listen.conf
 # Prevent accidental removal of the systemd package
-Source6:        yum-protect-systemd.conf
+Source4:        yum-protect-systemd.conf
 # ship /etc/rc.d/rc.local https://bugzilla.redhat.com/show_bug.cgi?id=968401
-Source8:        rc.local
+Source5:        rc.local
 
 BuildRequires:  libcap-devel
 BuildRequires:  tcp_wrappers-devel
@@ -251,8 +249,6 @@ touch %{buildroot}%{_sysconfdir}/X11/xorg.conf.d/00-keyboard.conf
 mkdir -p %{buildroot}%{_prefix}/lib/systemd/system-preset/
 mkdir -p %{buildroot}%{_prefix}/lib/systemd/user-preset/
 install -m 0644 %{SOURCE1} %{buildroot}%{_prefix}/lib/systemd/system-preset/
-install -m 0644 %{SOURCE5} %{buildroot}%{_prefix}/lib/systemd/system-preset/
-install -m 0644 %{SOURCE7} %{buildroot}%{_prefix}/lib/systemd/system-preset/
 
 # Make sure the shutdown/sleep drop-in dirs exist
 mkdir -p %{buildroot}%{_prefix}/lib/systemd/system-shutdown/
@@ -272,15 +268,15 @@ install -m 0755 %{SOURCE2} %{buildroot}%{_bindir}/
 
 # Install rsyslog fragment
 mkdir -p %{buildroot}%{_sysconfdir}/rsyslog.d/
-install -m 0644 %{SOURCE4} %{buildroot}%{_sysconfdir}/rsyslog.d/
+install -m 0644 %{SOURCE3} %{buildroot}%{_sysconfdir}/rsyslog.d/
 
 # Install yum protection fragment
 mkdir -p %{buildroot}%{_sysconfdir}/yum/protected.d/
-install -m 0644 %{SOURCE6} %{buildroot}%{_sysconfdir}/yum/protected.d/systemd.conf
+install -m 0644 %{SOURCE4} %{buildroot}%{_sysconfdir}/yum/protected.d/systemd.conf
 
 # Install rc.local
 mkdir -p %{buildroot}%{_sysconfdir}/rc.d/
-install -m 0644 %{SOURCE8} %{buildroot}%{_sysconfdir}/rc.d/rc.local
+install -m 0644 %{SOURCE5} %{buildroot}%{_sysconfdir}/rc.d/rc.local
 ln -s rc.d/rc.local %{buildroot}%{_sysconfdir}/rc.local
 
 # To avoid making life hard for Rawhide-using developers, don't package the
@@ -647,8 +643,6 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_prefix}/lib/tmpfiles.d/tmp.conf
 %{_prefix}/lib/tmpfiles.d/systemd-nologin.conf
 %{_prefix}/lib/sysctl.d/50-default.conf
-%{_prefix}/lib/systemd/system-preset/85-display-manager.preset
-%{_prefix}/lib/systemd/system-preset/90-default.preset
 %{_prefix}/lib/systemd/system-preset/99-default-disable.preset
 %{_prefix}/lib/systemd/catalog/systemd.catalog
 %{_prefix}/lib/kernel/install.d/50-depmod.install
@@ -785,6 +779,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Wed Feb 12 2014 Michal Sekletar <msekleta@redhat.com> - 208-2
+- move preset policy out of systemd package (#903690)
+
 * Tue Feb 11 2014 Michal Sekletar <msekleta@redhat.com> - 208-1
 - rebase to systemd-208 (#1063332)
 - do not create symlink /etc/systemd/system/syslog.service (#1055421)
