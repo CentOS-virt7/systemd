@@ -70,6 +70,7 @@ Requires:       dbus
 Requires:       nss-myhostname
 Requires:       %{name}-libs = %{version}-%{release}
 Requires:       kmod >= 14
+Requires:       redhat-release
 
 Provides:       /bin/systemctl
 Provides:       /sbin/shutdown
@@ -781,6 +782,7 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 
 %changelog
 * Wed Feb 12 2014 Michal Sekletar <msekleta@redhat.com> - 208-2
+- require redhat-release package
 - call systemd-tmpfiles after package installation (#1059345)
 - move preset policy out of systemd package (#903690)
 
