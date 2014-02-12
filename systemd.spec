@@ -351,6 +351,7 @@ systemctl daemon-reexec >/dev/null 2>&1 || :
 systemctl start systemd-udevd.service >/dev/null 2>&1 || :
 udevadm hwdb --update >/dev/null 2>&1 || :
 journalctl --update-catalog >/dev/null 2>&1 || :
+systemd-tmpfiles --create >/dev/null 2>&1 || :
 
 if [ $1 -eq 1 ] ; then
         # Try to read default runlevel from the old inittab if it exists
@@ -780,6 +781,7 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 
 %changelog
 * Wed Feb 12 2014 Michal Sekletar <msekleta@redhat.com> - 208-2
+- call systemd-tmpfiles after package installation (#1059345)
 - move preset policy out of systemd package (#903690)
 
 * Tue Feb 11 2014 Michal Sekletar <msekleta@redhat.com> - 208-1
