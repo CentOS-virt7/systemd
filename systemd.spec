@@ -11,7 +11,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        2%{?dist}
+Release:        3%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -29,6 +29,8 @@ Source3:        listen.conf
 Source4:        yum-protect-systemd.conf
 # ship /etc/rc.d/rc.local https://bugzilla.redhat.com/show_bug.cgi?id=968401
 Source5:        rc.local
+
+Patch0:         0001-dbus-manager-fix-selinux-check-for-enable-disable.patch
 
 BuildRequires:  libcap-devel
 BuildRequires:  tcp_wrappers-devel
@@ -781,6 +783,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Fri Feb 14 2014 Lukáš Nykrýn <lnykryn@redhat.com> - 208-3
+- dbus-manager: fix selinux check for enable/disable
+
 * Wed Feb 12 2014 Michal Sekletar <msekleta@redhat.com> - 208-2
 - require redhat-release package
 - call systemd-tmpfiles after package installation (#1059345)

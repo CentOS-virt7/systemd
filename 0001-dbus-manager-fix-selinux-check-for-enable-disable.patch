@@ -1,0 +1,70 @@
+From b2e1656f90f9fe7d6af19ad8cf0a8c75a5dcc3a4 Mon Sep 17 00:00:00 2001
+From: Lukas Nykryn <lnykryn@redhat.com>
+Date: Fri, 14 Feb 2014 15:03:47 +0100
+Subject: [PATCH] dbus-manager: fix selinux check for enable/disable
+
+---
+ src/core/dbus-manager.c | 26 ++++----------------------
+ 1 file changed, 4 insertions(+), 22 deletions(-)
+
+diff --git a/src/core/dbus-manager.c b/src/core/dbus-manager.c
+index 60004e1..9ec5bfb 100644
+--- a/src/core/dbus-manager.c
++++ b/src/core/dbus-manager.c
+@@ -1589,6 +1589,8 @@ static DBusHandlerResult bus_manager_message_handler(DBusConnection *connection,
+                 dbus_bool_t runtime, force;
+                 int carries_install_info = -1;
+ 
++                SELINUX_ACCESS_CHECK(connection, message, streq(member, "MaskUnitFiles") ? "disable" : "enable");
++
+                 if (!dbus_message_iter_init(message, &iter))
+                         goto oom;
+ 
+@@ -1600,17 +1602,6 @@ static DBusHandlerResult bus_manager_message_handler(DBusConnection *connection,
+                         return bus_send_error_reply(connection, message, NULL, r);
+                 }
+ 
+-                STRV_FOREACH(i, l) {
+-                        Unit *u;
+-
+-                        u = manager_get_unit(m, *i);
+-                        if (!u) {
+-                                dbus_set_error(&error, BUS_ERROR_NO_SUCH_UNIT, "Unit %s is not loaded.", *i);
+-                                return bus_send_error_reply(connection, message, &error, -ENOENT);
+-                        }
+-                        SELINUX_UNIT_ACCESS_CHECK(u, connection, message, streq(member, "MaskUnitFiles") ? "disable" : "enable");
+-                }
+-
+                 if (!dbus_message_iter_next(&iter) ||
+                     bus_iter_get_basic_and_next(&iter, DBUS_TYPE_BOOLEAN, &runtime, true) < 0 ||
+                     bus_iter_get_basic_and_next(&iter, DBUS_TYPE_BOOLEAN, &force, false) < 0) {
+@@ -1661,6 +1652,8 @@ static DBusHandlerResult bus_manager_message_handler(DBusConnection *connection,
+                 unsigned n_changes = 0;
+                 dbus_bool_t runtime;
+ 
++                SELINUX_ACCESS_CHECK(connection, message, streq(member, "UnmaskUnitFiles") ? "enable" : "disable");
++
+                 if (!dbus_message_iter_init(message, &iter))
+                         goto oom;
+ 
+@@ -1678,17 +1671,6 @@ static DBusHandlerResult bus_manager_message_handler(DBusConnection *connection,
+                         return bus_send_error_reply(connection, message, NULL, -EIO);
+                 }
+ 
+-                STRV_FOREACH(i, l) {
+-                        Unit *u;
+-
+-                        u = manager_get_unit(m, *i);
+-                        if (!u) {
+-                                dbus_set_error(&error, BUS_ERROR_NO_SUCH_UNIT, "Unit %s is not loaded.", *i);
+-                                return bus_send_error_reply(connection, message, &error, -ENOENT);
+-                        }
+-                        SELINUX_UNIT_ACCESS_CHECK(u, connection, message, streq(member, "UnmaskUnitFiles") ? "enable" : "disable");
+-                }
+-
+                 if (streq(member, "DisableUnitFiles"))
+                         r = unit_file_disable(scope, runtime, NULL, l, &changes, &n_changes);
+                 else if (streq(member, "UnmaskUnitFiles"))
+-- 
+1.8.4.2
+
