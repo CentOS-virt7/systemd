@@ -11,7 +11,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        3%{?dist}
+Release:        4%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -31,6 +31,7 @@ Source4:        yum-protect-systemd.conf
 Source5:        rc.local
 
 Patch0:         0001-dbus-manager-fix-selinux-check-for-enable-disable.patch
+Patch1:         0002-Revert-fstab-generator-Do-not-try-to-fsck-non-device.patch
 
 BuildRequires:  libcap-devel
 BuildRequires:  tcp_wrappers-devel
@@ -783,6 +784,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Mon Feb 17 2014 Lukáš Nykrýn <lnykryn@redhat.com> - 208-4
+- fstab-generator: revert wrongly applied patch
+
 * Fri Feb 14 2014 Lukáš Nykrýn <lnykryn@redhat.com> - 208-3
 - dbus-manager: fix selinux check for enable/disable
 
