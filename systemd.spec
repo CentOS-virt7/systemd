@@ -11,7 +11,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        4%{?dist}
+Release:        5%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -29,6 +29,8 @@ Source3:        listen.conf
 Source4:        yum-protect-systemd.conf
 # ship /etc/rc.d/rc.local https://bugzilla.redhat.com/show_bug.cgi?id=968401
 Source5:        rc.local
+#https://bugzilla.redhat.com/show_bug.cgi?id=1032711
+Source6:        60-alias-kmsg.rules
 
 Patch0:         0001-dbus-manager-fix-selinux-check-for-enable-disable.patch
 Patch1:         0002-Revert-fstab-generator-Do-not-try-to-fsck-non-device.patch
@@ -298,6 +300,8 @@ rm -f %{buildroot}%{_prefix}/lib/systemd/system/local-fs.target.wants/tmp.mount
 
 # No gpt-auto-generator in RHEL7
 rm -f %{buildroot}%{_prefix}/lib/systemd/system-generators/systemd-gpt-auto-generator
+
+install -m 0644 %{SOURCE6} $RPM_BUILD_ROOT/%{_udevrulesdir}/
 
 %pre
 getent group cdrom >/dev/null 2>&1 || groupadd -r -g 11 cdrom >/dev/null 2>&1 || :
@@ -784,6 +788,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Tue Feb 25 2014 Lukáš Nykrýn <lnykryn@redhat.com> - 208-5
+- reintroduce 60-alias-kmsg.rules (#1032711)
+
 * Mon Feb 17 2014 Lukáš Nykrýn <lnykryn@redhat.com> - 208-4
 - fstab-generator: revert wrongly applied patch
 
