@@ -11,7 +11,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        5%{?dist}
+Release:        6%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -34,6 +34,7 @@ Source6:        60-alias-kmsg.rules
 
 Patch0:         0001-dbus-manager-fix-selinux-check-for-enable-disable.patch
 Patch1:         0002-Revert-fstab-generator-Do-not-try-to-fsck-non-device.patch
+Patch2:         0003-selinux-Don-t-attempt-to-load-policy-in-initramfs-if.patch
 
 BuildRequires:  libcap-devel
 BuildRequires:  tcp_wrappers-devel
@@ -788,6 +789,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Wed Feb 26 2014 Lukáš Nykrýn <lnykryn@redhat.com> - 208-6
+- fix boot if SELINUX=permissive in configuration file and trying to boot in enforcing=1 (#907841)
+
 * Tue Feb 25 2014 Lukáš Nykrýn <lnykryn@redhat.com> - 208-5
 - reintroduce 60-alias-kmsg.rules (#1032711)
 
