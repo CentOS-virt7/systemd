@@ -9,7 +9,7 @@ fi
 git rm -f [0-9][0-9][0-9][0-9]*.patch
 
 git fetch systemd-rhel7
-git format-patch -M -N --no-signature v207..systemd-rhel7/RHEL-7
+git format-patch -M -N --no-signature v208..systemd-rhel7/master
 for i in [0-9][0-9][0-9][0-9]*.patch; do
 	[ -f "$i" ] || continue
 	git add "$i"

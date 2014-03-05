@@ -1,7 +1,7 @@
-From f3b382282ff056826a141bf7b782254286c547af Mon Sep 17 00:00:00 2001
+From 4083e4d76b61bc9eb40583f941412c1ea1a0285b Mon Sep 17 00:00:00 2001
 From: Colin Walters <walters@verbum.org>
 Date: Fri, 21 Feb 2014 03:29:00 +0100
-Subject: [PATCH 3/3] selinux: Don't attempt to load policy in initramfs if it
+Subject: [PATCH] selinux: Don't attempt to load policy in initramfs if it
  doesn't exist
 
 Currently on at least Fedora, SELinux policy does not come in the
@@ -38,6 +38,3 @@ index 7a32ed5..9a5d6b2 100644
         /* Already initialized by somebody else? */
         r = getcon_raw(&con);
         if (r == 0) {
--- 
-1.8.5.3
-
