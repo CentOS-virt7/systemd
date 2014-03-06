@@ -11,7 +11,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        7%{?dist}
+Release:        8%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -235,6 +235,13 @@ Patch0201: 0201-Fix-bad-assert-in-show_pid_array.patch
 Patch0202: 0202-mount-don-t-send-out-PropertiesChanged-message-if-ac.patch
 Patch0203: 0203-udev-rules-setup-tty-permissions-and-group-for-sclp_.patch
 Patch0204: 0204-cdrom_id-use-the-old-MMC-fallback.patch
+Patch0205: 0205-core-introduce-new-stop-protocol-for-unit-scopes.patch
+Patch0206: 0206-core-watch-SIGCHLD-more-closely-to-track-processes-o.patch
+Patch0207: 0207-logind-rework-session-shutdown-logic.patch
+Patch0208: 0208-logind-order-all-scopes-after-both-systemd-logind.se.patch
+Patch0209: 0209-logind-given-that-we-can-now-relatively-safely-shutd.patch
+Patch0210: 0210-utmp-make-sure-we-don-t-write-the-utmp-reboot-record.patch
+Patch0211: 0211-rules-mark-loop-device-as-SYSTEMD_READY-0-if-no-file.patch
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
 
@@ -1033,6 +1040,12 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Thu Mar 06 2014 Lukáš Nykrýn <lnykryn@redhat.com> - 208-8
+- rules: mark loop device as SYSTEMD_READY=0 if no file is attached (#1067422)
+- utmp: make sure we don't write the utmp reboot record twice on each boot (#1053600)
+- rework session shutdown logic (#1047614)
+- introduce new stop protocol for unit scopes (#1064976)
+
 * Wed Mar 05 2014 Lukáš Nykrýn <lnykryn@redhat.com> - 208-7
 - setup tty permissions and group for /dev/sclp_line0 (#1070310)
 - cdrom_id: use the old MMC fallback (#1038015)
