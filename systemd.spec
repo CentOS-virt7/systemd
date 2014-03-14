@@ -11,7 +11,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        8%{?dist}
+Release:        9%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -242,6 +242,25 @@ Patch0208: 0208-logind-order-all-scopes-after-both-systemd-logind.se.patch
 Patch0209: 0209-logind-given-that-we-can-now-relatively-safely-shutd.patch
 Patch0210: 0210-utmp-make-sure-we-don-t-write-the-utmp-reboot-record.patch
 Patch0211: 0211-rules-mark-loop-device-as-SYSTEMD_READY-0-if-no-file.patch
+Patch0212: 0212-logind-fix-reference-to-systemd-user-sessions.servic.patch
+Patch0213: 0213-logind-add-forgotten-call-to-user_send_changed.patch
+Patch0214: 0214-logind-save-session-after-setting-the-stopping-flag.patch
+Patch0215: 0215-logind-save-user-state-after-stopping-the-session.patch
+Patch0216: 0216-logind-initialize-timer_fd.patch
+Patch0217: 0217-service-don-t-create-extra-cgroup-for-control-proces.patch
+Patch0218: 0218-logind-pass-pointer-to-User-object-to-user_save.patch
+Patch0219: 0219-fstab-generator-When-parsing-the-root-cmdline-option.patch
+Patch0220: 0220-gpt-auto-generator-Generate-explicit-dependencies-on.patch
+Patch0221: 0221-fstab-generator-Generate-explicit-dependencies-on-sy.patch
+Patch0222: 0222-fsck-root-only-run-when-requested-in-fstab.patch
+Patch0223: 0223-core-allow-PIDs-to-be-watched-by-two-units-at-the-sa.patch
+Patch0224: 0224-core-correctly-unregister-PIDs-from-PID-hashtables.patch
+Patch0225: 0225-logind-uninitialized-timer_fd-is-set-to-1.patch
+Patch0226: 0226-logind-add-forgotten-return-statement.patch
+Patch0227: 0227-core-remove-extra-semicolon-and-make-gcc-shut-up.patch
+Patch0228: 0228-core-fix-detection-of-dead-processes.patch
+Patch0229: 0229-Fix-prototype-of-get_process_state.patch
+Patch0230: 0230-core-check-for-return-value-from-get_process_state.patch
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
 
@@ -1040,6 +1059,10 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Fri Mar 14 2014 Lukáš Nykrýn <lnykryn@redhat.com> - 208-9
+- fixes crashes in logind and systemd (#1073994)
+- run fsck before mouting root in initramfs (#1056661)
+
 * Thu Mar 06 2014 Lukáš Nykrýn <lnykryn@redhat.com> - 208-8
 - rules: mark loop device as SYSTEMD_READY=0 if no file is attached (#1067422)
 - utmp: make sure we don't write the utmp reboot record twice on each boot (#1053600)
