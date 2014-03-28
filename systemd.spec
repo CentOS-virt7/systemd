@@ -11,7 +11,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        9%{?dist}
+Release:        10%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -304,7 +304,7 @@ Requires:       dbus
 Requires:       nss-myhostname
 Requires:       %{name}-libs = %{version}-%{release}
 Requires:       kmod >= 14
-Requires:       redhat-release
+Requires:       redhat-release >= 7.0
 
 Provides:       /bin/systemctl
 Provides:       /sbin/shutdown
@@ -1059,6 +1059,10 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Fri Mar 28 2014 Harald Hoyer <harald@redhat.com> 208-10
+- require redhat-release >= 7.0
+Resolves: rhbz#1070114
+
 * Fri Mar 14 2014 Lukáš Nykrýn <lnykryn@redhat.com> - 208-9
 - fixes crashes in logind and systemd (#1073994)
 - run fsck before mouting root in initramfs (#1056661)
