@@ -11,7 +11,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        10%{?dist}
+Release:        11%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -261,6 +261,8 @@ Patch0227: 0227-core-remove-extra-semicolon-and-make-gcc-shut-up.patch
 Patch0228: 0228-core-fix-detection-of-dead-processes.patch
 Patch0229: 0229-Fix-prototype-of-get_process_state.patch
 Patch0230: 0230-core-check-for-return-value-from-get_process_state.patch
+Patch0231: 0231-unit-add-waiting-jobs-to-run-queue-in-unit_coldplug.patch
+Patch0232: 0232-logind-session-save-stopping-flag.patch
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
 
@@ -1059,6 +1061,10 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Wed Apr 02 2014 Lukáš Nykrýn <lnykryn@redhat.com> - 208-11
+- logind-session: save stopping flag (#1082692)
+- unit: add waiting jobs to run queue in unit_coldplug (#1083159)
+
 * Fri Mar 28 2014 Harald Hoyer <harald@redhat.com> 208-10
 - require redhat-release >= 7.0
 Resolves: rhbz#1070114
