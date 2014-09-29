@@ -1,0 +1,292 @@
+From 7664fb3e7ebba889d52c4e7ba653dbbba9035969 Mon Sep 17 00:00:00 2001
+From: Michal Sekletar <msekleta@redhat.com>
+Date: Wed, 24 Sep 2014 13:17:43 +0200
+Subject: [PATCH] localectl: print warning when there are options given on
+ kernel cmdline
+
+Conflicts:
+        src/locale/localectl.c
+
+(cherry picked from commit a34286684ebb78dd3db0d7f34feb2c121c9d00cc)
+
+Related: #1069420
+---
+ Makefile.am              |  2 ++
+ src/core/locale-setup.c  | 47 +++++---------------------------------------
+ src/locale/localectl.c   | 51 ++++++++++++++++++++++++++++++++++++++++++++++++
+ src/shared/locale-util.c | 42 +++++++++++++++++++++++++++++++++++++++
+ src/shared/locale-util.h | 47 ++++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 147 insertions(+), 42 deletions(-)
+ create mode 100644 src/shared/locale-util.c
+ create mode 100644 src/shared/locale-util.h
+
+diff --git a/Makefile.am b/Makefile.am
+index d54a556..dab55ba 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -656,6 +656,8 @@ libsystemd_shared_la_SOURCES = \
+ 	src/shared/path-util.h \
+ 	src/shared/time-util.c \
+ 	src/shared/time-util.h \
++	src/shared/locale-util.c \
++	src/shared/locale-util.h \
+ 	src/shared/hashmap.c \
+ 	src/shared/hashmap.h \
+ 	src/shared/set.c \
+diff --git a/src/core/locale-setup.c b/src/core/locale-setup.c
+index 276deb9..69e9bca 100644
+--- a/src/core/locale-setup.c
++++ b/src/core/locale-setup.c
+@@ -30,48 +30,11 @@
+ #include "fileio.h"
+ #include "strv.h"
+ #include "env-util.h"
+-
+-enum {
+-        /* We don't list LC_ALL here on purpose. People should be
+-         * using LANG instead. */
+-
+-        VARIABLE_LANG,
+-        VARIABLE_LANGUAGE,
+-        VARIABLE_LC_CTYPE,
+-        VARIABLE_LC_NUMERIC,
+-        VARIABLE_LC_TIME,
+-        VARIABLE_LC_COLLATE,
+-        VARIABLE_LC_MONETARY,
+-        VARIABLE_LC_MESSAGES,
+-        VARIABLE_LC_PAPER,
+-        VARIABLE_LC_NAME,
+-        VARIABLE_LC_ADDRESS,
+-        VARIABLE_LC_TELEPHONE,
+-        VARIABLE_LC_MEASUREMENT,
+-        VARIABLE_LC_IDENTIFICATION,
+-        _VARIABLE_MAX
+-};
+-
+-static const char * const variable_names[_VARIABLE_MAX] = {
+-        [VARIABLE_LANG] = "LANG",
+-        [VARIABLE_LANGUAGE] = "LANGUAGE",
+-        [VARIABLE_LC_CTYPE] = "LC_CTYPE",
+-        [VARIABLE_LC_NUMERIC] = "LC_NUMERIC",
+-        [VARIABLE_LC_TIME] = "LC_TIME",
+-        [VARIABLE_LC_COLLATE] = "LC_COLLATE",
+-        [VARIABLE_LC_MONETARY] = "LC_MONETARY",
+-        [VARIABLE_LC_MESSAGES] = "LC_MESSAGES",
+-        [VARIABLE_LC_PAPER] = "LC_PAPER",
+-        [VARIABLE_LC_NAME] = "LC_NAME",
+-        [VARIABLE_LC_ADDRESS] = "LC_ADDRESS",
+-        [VARIABLE_LC_TELEPHONE] = "LC_TELEPHONE",
+-        [VARIABLE_LC_MEASUREMENT] = "LC_MEASUREMENT",
+-        [VARIABLE_LC_IDENTIFICATION] = "LC_IDENTIFICATION"
+-};
++#include "locale-util.h"
+ 
+ int locale_setup(char ***environment) {
+         char **add;
+-        char *variables[_VARIABLE_MAX] = {};
++        char *variables[_VARIABLE_LC_MAX] = {};
+         int r = 0, i;
+ 
+         if (detect_container(NULL) <= 0) {
+@@ -121,13 +84,13 @@ int locale_setup(char ***environment) {
+         }
+ 
+         add = NULL;
+-        for (i = 0; i < _VARIABLE_MAX; i++) {
++        for (i = 0; i < _VARIABLE_LC_MAX; i++) {
+                 char *s;
+ 
+                 if (!variables[i])
+                         continue;
+ 
+-                s = strjoin(variable_names[i], "=", variables[i], NULL);
++                s = strjoin(locale_variable_to_string(i), "=", variables[i], NULL);
+                 if (!s) {
+                         r = -ENOMEM;
+                         goto finish;
+@@ -158,7 +121,7 @@ int locale_setup(char ***environment) {
+ finish:
+         strv_free(add);
+ 
+-        for (i = 0; i < _VARIABLE_MAX; i++)
++        for (i = 0; i < _VARIABLE_LC_MAX; i++)
+                 free(variables[i]);
+ 
+         return r;
+diff --git a/src/locale/localectl.c b/src/locale/localectl.c
+index d3c6152..fdef3a0 100644
+--- a/src/locale/localectl.c
++++ b/src/locale/localectl.c
+@@ -39,6 +39,9 @@
+ #include "path-util.h"
+ #include "utf8.h"
+ #include "def.h"
++#include "virt.h"
++#include "fileio.h"
++#include "locale-util.h"
+ 
+ static bool arg_no_pager = false;
+ static enum transport {
+@@ -79,6 +82,53 @@ typedef struct StatusInfo {
+         const char *x11_options;
+ } StatusInfo;
+ 
++static void print_overriden_variables(void) {
++        int r;
++        char *variables[_VARIABLE_LC_MAX] = {};
++        LocaleVariable j;
++        bool print_warning = true;
++
++        if (detect_container(NULL) > 0 || arg_host)
++                return;
++
++        r = parse_env_file("/proc/cmdline", WHITESPACE,
++                           "locale.LANG",              &variables[VARIABLE_LANG],
++                           "locale.LANGUAGE",          &variables[VARIABLE_LANGUAGE],
++                           "locale.LC_CTYPE",          &variables[VARIABLE_LC_CTYPE],
++                           "locale.LC_NUMERIC",        &variables[VARIABLE_LC_NUMERIC],
++                           "locale.LC_TIME",           &variables[VARIABLE_LC_TIME],
++                           "locale.LC_COLLATE",        &variables[VARIABLE_LC_COLLATE],
++                           "locale.LC_MONETARY",       &variables[VARIABLE_LC_MONETARY],
++                           "locale.LC_MESSAGES",       &variables[VARIABLE_LC_MESSAGES],
++                           "locale.LC_PAPER",          &variables[VARIABLE_LC_PAPER],
++                           "locale.LC_NAME",           &variables[VARIABLE_LC_NAME],
++                           "locale.LC_ADDRESS",        &variables[VARIABLE_LC_ADDRESS],
++                           "locale.LC_TELEPHONE",      &variables[VARIABLE_LC_TELEPHONE],
++                           "locale.LC_MEASUREMENT",    &variables[VARIABLE_LC_MEASUREMENT],
++                           "locale.LC_IDENTIFICATION", &variables[VARIABLE_LC_IDENTIFICATION],
++                           NULL);
++
++        if (r < 0 && r != -ENOENT) {
++                log_warning("Failed to read /proc/cmdline: %s", strerror(-r));
++                goto finish;
++        }
++
++        for (j = VARIABLE_LANG; j < _VARIABLE_LC_MAX; j++)
++                if (variables[j]) {
++                        if (print_warning) {
++                                printf("Warning: Settings on Kernel Command Line override system locale settings in /etc/locale.conf\n");
++                                printf("    Command Line: %s=%s\n", locale_variable_to_string(j), variables[j]);
++
++                                print_warning = false;
++                                continue;
++                        }
++                        printf("                  %s=%s\n", locale_variable_to_string(j), variables[j]);
++                }
++ finish:
++        for (j = VARIABLE_LANG; j < _VARIABLE_LC_MAX; j++)
++                free(variables[j]);
++}
++
+ static void print_status_info(StatusInfo *i) {
+         assert(i);
+ 
+@@ -218,6 +268,7 @@ static int show_status(DBusConnection *bus, char **args, unsigned n) {
+                 dbus_message_iter_next(&sub);
+         }
+ 
++        print_overriden_variables();
+         print_status_info(&info);
+         strv_free(info.locale);
+         return 0;
+diff --git a/src/shared/locale-util.c b/src/shared/locale-util.c
+new file mode 100644
+index 0000000..d53b16c
+--- /dev/null
++++ b/src/shared/locale-util.c
+@@ -0,0 +1,42 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
++/***
++  This file is part of systemd.
++
++  Copyright 2014 Lennart Poettering
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU Lesser General Public License as published by
++  the Free Software Foundation; either version 2.1 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  Lesser General Public License for more details.
++
++  You should have received a copy of the GNU Lesser General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
++#include "util.h"
++#include "locale-util.h"
++
++static const char * const locale_variable_table[_VARIABLE_LC_MAX] = {
++        [VARIABLE_LANG] = "LANG",
++        [VARIABLE_LANGUAGE] = "LANGUAGE",
++        [VARIABLE_LC_CTYPE] = "LC_CTYPE",
++        [VARIABLE_LC_NUMERIC] = "LC_NUMERIC",
++        [VARIABLE_LC_TIME] = "LC_TIME",
++        [VARIABLE_LC_COLLATE] = "LC_COLLATE",
++        [VARIABLE_LC_MONETARY] = "LC_MONETARY",
++        [VARIABLE_LC_MESSAGES] = "LC_MESSAGES",
++        [VARIABLE_LC_PAPER] = "LC_PAPER",
++        [VARIABLE_LC_NAME] = "LC_NAME",
++        [VARIABLE_LC_ADDRESS] = "LC_ADDRESS",
++        [VARIABLE_LC_TELEPHONE] = "LC_TELEPHONE",
++        [VARIABLE_LC_MEASUREMENT] = "LC_MEASUREMENT",
++        [VARIABLE_LC_IDENTIFICATION] = "LC_IDENTIFICATION"
++};
++
++DEFINE_STRING_TABLE_LOOKUP(locale_variable, LocaleVariable);
+diff --git a/src/shared/locale-util.h b/src/shared/locale-util.h
+new file mode 100644
+index 0000000..420a89d
+--- /dev/null
++++ b/src/shared/locale-util.h
+@@ -0,0 +1,47 @@
++/*-*- Mode: C; c-basic-offset: 8; indent-tabs-mode: nil -*-*/
++
++/***
++  This file is part of systemd.
++
++  Copyright 2014 Lennart Poettering
++
++  systemd is free software; you can redistribute it and/or modify it
++  under the terms of the GNU Lesser General Public License as published by
++  the Free Software Foundation; either version 2.1 of the License, or
++  (at your option) any later version.
++
++  systemd is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++  Lesser General Public License for more details.
++
++  You should have received a copy of the GNU Lesser General Public License
++  along with systemd; If not, see <http://www.gnu.org/licenses/>.
++***/
++
++#include "util.h"
++
++typedef enum LocaleVariable {
++        /* We don't list LC_ALL here on purpose. People should be
++         * using LANG instead. */
++
++        VARIABLE_LANG,
++        VARIABLE_LANGUAGE,
++        VARIABLE_LC_CTYPE,
++        VARIABLE_LC_NUMERIC,
++        VARIABLE_LC_TIME,
++        VARIABLE_LC_COLLATE,
++        VARIABLE_LC_MONETARY,
++        VARIABLE_LC_MESSAGES,
++        VARIABLE_LC_PAPER,
++        VARIABLE_LC_NAME,
++        VARIABLE_LC_ADDRESS,
++        VARIABLE_LC_TELEPHONE,
++        VARIABLE_LC_MEASUREMENT,
++        VARIABLE_LC_IDENTIFICATION,
++        _VARIABLE_LC_MAX,
++        _VARIABLE_LC_INVALID = -1
++} LocaleVariable;
++
++const char* locale_variable_to_string(LocaleVariable i) _const_;
++LocaleVariable locale_variable_from_string(const char *s) _pure_;

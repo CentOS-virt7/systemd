@@ -1,0 +1,35 @@
+From 6c3574cb20ee440a2293a64ef140dc0d073a93a5 Mon Sep 17 00:00:00 2001
+From: Lukas Nykryn <lnykryn@redhat.com>
+Date: Thu, 18 Sep 2014 14:13:31 +0200
+Subject: [PATCH] man: mention localectl in locale.conf
+
+rhel-only (in other patch in upstream)
+
+Resolves: #1049286
+---
+ man/locale.conf.xml | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/man/locale.conf.xml b/man/locale.conf.xml
+index e970921..408f18f 100644
+--- a/man/locale.conf.xml
++++ b/man/locale.conf.xml
+@@ -96,6 +96,10 @@
+                 configuration files might be checked for locale
+                 configuration as well, however only as
+                 fallback.</para>
++
++                <para><citerefentry><refentrytitle>localectl</refentrytitle><manvolnum>1</manvolnum></citerefentry>
++                may be used to alter the settings in this file during
++                runtime from the command line.</para>
+         </refsect1>
+ 
+         <refsect1>
+@@ -142,6 +146,7 @@ LC_MESSAGES=en_US.UTF-8</programlisting>
+                   <para>
+                           <citerefentry><refentrytitle>systemd</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+                           <citerefentry><refentrytitle>locale</refentrytitle><manvolnum>7</manvolnum></citerefentry>,
++                          <citerefentry><refentrytitle>localectl</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
+                           <citerefentry><refentrytitle>systemd-localed.service</refentrytitle><manvolnum>8</manvolnum></citerefentry>
+                   </para>
+         </refsect1>

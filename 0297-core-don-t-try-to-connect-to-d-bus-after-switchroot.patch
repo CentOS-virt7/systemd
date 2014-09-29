@@ -1,0 +1,25 @@
+From 376c59b17a8d90b623533f639c2045276d1009d7 Mon Sep 17 00:00:00 2001
+From: Lukas Nykryn <lnykryn@redhat.com>
+Date: Wed, 24 Sep 2014 13:20:29 +0200
+Subject: [PATCH] core: don't try to connect to d-bus after switchroot
+
+rhel-only
+
+Resolves: #1083300
+---
+ src/core/main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/core/main.c b/src/core/main.c
+index afd5f6f..d4bf8ba 100644
+--- a/src/core/main.c
++++ b/src/core/main.c
+@@ -1543,7 +1543,7 @@ int main(int argc, char *argv[]) {
+         if (arg_running_as == SYSTEMD_SYSTEM)
+                 bump_rlimit_nofile(&saved_rlimit_nofile);
+ 
+-        r = manager_new(arg_running_as, !!serialization, &m);
++        r = manager_new(arg_running_as, !!serialization && !arg_switched_root, &m);
+         if (r < 0) {
+                 log_error("Failed to allocate manager object: %s", strerror(-r));
+                 goto finish;

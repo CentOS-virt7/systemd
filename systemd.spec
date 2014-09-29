@@ -11,7 +11,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        11%{?dist}
+Release:        12%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -263,6 +263,77 @@ Patch0229: 0229-Fix-prototype-of-get_process_state.patch
 Patch0230: 0230-core-check-for-return-value-from-get_process_state.patch
 Patch0231: 0231-unit-add-waiting-jobs-to-run-queue-in-unit_coldplug.patch
 Patch0232: 0232-logind-session-save-stopping-flag.patch
+Patch0233: 0233-units-serial-getty-.service-add-Install-section.patch
+Patch0234: 0234-units-order-network-online.target-after-network.targ.patch
+Patch0235: 0235-util-consider-both-fuse.glusterfs-and-glusterfs-netw.patch
+Patch0236: 0236-core-make-StopWhenUnneeded-work-in-conjunction-with-.patch
+Patch0237: 0237-cgroups-agent-down-grade-log-level.patch
+Patch0238: 0238-random-seed-raise-POOL_SIZE_MIN-constant-to-1024.patch
+Patch0239: 0239-delta-do-not-use-unicode-chars-in-C-locale.patch
+Patch0240: 0240-core-print-debug-instead-of-error-message.patch
+Patch0241: 0241-journald-always-add-syslog-facility-for-messages-com.patch
+Patch0242: 0242-Introduce-_cleanup_endmntent_.patch
+Patch0243: 0243-Introduce-_cleanup_fdset_free_.patch
+Patch0244: 0244-Introduce-udev-object-cleanup-functions.patch
+Patch0245: 0245-fsck-modernization.patch
+Patch0246: 0246-fsck-fstab-generator-be-lenient-about-missing-fsck.-.patch
+Patch0247: 0247-rules-60-persistent-storage-add-nvme-pcie-ssd-scsi_i.patch
+Patch0248: 0248-cgls-fix-running-with-M-option.patch
+Patch0249: 0249-units-when-spawning-a-getty-configure-TERM-explicitl.patch
+Patch0250: 0250-getty-Start-getty-on-3270-terminals-available-on-Lin.patch
+Patch0251: 0251-core-Added-support-for-ERRNO-NOTIFY_SOCKET-message-p.patch
+Patch0252: 0252-service-don-t-accept-negative-ERRNO-notification-mes.patch
+Patch0253: 0253-socket-add-SocketUser-and-SocketGroup-for-chown-ing-.patch
+Patch0254: 0254-selinux-Check-access-vector-for-enable-and-disable-p.patch
+Patch0255: 0255-systemctl-show-StatusErrno-value-in-systemctl-status.patch
+Patch0256: 0256-service-flush-status-text-and-errno-values-each-time.patch
+Patch0257: 0257-service-don-t-free-status_text-twice.patch
+Patch0258: 0258-util-add-files_same-helper-function.patch
+Patch0259: 0259-systemctl-for-switch-root-check-if-we-switch-to-a-sy.patch
+Patch0260: 0260-shared-include-root-when-canonicalizing-conf-paths.patch
+Patch0261: 0261-shared-add-root-argument-to-search_and_fopen.patch
+Patch0262: 0262-machine-id-add-root-option-to-operate-on-an-alternat.patch
+Patch0263: 0263-conf-files-fix-when-for-root-logic.patch
+Patch0264: 0264-Make-systemctl-root-look-for-files-in-the-proper-pla.patch
+Patch0265: 0265-tmpfiles-fix-memory-leak-of-exclude_prefixes.patch
+Patch0266: 0266-tmpfiles-add-root-option-to-operate-on-an-alternate-.patch
+Patch0267: 0267-conf-files-include-root-in-returned-file-paths.patch
+Patch0268: 0268-install-make-sure-that-root-mode-doesn-t-make-us-con.patch
+Patch0269: 0269-shared-install-do-not-prefix-created-symlink-with-ro.patch
+Patch0270: 0270-systemctl-fail-in-the-case-that-no-unit-files-were-f.patch
+Patch0271: 0271-units-make-ExecStopPost-action-part-of-ExecStart.patch
+Patch0272: 0272-systemctl-fix-broken-list-unit-files-with-root.patch
+Patch0273: 0273-machine-id-only-look-into-KVM-uuid-when-we-are-not-r.patch
+Patch0274: 0274-util-reset-signals-when-we-fork-off-agents.patch
+Patch0275: 0275-util-fix-minimal-race-where-we-might-miss-SIGTERMs-w.patch
+Patch0276: 0276-udev-do-not-skip-the-execution-of-RUN-when-renaming-.patch
+Patch0277: 0277-man-mention-System-Administrator-s-Guide-in-systemct.patch
+Patch0278: 0278-vconsole-also-copy-character-maps-not-just-fonts-fro.patch
+Patch0279: 0279-vconsole-setup-run-setfont-before-loadkeys.patch
+Patch0280: 0280-vconsole-setup-fix-inverted-error-messages.patch
+Patch0281: 0281-localed-consider-an-unset-model-as-a-wildcard.patch
+Patch0282: 0282-systemd-detect-virt-detect-s390-virtualization.patch
+Patch0283: 0283-systemctl-unbreak-switchroot.patch
+Patch0284: 0284-systemd-detect-virt-fix-detect-s390-virtualization.patch
+Patch0285: 0285-exec-Add-SELinuxContext-configuration-item.patch
+Patch0286: 0286-exec-Ignore-the-setting-SELinuxContext-if-selinux-is.patch
+Patch0287: 0287-exec-Add-support-for-ignoring-errors-on-SELinuxConte.patch
+Patch0288: 0288-core-store-and-expose-SELinuxContext-field-normalize.patch
+Patch0289: 0289-socket-introduce-SELinuxContextFromNet-option.patch
+Patch0290: 0290-sysctl-make-prefix-allow-all-kinds-of-sysctl-paths.patch
+Patch0291: 0291-core-make-sure-to-serialize-jobs-for-all-units.patch
+Patch0292: 0292-man-mention-localectl-in-locale.conf.patch
+Patch0293: 0293-rules-automatically-online-hot-added-CPUs.patch
+Patch0294: 0294-rules-add-rule-for-naming-Dell-iDRAC-USB-Virtual-NIC.patch
+Patch0295: 0295-bash-completion-add-verb-set-property.patch
+Patch0296: 0296-man-update-journald-rate-limit-defaults.patch
+Patch0297: 0297-core-don-t-try-to-connect-to-d-bus-after-switchroot.patch
+Patch0298: 0298-localed-log-locale-keymap-changes-in-detail.patch
+Patch0299: 0299-localed-introduce-helper-function-to-simplify-matchi.patch
+Patch0300: 0300-localed-check-for-partially-matching-converted-keyma.patch
+Patch0301: 0301-fileio-make-parse_env_file-return-number-of-parsed-i.patch
+Patch0302: 0302-localectl-print-warning-when-there-are-options-given.patch
+Patch0303: 0303-dbus-fix-crash-when-appending-selinux-context.patch
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
 
@@ -1061,6 +1132,42 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Mon Sep 29 2014 Lukas Nykryn <lnykryn@redhat.com> - 208-12
+- units/serial-getty@.service: add [Install] section (#1083936)
+- units: order network-online.target after network.target (#1072431)
+- util: consider both fuse.glusterfs and glusterfs network file systems (#1080229)
+- core: make StopWhenUnneeded work in conjunction with units that fail during their start job (#986949)
+- cgroups-agent: down-grade log level (#1044386)
+- random-seed: raise POOL_SIZE_MIN constant to 1024 (#1066517)
+- delta: do not use unicode chars in C locale (#1088419)
+- core: print debug instead of error message (#1105608)
+- journald: always add syslog facility for messages coming from kmsg (#1113215)
+- fsck,fstab-generator: be lenient about missing fsck.<type> (#1098310)
+- rules/60-persistent-storage: add nvme pcie ssd scsi_id ENV (#1042990)
+- cgls: fix running with -M option (#1085455)
+- getty: Start getty on 3270 terminals available on Linux on System z (#1075729)
+- core: Added support for ERRNO NOTIFY_SOCKET  message parsing (#1106457)
+- socket: add SocketUser= and SocketGroup= for chown()ing sockets in the file system (#1111761)
+- tmpfiles: add --root option to operate on an alternate fs tree (#1111199)
+- units: make ExecStopPost action part of ExecStart (#1036276)
+- machine-id: only look into KVM uuid when we are not running in a container (#1123452)
+- util: reset signals when we fork off agents (#1134818)
+- udev: do not skip the execution of RUN when renaming a network device fails (#1102135)
+- man: mention System Administrator's Guide in systemctl manpage (#978948)
+- vconsole: also copy character maps (not just fonts) from vt1 to vt2, vt3, ... (#1002450)
+- localed: consider an unset model as a wildcard (#903776)
+- systemd-detect-virt: detect s390 virtualization (#1139149)
+- socket: introduce SELinuxContextFromNet option (#1113790)
+- sysctl: make --prefix allow all kinds of sysctl paths (#1138591)
+- man: mention localectl in locale.conf (#1049286)
+- rules: automatically online hot-added CPUs (#968811)
+- rules: add rule for naming Dell iDRAC USB Virtual NIC as 'idrac' (#1054477)
+- bash-completion: add verb set-property (#1064487)
+- man: update journald rate limit defaults (#1145352)
+- core: don't try to connect to d-bus after switchroot (#1083300)
+- localed: check for partially matching converted keymaps (#1109145)
+- fileio: make parse_env_file() return number of parsed items (#1069420)
+
 * Wed Apr 02 2014 Lukáš Nykrýn <lnykryn@redhat.com> - 208-11
 - logind-session: save stopping flag (#1082692)
 - unit: add waiting jobs to run queue in unit_coldplug (#1083159)

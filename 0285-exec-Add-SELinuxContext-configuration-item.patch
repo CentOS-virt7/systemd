@@ -1,0 +1,180 @@
+From d0a2b8832732d297321fddcad56872511ff212f2 Mon Sep 17 00:00:00 2001
+From: Michael Scherer <misc@zarb.org>
+Date: Thu, 6 Feb 2014 10:05:16 +0100
+Subject: [PATCH] exec: Add SELinuxContext configuration item
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+This permit to let system administrators decide of the domain of a service.
+This can be used with templated units to have each service in a différent
+domain ( for example, a per customer database, using MLS or anything ),
+or can be used to force a non selinux enabled system (jvm, erlang, etc)
+to start in a different domain for each service.
+
+Conflicts:
+        src/core/dbus-execute.c
+        src/core/execute.c
+        src/core/execute.h
+        src/shared/exit-status.c
+        src/shared/exit-status.h
+
+(cherry picked from commit 7b52a628f8b43ba521c302a7f32bccf9d0dc8bfd)
+
+Related: #1113790
+---
+ man/systemd.exec.xml                  | 11 +++++++++++
+ src/core/dbus-execute.c               |  1 +
+ src/core/execute.c                    | 27 +++++++++++++++++++++++++++
+ src/core/execute.h                    |  2 ++
+ src/core/load-fragment-gperf.gperf.m4 |  3 ++-
+ src/shared/exit-status.c              |  3 +++
+ src/shared/exit-status.h              |  1 +
+ 7 files changed, 47 insertions(+), 1 deletion(-)
+
+diff --git a/man/systemd.exec.xml b/man/systemd.exec.xml
+index 612b4d2..a68cfa7 100644
+--- a/man/systemd.exec.xml
++++ b/man/systemd.exec.xml
+@@ -919,6 +919,17 @@
+                         </varlistentry>
+ 
+                         <varlistentry>
++                                <term><varname>SELinuxContext=</varname></term>
++
++                                <listitem><para>Set the SELinux context of the
++                                executed process. If set, this will override the
++                                automated domain transition. However, the policy
++                                still need to autorize the transition. See
++                                <citerefentry><refentrytitle>setexeccon</refentrytitle><manvolnum>3</manvolnum></citerefentry>
++                                for details.</para></listitem>
++                        </varlistentry>
++
++                        <varlistentry>
+                                 <term><varname>IgnoreSIGPIPE=</varname></term>
+ 
+                                 <listitem><para>Takes a boolean
+diff --git a/src/core/dbus-execute.c b/src/core/dbus-execute.c
+index 2402e8c..97d75fa 100644
+--- a/src/core/dbus-execute.c
++++ b/src/core/dbus-execute.c
+@@ -429,6 +429,7 @@ const BusProperty bus_exec_context_properties[] = {
+         { "PrivateNetwork",           bus_property_append_bool,              "b", offsetof(ExecContext, private_network)              },
+         { "SameProcessGroup",         bus_property_append_bool,              "b", offsetof(ExecContext, same_pgrp)                    },
+         { "UtmpIdentifier",           bus_property_append_string,            "s", offsetof(ExecContext, utmp_id),                true },
++        { "SELinuxContext",           bus_property_append_string,            "s", offsetof(ExecContext, selinux_context),        true },
+         { "IgnoreSIGPIPE",            bus_property_append_bool,              "b", offsetof(ExecContext, ignore_sigpipe)               },
+         { "NoNewPrivileges",          bus_property_append_bool,              "b", offsetof(ExecContext, no_new_privileges)            },
+         { "SystemCallFilter",         bus_execute_append_syscall_filter,    "au", 0                                                   },
+diff --git a/src/core/execute.c b/src/core/execute.c
+index 981b9e4..cf9d24e 100644
+--- a/src/core/execute.c
++++ b/src/core/execute.c
+@@ -46,6 +46,10 @@
+ #include <security/pam_appl.h>
+ #endif
+ 
++#ifdef HAVE_SELINUX
++#include <selinux/selinux.h>
++#endif
++
+ #include "execute.h"
+ #include "strv.h"
+ #include "macro.h"
+@@ -1467,6 +1471,20 @@ int exec_spawn(ExecCommand *command,
+                                         goto fail_child;
+                                 }
+                         }
++#ifdef HAVE_SELINUX
++                        if (context->selinux_context) {
++                                err = security_check_context(context->selinux_context);
++                                if (err < 0) {
++                                        r = EXIT_SELINUX_CONTEXT;
++                                        goto fail_child;
++                                }
++                                err = setexeccon(context->selinux_context);
++                                if (err < 0) {
++                                        r = EXIT_SELINUX_CONTEXT;
++                                        goto fail_child;
++                                }
++                        }
++#endif
+                 }
+ 
+                 our_env = new0(char*, 7);
+@@ -1696,6 +1714,9 @@ void exec_context_done(ExecContext *c, bool reloading_or_reexecuting) {
+         free(c->utmp_id);
+         c->utmp_id = NULL;
+ 
++        free(c->selinux_context);
++        c->selinux_context = NULL;
++
+         free(c->syscall_filter);
+         c->syscall_filter = NULL;
+ 
+@@ -2067,6 +2088,12 @@ void exec_context_dump(ExecContext *c, FILE* f, const char *prefix) {
+                 fprintf(f,
+                         "%sUtmpIdentifier: %s\n",
+                         prefix, c->utmp_id);
++
++        if (c->selinux_context)
++                fprintf(f,
++                        "%sSELinuxContext: %s\n",
++                        prefix, c->selinux_context);
++
+ }
+ 
+ void exec_status_start(ExecStatus *s, pid_t pid) {
+diff --git a/src/core/execute.h b/src/core/execute.h
+index c1e9717..92ac8dd 100644
+--- a/src/core/execute.h
++++ b/src/core/execute.h
+@@ -124,6 +124,8 @@ struct ExecContext {
+ 
+         char *utmp_id;
+ 
++        char *selinux_context;
++
+         char **read_write_dirs, **read_only_dirs, **inaccessible_dirs;
+         unsigned long mount_flags;
+ 
+diff --git a/src/core/load-fragment-gperf.gperf.m4 b/src/core/load-fragment-gperf.gperf.m4
+index 0991cb9..935f04e 100644
+--- a/src/core/load-fragment-gperf.gperf.m4
++++ b/src/core/load-fragment-gperf.gperf.m4
+@@ -75,7 +75,8 @@ $1.MountFlags,                   config_parse_exec_mount_flags,      0,
+ $1.TCPWrapName,                  config_parse_unit_string_printf,    0,                             offsetof($1, exec_context.tcpwrap_name)
+ $1.PAMName,                      config_parse_unit_string_printf,    0,                             offsetof($1, exec_context.pam_name)
+ $1.IgnoreSIGPIPE,                config_parse_bool,                  0,                             offsetof($1, exec_context.ignore_sigpipe)
+-$1.UtmpIdentifier,               config_parse_unit_string_printf,    0,                             offsetof($1, exec_context.utmp_id)'
++$1.UtmpIdentifier,               config_parse_unit_string_printf,    0,                             offsetof($1, exec_context.utmp_id)
++$1.SELinuxContext,               config_parse_unit_string_printf,    0,                             offsetof($1, exec_context.selinux_context)'
+ )m4_dnl
+ m4_define(`KILL_CONTEXT_CONFIG_ITEMS',
+ `$1.SendSIGKILL,                 config_parse_bool,                  0,                             offsetof($1, kill_context.send_sigkill)
+diff --git a/src/shared/exit-status.c b/src/shared/exit-status.c
+index f15fdba..676291b 100644
+--- a/src/shared/exit-status.c
++++ b/src/shared/exit-status.c
+@@ -131,6 +131,9 @@ const char* exit_status_to_string(ExitStatus status, ExitStatusLevel level) {
+                 case EXIT_SECCOMP:
+                         return "SECCOMP";
+ 
++                case EXIT_SELINUX_CONTEXT:
++                        return "SELINUX_CONTEXT";
++
+                 case EXIT_CHOWN:
+                         return "CHOWN";
+ 
+diff --git a/src/shared/exit-status.h b/src/shared/exit-status.h
+index 52dd3d0..798f1e1 100644
+--- a/src/shared/exit-status.h
++++ b/src/shared/exit-status.h
+@@ -68,6 +68,7 @@ typedef enum ExitStatus {
+         EXIT_NAMESPACE,
+         EXIT_NO_NEW_PRIVILEGES,
+         EXIT_SECCOMP,
++        EXIT_SELINUX_CONTEXT,
+         EXIT_CHOWN
+ } ExitStatus;
+ 
