@@ -11,7 +11,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        12%{?dist}
+Release:        13%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -334,6 +334,62 @@ Patch0300: 0300-localed-check-for-partially-matching-converted-keyma.patch
 Patch0301: 0301-fileio-make-parse_env_file-return-number-of-parsed-i.patch
 Patch0302: 0302-localectl-print-warning-when-there-are-options-given.patch
 Patch0303: 0303-dbus-fix-crash-when-appending-selinux-context.patch
+Patch0304: 0304-tmpfiles-minor-modernizations.patch
+Patch0305: 0305-install-when-looking-for-a-unit-file-for-enabling-se.patch
+Patch0306: 0306-install-remove-unused-variable.patch
+Patch0307: 0307-bootctl-typo-fix-in-help-message.patch
+Patch0308: 0308-logind-ignore-failing-close-on-session-devices.patch
+Patch0309: 0309-sysfs-show.c-return-negative-error.patch
+Patch0310: 0310-core-only-send-SIGHUP-when-doing-first-kill-not-when.patch
+Patch0311: 0311-cgroup-make-sure-to-properly-send-SIGCONT-to-all-pro.patch
+Patch0312: 0312-core-don-t-send-duplicate-SIGCONT-when-killing-units.patch
+Patch0313: 0313-efi-fix-Undefined-reference-efi_loader_get_boot_usec.patch
+Patch0314: 0314-macro-better-make-IN_SET-macro-use-const-arrays.patch
+Patch0315: 0315-macro-make-sure-we-can-use-IN_SET-also-with-complex-.patch
+Patch0316: 0316-core-fix-property-changes-in-transient-units.patch
+Patch0317: 0317-load-modules-properly-return-a-failing-error-code-if.patch
+Patch0318: 0318-core-unit-fix-unit_add_target_dependencies-for-units.patch
+Patch0319: 0319-man-there-is-no-ExecStopPre-for-service-units.patch
+Patch0320: 0320-man-document-that-per-interface-sysctl-variables-are.patch
+Patch0321: 0321-journal-downgrade-vaccuum-message-to-debug-level.patch
+Patch0322: 0322-logs-show-fix-corrupt-output-with-empty-messages.patch
+Patch0323: 0323-journalctl-refuse-extra-arguments-with-verify-and-si.patch
+Patch0324: 0324-journal-assume-that-next-entry-is-after-previous-ent.patch
+Patch0325: 0325-journal-forget-file-after-encountering-an-error.patch
+Patch0326: 0326-man-update-link-to-LSB.patch
+Patch0327: 0327-man-systemd-bootchart-fix-spacing-in-command.patch
+Patch0328: 0328-man-add-missing-comma.patch
+Patch0329: 0329-units-Do-not-unescape-instance-name-in-systemd-backl.patch
+Patch0330: 0330-manager-flush-memory-stream-before-using-the-buffer.patch
+Patch0331: 0331-man-multiple-sleep-modes-are-to-be-separated-by-whit.patch
+Patch0332: 0332-man-fix-description-of-systemctl-after-before.patch
+Patch0333: 0333-udev-properly-detect-reference-to-unexisting-part-of.patch
+Patch0334: 0334-gpt-auto-generator-don-t-return-OOM-on-parentless-de.patch
+Patch0335: 0335-man-improve-wording-of-systemctl-s-after-before.patch
+Patch0336: 0336-cgroup-it-s-not-OK-to-invoke-alloca-in-loops.patch
+Patch0337: 0337-core-don-t-try-to-relabel-mounts-before-we-loaded-th.patch
+Patch0338: 0338-systemctl-kill-mode-is-long-long-gone-don-t-mention-.patch
+Patch0339: 0339-ask-password-when-the-user-types-a-overly-long-passw.patch
+Patch0340: 0340-logind-don-t-print-error-if-devices-vanish-during-AC.patch
+Patch0341: 0341-tty-ask-password-agent-return-negative-errno.patch
+Patch0342: 0342-journal-cleanup-up-error-handling-in-update_catalog.patch
+Patch0343: 0343-bash-completion-fix-__get_startable_units.patch
+Patch0344: 0344-core-check-the-right-variable-for-failed-open.patch
+Patch0345: 0345-util-allow-trailing-semicolons-on-define_trivial_cle.patch
+Patch0346: 0346-man-sd_journal_send-does-nothing-when-journald-is-no.patch
+Patch0347: 0347-man-clarify-that-the-ExecReload-command-should-be-sy.patch
+Patch0348: 0348-conf-parser-never-consider-it-an-error-if-we-cannot-.patch
+Patch0349: 0349-socket-properly-handle-if-our-service-vanished-durin.patch
+Patch0350: 0350-Do-not-unescape-unit-names-in-Install-section.patch
+Patch0351: 0351-util-ignore_file-should-not-allow-files-ending-with.patch
+Patch0352: 0352-core-fix-invalid-free-in-killall.patch
+Patch0353: 0353-install-fix-invalid-free-in-unit_file_mask.patch
+Patch0354: 0354-unit-name-fix-detection-of-unit-templates-instances.patch
+Patch0355: 0355-journald-make-MaxFileSec-really-default-to-1month.patch
+Patch0356: 0356-bootchart-it-s-not-OK-to-return-1-from-a-main-progra.patch
+Patch0357: 0357-journald-Fix-off-by-one-error-in-Missed-X-kernel-mes.patch
+Patch0358: 0358-man-drop-references-to-removed-and-obsolete-systemct.patch
+Patch0359: 0359-units-fix-BindsTo-logic-when-applied-relative-to-ser.patch
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
 
@@ -1132,6 +1188,63 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Tue Oct 07 2014 Lukas Nykryn <lnykryn@redhat.com> - 208-13
+- tmpfiles: minor modernizations (#1147524)
+- install: when looking for a unit file for enabling, search for templates only after traversing all search directories (#1147524)
+- install: remove unused variable (#1147524)
+- bootctl: typo fix in help message (#1147524)
+- logind: ignore failing close() on session-devices (#1147524)
+- sysfs-show.c: return negative error (#1147524)
+- core: only send SIGHUP when doing first kill, not when doing final sigkill (#1147524)
+- cgroup: make sure to properly send SIGCONT to all processes of a cgroup if that's requested (#1147524)
+- core: don't send duplicate SIGCONT when killing units (#1147524)
+- efi: fix Undefined reference efi_loader_get_boot_usec when EFI support is disabled (#1147524)
+- macro: better make IN_SET() macro use const arrays (#1147524)
+- macro: make sure we can use IN_SET() also with complex function calls as first argument (#1147524)
+- core: fix property changes in transient units (#1147524)
+- load-modules: properly return a failing error code if some module fails to load (#1147524)
+- core/unit: fix unit_add_target_dependencies() for units with no dependencies (#1147524)
+- man: there is no ExecStopPre= for service units (#1147524)
+- man: document that per-interface sysctl variables are applied as network interfaces show up (#1147524)
+- journal: downgrade vaccuum message to debug level (#1147524)
+- logs-show: fix corrupt output with empty messages (#1147524)
+- journalctl: refuse extra arguments with --verify and similar (#1147524)
+- journal: assume that next entry is after previous entry (#1147524)
+- journal: forget file after encountering an error (#1147524)
+- man: update link to LSB (#1147524)
+- man: systemd-bootchart - fix spacing in command (#1147524)
+- man: add missing comma (#1147524)
+- units: Do not unescape instance name in systemd-backlight@.service (#1147524)
+- manager: flush memory stream before using the buffer (#1147524)
+- man: multiple sleep modes are to be separated by whitespace, not commas (#1147524)
+- man: fix description of systemctl --after/--before (#1147524)
+- udev: properly detect reference to unexisting part of PROGRAM's result (#1147524)
+- gpt-auto-generator: don't return OOM on parentless devices (#1147524)
+- man: improve wording of systemctl's --after/--before (#1147524)
+- cgroup: it's not OK to invoke alloca() in loops (#1147524)
+- core: don't try to relabel mounts before we loaded the policy (#1147524)
+- systemctl: --kill-mode is long long gone, don't mention it in the man page (#1147524)
+- ask-password: when the user types a overly long password, beep and refuse (#1147524)
+- logind: don't print error if devices vanish during ACL-init (#1147524)
+- tty-ask-password-agent: return negative errno (#1147524)
+- journal: cleanup up error handling in update_catalog() (#1147524)
+- bash completion: fix __get_startable_units (#1147524)
+- core: check the right variable for failed open() (#1147524)
+- man: sd_journal_send does nothing when journald is not available (#1147524)
+- man: clarify that the ExecReload= command should be synchronous (#1147524)
+- conf-parser: never consider it an error if we cannot load a drop-in file because it is missing (#1147524)
+- socket: properly handle if our service vanished during runtime (#1147524)
+- Do not unescape unit names in [Install] section (#1147524)
+- util: ignore_file should not allow files ending with '~' (#1147524)
+- core: fix invalid free() in killall() (#1147524)
+- install: fix invalid free() in unit_file_mask() (#1147524)
+- unit-name: fix detection of unit templates/instances (#1147524)
+- journald: make MaxFileSec really default to 1month (#1147524)
+- bootchart: it's not OK to return -1 from a main program (#1147524)
+- journald: Fix off-by-one error in "Missed X kernel messages" warning (#1147524)
+- man: drop references to removed and obsolete 'systemctl load' command (#1147524)
+- units: fix BindsTo= logic when applied relative to services with Type=oneshot (#1147524)
+
 * Mon Sep 29 2014 Lukas Nykryn <lnykryn@redhat.com> - 208-12
 - units/serial-getty@.service: add [Install] section (#1083936)
 - units: order network-online.target after network.target (#1072431)

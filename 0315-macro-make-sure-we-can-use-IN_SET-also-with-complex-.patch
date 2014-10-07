@@ -1,0 +1,49 @@
+From 28a4b5dd0895ba41d1327dcaf824f8adffea73f7 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 12 Mar 2014 22:26:22 +0100
+Subject: [PATCH] macro: make sure we can use IN_SET() also with complex
+ function calls as first argument
+
+(cherry-picked from dc36d78e)
+
+Resolves: #1147524
+---
+ src/shared/macro.h   | 9 +++++----
+ src/test/test-util.c | 1 -
+ 2 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/src/shared/macro.h b/src/shared/macro.h
+index 27a02d4..21039eb 100644
+--- a/src/shared/macro.h
++++ b/src/shared/macro.h
+@@ -287,13 +287,14 @@ do {                                                                    \
+ #define SET_FLAG(v, flag, b) \
+         (v) = (b) ? ((v) | (flag)) : ((v) & ~(flag))
+ 
+-#define IN_SET(x, ...)                                                  \
++#define IN_SET(x, y, ...)                                               \
+         ({                                                              \
+-                const typeof(x) _x = (x);                               \
++                const typeof(y) _y = (y);                               \
++                const typeof(_y) _x = (x);                              \
+                 unsigned _i;                                            \
+                 bool _found = false;                                    \
+-                for (_i = 0; _i < sizeof((const typeof(_x)[]) { __VA_ARGS__ })/sizeof(const typeof(_x)); _i++) \
+-                        if (((const typeof(_x)[]) { __VA_ARGS__ })[_i] == _x) { \
++                for (_i = 0; _i < 1 + sizeof((const typeof(_x)[]) { __VA_ARGS__ })/sizeof(const typeof(_x)); _i++) \
++                        if (((const typeof(_x)[]) { _y, __VA_ARGS__ })[_i] == _x) { \
+                                 _found = true;                          \
+                                 break;                                  \
+                         }                                               \
+diff --git a/src/test/test-util.c b/src/test/test-util.c
+index c5762ed..8527f13 100644
+--- a/src/test/test-util.c
++++ b/src/test/test-util.c
+@@ -571,7 +571,6 @@ static void test_fstab_node_to_udev_node(void) {
+         assert_se(streq(n, "/dev/disk/by-partuuid/037b9d94-148e-4ee4-8d38-67bfe15bb535"));
+         free(n);
+ 
+-
+         n = fstab_node_to_udev_node("PONIES=awesome");
+         puts(n);
+         assert_se(streq(n, "PONIES=awesome"));

@@ -1,0 +1,75 @@
+From 0fca5aae90d5a4e292db8db7b9c31c8390799368 Mon Sep 17 00:00:00 2001
+From: Daniel Mack <zonque@gmail.com>
+Date: Fri, 7 Mar 2014 14:43:59 +0100
+Subject: [PATCH] manager: flush memory stream before using the buffer
+
+When the manager receives a SIGUSR2 signal, it opens a memory stream
+with open_memstream(), uses the returned file handle for logging, and
+dumps the logged content with log_dump().
+
+However, the char* buffer is only safe to use after the file handle has
+been flushed with fflush, as the man pages states:
+
+  When the stream is closed (fclose(3)) or flushed (fflush(3)), the
+  locations pointed to by ptr and sizeloc are updated to contain,
+  respectively, a pointer to the buffer and the current size of  the
+  buffer.
+  These values remain valid only as long as the caller performs no
+  further output on the stream.  If further output is performed, then the
+  stream must again be flushed before trying to access these variables.
+
+Without that call, dump remains NULL and the daemon crashes in
+log_dump().
+
+Conflicts:
+	src/core/manager.c
+
+(cherry-picked from b2cdc6664ef6b56e47d38649d69b9943d9f9f5d0)
+
+Resolves: #1147524
+---
+ src/core/manager.c | 17 +++++++++--------
+ 1 file changed, 9 insertions(+), 8 deletions(-)
+
+diff --git a/src/core/manager.c b/src/core/manager.c
+index 4ad26e1..e48ea36 100644
+--- a/src/core/manager.c
++++ b/src/core/manager.c
+@@ -1536,11 +1536,12 @@ static int manager_process_signal_fd(Manager *m) {
+                 }
+ 
+                 case SIGUSR2: {
+-                        FILE *f;
+-                        char *dump = NULL;
++                        _cleanup_free_ char *dump = NULL;
++                        _cleanup_fclose_ FILE *f = NULL;
+                         size_t size;
+ 
+-                        if (!(f = open_memstream(&dump, &size))) {
++                        f = open_memstream(&dump, &size);
++                        if (!f) {
+                                 log_warning("Failed to allocate memory stream.");
+                                 break;
+                         }
+@@ -1549,16 +1550,16 @@ static int manager_process_signal_fd(Manager *m) {
+                         manager_dump_jobs(m, f, "\t");
+ 
+                         if (ferror(f)) {
+-                                fclose(f);
+-                                free(dump);
+                                 log_warning("Failed to write status stream");
+                                 break;
+                         }
+ 
+-                        fclose(f);
+-                        log_dump(LOG_INFO, dump);
+-                        free(dump);
++                        if (fflush(f)) {
++                                log_warning("Failed to flush status stream");
++                                break;
++                        }
+ 
++                        log_dump(LOG_INFO, dump);
+                         break;
+                 }
+ 

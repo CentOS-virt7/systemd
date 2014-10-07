@@ -1,0 +1,39 @@
+From 02d57e30f6e8f0a1f0828d4ee0e1d3b87b54d8f6 Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Wed, 2 Apr 2014 16:20:13 +0200
+Subject: [PATCH] logind: don't print error if devices vanish during ACL-init
+
+If a device is unplugged while we initialize it, we will get ENOENT for
+ACL-init (and related stuff). We currently print errors then, which is
+misleading. Print a debug-message early and continue.
+
+Conflicts:
+	src/login/logind-acl.c
+
+(cherry-picked from 8016b904849a2d2bd8b0171ed8493db5524b5ff7)
+
+Resolves: #1147524
+---
+ src/login/logind-acl.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/src/login/logind-acl.c b/src/login/logind-acl.c
+index 25abcbc..6582b8c 100644
+--- a/src/login/logind-acl.c
++++ b/src/login/logind-acl.c
+@@ -283,8 +283,14 @@ int devnode_acl_all(struct udev *udev,
+         }
+ 
+         SET_FOREACH(n, nodes, i) {
++                int k;
++
+                 log_debug("Fixing up ACLs at %s for seat %s", n, seat);
+-                r = devnode_acl(n, flush, del, old_uid, add, new_uid);
++                k = devnode_acl(n, flush, del, old_uid, add, new_uid);
++                if (k == -ENOENT)
++                        log_debug("Device %s disappeared while setting ACLs", n);
++                else if (k < 0)
++                        r = k;
+         }
+ 
+ finish:

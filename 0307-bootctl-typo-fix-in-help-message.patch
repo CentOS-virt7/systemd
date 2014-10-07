@@ -1,0 +1,25 @@
+From 5f9893fe56014642bbdb2d15eb829e3447dac265 Mon Sep 17 00:00:00 2001
+From: Thomas Hindoe Paaboel Andersen <phomes@gmail.com>
+Date: Wed, 6 Nov 2013 00:29:49 +0100
+Subject: [PATCH] bootctl: typo fix in help message
+
+(cherry-picked from 82de16f92ca5259e9ddb4f328f086cb6a9f043b0)
+
+Resolves: #1147524
+---
+ src/boot/bootctl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/boot/bootctl.c b/src/boot/bootctl.c
+index af694fd..d25ddef 100644
+--- a/src/boot/bootctl.c
++++ b/src/boot/bootctl.c
+@@ -34,7 +34,7 @@
+ 
+ static int help(void) {
+         printf("%s [OPTIONS...] COMMAND ...\n\n"
+-               "Query or change firmware and boot mananger settings.\n\n"
++               "Query or change firmware and boot manager settings.\n\n"
+                "  -h --help              Show this help\n"
+                "     --version           Show package version\n"
+                "Commands:\n"

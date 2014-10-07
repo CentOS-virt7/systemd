@@ -1,0 +1,25 @@
+From 1368259de25f91b0130fcf9a8dd1623b3354ba10 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 6 Feb 2014 19:46:46 +0100
+Subject: [PATCH] core: don't send duplicate SIGCONT when killing units
+
+(cherry-picked from 8190da36f71a887945297cd65d6426c78b466a50)
+
+Resolves: #1147524
+---
+ src/core/unit.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/core/unit.c b/src/core/unit.c
+index fe1864a..87a6385 100644
+--- a/src/core/unit.c
++++ b/src/core/unit.c
+@@ -3169,7 +3169,7 @@ int unit_kill_context(
+                                 if (!pid_set)
+                                         return -ENOMEM;
+ 
+-                                cg_kill_recursive(SYSTEMD_CGROUP_CONTROLLER, u->cgroup_path, SIGHUP, true, true, false, pid_set);
++                                cg_kill_recursive(SYSTEMD_CGROUP_CONTROLLER, u->cgroup_path, SIGHUP, false, true, false, pid_set);
+                         }
+                 }
+         }
