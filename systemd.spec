@@ -11,7 +11,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        13%{?dist}
+Release:        14%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -390,6 +390,8 @@ Patch0356: 0356-bootchart-it-s-not-OK-to-return-1-from-a-main-progra.patch
 Patch0357: 0357-journald-Fix-off-by-one-error-in-Missed-X-kernel-mes.patch
 Patch0358: 0358-man-drop-references-to-removed-and-obsolete-systemct.patch
 Patch0359: 0359-units-fix-BindsTo-logic-when-applied-relative-to-ser.patch
+Patch0360: 0360-core-don-t-allow-enabling-if-unit-is-masked.patch
+Patch0361: 0361-man-systemctl-document-enable-on-masked-units.patch
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
 
@@ -1188,6 +1190,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Wed Oct 08 2014 Lukas Nykryn <lnykryn@redhat.com> - 208-14
+- core: don't allow enabling if unit is masked (#1149299)
+
 * Tue Oct 07 2014 Lukas Nykryn <lnykryn@redhat.com> - 208-13
 - tmpfiles: minor modernizations (#1147524)
 - install: when looking for a unit file for enabling, search for templates only after traversing all search directories (#1147524)
