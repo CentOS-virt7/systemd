@@ -1,0 +1,89 @@
+From e7c4dc07d35a10dc90f013572da6d25d17311d0a Mon Sep 17 00:00:00 2001
+From: Michal Sekletar <msekleta@redhat.com>
+Date: Mon, 13 Oct 2014 16:12:30 +0200
+Subject: [PATCH] selinux: set selinux context applied on exec() before closing
+ all fds
+
+We need original socket_fd around otherwise label_get_child_mls_label fails with
+-EINVAL return code.
+
+Related: #1113790
+---
+ src/core/execute.c | 56 +++++++++++++++++++++++++++++-------------------------
+ 1 file changed, 30 insertions(+), 26 deletions(-)
+
+diff --git a/src/core/execute.c b/src/core/execute.c
+index be99149..06713cc 100644
+--- a/src/core/execute.c
++++ b/src/core/execute.c
+@@ -1401,6 +1401,36 @@ int exec_spawn(ExecCommand *command,
+                         }
+                 }
+ 
++#ifdef HAVE_SELINUX
++                if (apply_permissions) {
++                        if (use_selinux()) {
++                                if (context->selinux_context) {
++                                        err = setexeccon(context->selinux_context);
++                                        if (err < 0 && !context->selinux_context_ignore) {
++                                                r = EXIT_SELINUX_CONTEXT;
++                                                goto fail_child;
++                                        }
++                                }
++
++                                if (selinux_context_net && socket_fd >= 0) {
++                                        _cleanup_free_ char *label = NULL;
++
++                                        err = label_get_child_mls_label(socket_fd, command->path, &label);
++                                        if (err < 0) {
++                                                r = EXIT_SELINUX_CONTEXT;
++                                                goto fail_child;
++                                        }
++
++                                        err = setexeccon(label);
++                                        if (err < 0) {
++                                                r = EXIT_SELINUX_CONTEXT;
++                                                goto fail_child;
++                                        }
++                                }
++                        }
++                }
++#endif
++
+                 /* We repeat the fd closing here, to make sure that
+                  * nothing is leaked from the PAM modules */
+                 err = close_all_fds(fds, n_fds);
+@@ -1474,33 +1504,7 @@ int exec_spawn(ExecCommand *command,
+                                         goto fail_child;
+                                 }
+                         }
+-#ifdef HAVE_SELINUX
+-                        if (use_selinux()) {
+-                                if (context->selinux_context) {
+-                                        err = setexeccon(context->selinux_context);
+-                                        if (err < 0 && !context->selinux_context_ignore) {
+-                                                r = EXIT_SELINUX_CONTEXT;
+-                                                goto fail_child;
+-                                        }
+-                                }
+-
+-                                if (selinux_context_net && socket_fd >= 0) {
+-                                        _cleanup_free_ char *label = NULL;
+ 
+-                                        err = label_get_child_mls_label(socket_fd, command->path, &label);
+-                                        if (err < 0) {
+-                                                r = EXIT_SELINUX_CONTEXT;
+-                                                goto fail_child;
+-                                        }
+-
+-                                        err = setexeccon(label);
+-                                        if (err < 0) {
+-                                                r = EXIT_SELINUX_CONTEXT;
+-                                                goto fail_child;
+-                                        }
+-                                }
+-                        }
+-#endif
+                 }
+ 
+                 our_env = new0(char*, 7);

@@ -1,0 +1,40 @@
+From 161ad7deb00e31cb47fdc29f2e795690ffa66be4 Mon Sep 17 00:00:00 2001
+From: Michal Sekletar <msekleta@redhat.com>
+Date: Mon, 13 Oct 2014 13:41:06 +0200
+Subject: [PATCH] selinux: fix potential double free crash in child process
+
+Before returning from function we should reset ret to NULL, thus cleanup
+function is nop.
+
+Also context_str() returns pointer to a string containing context but not a
+copy, hence we must make copy it explicitly.
+
+Related: #1113790
+---
+ src/shared/label.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/src/shared/label.c b/src/shared/label.c
+index 8f7dfb4..52aea4f 100644
+--- a/src/shared/label.c
++++ b/src/shared/label.c
+@@ -270,7 +270,8 @@ int label_get_child_mls_label(int socket_fd, const char *exe, char **label) {
+         }
+ 
+         freecon(mycon);
+-        mycon = context_str(bcon);
++        mycon = NULL;
++        mycon = strdup(context_str(bcon));
+         if (!mycon) {
+                 r = -errno;
+                 goto out;
+@@ -284,8 +285,8 @@ int label_get_child_mls_label(int socket_fd, const char *exe, char **label) {
+         }
+ 
+         *label = ret;
++        ret = NULL;
+         r = 0;
+-
+ out:
+         if (r < 0 && security_getenforce() == 1)
+                 return r;

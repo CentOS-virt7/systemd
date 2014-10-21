@@ -11,7 +11,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        14%{?dist}
+Release:        15%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -392,6 +392,13 @@ Patch0358: 0358-man-drop-references-to-removed-and-obsolete-systemct.patch
 Patch0359: 0359-units-fix-BindsTo-logic-when-applied-relative-to-ser.patch
 Patch0360: 0360-core-don-t-allow-enabling-if-unit-is-masked.patch
 Patch0361: 0361-man-systemctl-document-enable-on-masked-units.patch
+Patch0362: 0362-core-do-not-segfault-if-proc-swaps-cannot-be-opened.patch
+Patch0363: 0363-man-we-don-t-have-Wanted-dependency.patch
+Patch0364: 0364-environment-append-unit_id-to-error-messages-regardi.patch
+Patch0365: 0365-udevd-add-event-timeout-commandline-option.patch
+Patch0366: 0366-selinux-fix-potential-double-free-crash-in-child-pro.patch
+Patch0367: 0367-selinux-pass-flag-to-correct-exec_spawn.patch
+Patch0368: 0368-selinux-set-selinux-context-applied-on-exec-before-c.patch
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
 
@@ -1190,6 +1197,12 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Tue Oct 21 2014 Lukas Nykryn <lnykryn@redhat.com> - 208-15
+- core: do not segfault if /proc/swaps cannot be opened (#1151239)
+- man: we don't have 'Wanted' dependency (#1152487)
+- environment: append unit_id to error messages regarding EnvironmentFile (#1147691)
+- udevd: add --event-timeout commandline option (#1154778)
+
 * Wed Oct 08 2014 Lukas Nykryn <lnykryn@redhat.com> - 208-14
 - core: don't allow enabling if unit is masked (#1149299)
 
