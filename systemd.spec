@@ -11,7 +11,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        15%{?dist}
+Release:        16%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -399,6 +399,9 @@ Patch0365: 0365-udevd-add-event-timeout-commandline-option.patch
 Patch0366: 0366-selinux-fix-potential-double-free-crash-in-child-pro.patch
 Patch0367: 0367-selinux-pass-flag-to-correct-exec_spawn.patch
 Patch0368: 0368-selinux-set-selinux-context-applied-on-exec-before-c.patch
+Patch0369: 0369-logind-use-correct-who-enum-values-with-KillUnit.patch
+Patch0370: 0370-logind-always-kill-session-when-termination-is-reque.patch
+Patch0371: 0371-udev-net_id-correctly-name-netdevs-based-on-dev_port.patch
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
 
@@ -1197,6 +1200,11 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Thu Oct 30 2014 Lukas Nykryn <lnykryn@redhat.com> - 208-16
+- logind: use correct "who" enum values with KillUnit. (#1155502)
+- logind: always kill session when termination is requested (#1155502)
+- udev: net_id - correctly name netdevs based on dev_port when set (#1155996)
+
 * Tue Oct 21 2014 Lukas Nykryn <lnykryn@redhat.com> - 208-15
 - core: do not segfault if /proc/swaps cannot be opened (#1151239)
 - man: we don't have 'Wanted' dependency (#1152487)

@@ -1,0 +1,291 @@
+From c4e4ad079d6c3c18b6f08722ce30796e8c53346b Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Sat, 8 Feb 2014 20:29:56 -0500
+Subject: [PATCH] logind: always kill session when termination is requested
+
+KillUserProcesses=yes/no should be ignored when termination is
+explicitly requested.
+
+Conflicts:
+	src/login/logind-dbus.c
+	src/login/logind-seat-dbus.c
+	src/login/logind-session-dbus.c
+	src/login/logind-session.c
+	src/login/logind-user-dbus.c
+	src/login/logind.c
+
+(cherry-picked (or better say rewritten) from 9bb69af4f2823fdd30902f5ffd959e9b041feb53)
+
+Resolves: #1155502
+---
+ src/login/logind-dbus.c         |  6 +++---
+ src/login/logind-seat-dbus.c    |  2 +-
+ src/login/logind-seat.c         |  8 ++++----
+ src/login/logind-seat.h         |  4 ++--
+ src/login/logind-session-dbus.c |  2 +-
+ src/login/logind-session.c      |  8 ++++----
+ src/login/logind-session.h      |  2 +-
+ src/login/logind-user-dbus.c    |  2 +-
+ src/login/logind-user.c         |  4 ++--
+ src/login/logind-user.h         |  2 +-
+ src/login/logind.c              | 10 +++++-----
+ 11 files changed, 25 insertions(+), 25 deletions(-)
+
+diff --git a/src/login/logind-dbus.c b/src/login/logind-dbus.c
+index 4137522..8a463f9 100644
+--- a/src/login/logind-dbus.c
++++ b/src/login/logind-dbus.c
+@@ -1927,7 +1927,7 @@ static DBusHandlerResult manager_message_handler(
+                 if (!session)
+                         return bus_send_error_reply(connection, message, &error, -ENOENT);
+ 
+-                r = session_stop(session);
++                r = session_stop(session, true);
+                 if (r < 0)
+                         return bus_send_error_reply(connection, message, NULL, r);
+ 
+@@ -1950,7 +1950,7 @@ static DBusHandlerResult manager_message_handler(
+                 if (!user)
+                         return bus_send_error_reply(connection, message, &error, -ENOENT);
+ 
+-                r = user_stop(user);
++                r = user_stop(user, true);
+                 if (r < 0)
+                         return bus_send_error_reply(connection, message, NULL, r);
+ 
+@@ -1973,7 +1973,7 @@ static DBusHandlerResult manager_message_handler(
+                 if (!seat)
+                         return bus_send_error_reply(connection, message, &error, -ENOENT);
+ 
+-                r = seat_stop_sessions(seat);
++                r = seat_stop_sessions(seat, true);
+                 if (r < 0)
+                         return bus_send_error_reply(connection, message, NULL, r);
+ 
+diff --git a/src/login/logind-seat-dbus.c b/src/login/logind-seat-dbus.c
+index 230f7f0..c87c1de 100644
+--- a/src/login/logind-seat-dbus.c
++++ b/src/login/logind-seat-dbus.c
+@@ -261,7 +261,7 @@ static DBusHandlerResult seat_message_dispatch(
+ 
+         if (dbus_message_is_method_call(message, "org.freedesktop.login1.Seat", "Terminate")) {
+ 
+-                r = seat_stop_sessions(s);
++                r = seat_stop_sessions(s, true);
+                 if (r < 0)
+                         return bus_send_error_reply(connection, message, NULL, r);
+ 
+diff --git a/src/login/logind-seat.c b/src/login/logind-seat.c
+index feebcf4..d3b999d 100644
+--- a/src/login/logind-seat.c
++++ b/src/login/logind-seat.c
+@@ -369,7 +369,7 @@ int seat_start(Seat *s) {
+         return 0;
+ }
+ 
+-int seat_stop(Seat *s) {
++int seat_stop(Seat *s, bool force) {
+         int r = 0;
+ 
+         assert(s);
+@@ -381,7 +381,7 @@ int seat_stop(Seat *s) {
+                            "MESSAGE=Removed seat %s.", s->id,
+                            NULL);
+ 
+-        seat_stop_sessions(s);
++        seat_stop_sessions(s, force);
+ 
+         unlink(s->state_file);
+         seat_add_to_gc_queue(s);
+@@ -394,14 +394,14 @@ int seat_stop(Seat *s) {
+         return r;
+ }
+ 
+-int seat_stop_sessions(Seat *s) {
++int seat_stop_sessions(Seat *s, bool force) {
+         Session *session;
+         int r = 0, k;
+ 
+         assert(s);
+ 
+         LIST_FOREACH(sessions_by_seat, session, s->sessions) {
+-                k = session_stop(session);
++                k = session_stop(session, force);
+                 if (k < 0)
+                         r = k;
+         }
+diff --git a/src/login/logind-seat.h b/src/login/logind-seat.h
+index be6db6e..bf496b3 100644
+--- a/src/login/logind-seat.h
++++ b/src/login/logind-seat.h
+@@ -72,8 +72,8 @@ bool seat_can_graphical(Seat *s);
+ int seat_get_idle_hint(Seat *s, dual_timestamp *t);
+ 
+ int seat_start(Seat *s);
+-int seat_stop(Seat *s);
+-int seat_stop_sessions(Seat *s);
++int seat_stop(Seat *s, bool force);
++int seat_stop_sessions(Seat *s, bool force);
+ 
+ int seat_check_gc(Seat *s, bool drop_not_started);
+ void seat_add_to_gc_queue(Seat *s);
+diff --git a/src/login/logind-session-dbus.c b/src/login/logind-session-dbus.c
+index 86b0746..76e16e7 100644
+--- a/src/login/logind-session-dbus.c
++++ b/src/login/logind-session-dbus.c
+@@ -311,7 +311,7 @@ static DBusHandlerResult session_message_dispatch(
+ 
+         if (dbus_message_is_method_call(message, "org.freedesktop.login1.Session", "Terminate")) {
+ 
+-                r = session_stop(s);
++                r = session_stop(s, true);
+                 if (r < 0)
+                         return bus_send_error_reply(connection, message, NULL, r);
+ 
+diff --git a/src/login/logind-session.c b/src/login/logind-session.c
+index 0fa290b..669a027 100644
+--- a/src/login/logind-session.c
++++ b/src/login/logind-session.c
+@@ -609,7 +609,7 @@ int session_start(Session *s) {
+         return 0;
+ }
+ 
+-static int session_stop_scope(Session *s) {
++static int session_stop_scope(Session *s, bool force) {
+         DBusError error;
+         char *job;
+         int r;
+@@ -621,7 +621,7 @@ static int session_stop_scope(Session *s) {
+         if (!s->scope)
+                 return 0;
+ 
+-        if (manager_shall_kill(s->manager, s->user->name)) {
++        if (force || manager_shall_kill(s->manager, s->user->name)) {
+                 r = manager_stop_unit(s->manager, s->scope, &error, &job);
+                 if (r < 0) {
+                         log_error("Failed to stop session scope: %s", bus_error(&error, r));
+@@ -676,7 +676,7 @@ static void session_close_timer_fd(Session *s) {
+         s->timer_fd = -1;
+ }
+ 
+-int session_stop(Session *s) {
++int session_stop(Session *s, bool force) {
+         int r;
+ 
+         assert(s);
+@@ -690,7 +690,7 @@ int session_stop(Session *s) {
+         session_remove_fifo(s);
+ 
+         /* Kill cgroup */
+-        r = session_stop_scope(s);
++        r = session_stop_scope(s, force);
+ 
+         s->stopping = true;
+ 
+diff --git a/src/login/logind-session.h b/src/login/logind-session.h
+index 9b76582..3659872 100644
+--- a/src/login/logind-session.h
++++ b/src/login/logind-session.h
+@@ -131,7 +131,7 @@ void session_set_idle_hint(Session *s, bool b);
+ int session_create_fifo(Session *s);
+ void session_remove_fifo(Session *s);
+ int session_start(Session *s);
+-int session_stop(Session *s);
++int session_stop(Session *s, bool force);
+ int session_finalize(Session *s);
+ void session_release(Session *s);
+ int session_save(Session *s);
+diff --git a/src/login/logind-user-dbus.c b/src/login/logind-user-dbus.c
+index fa2ecba..72dd5d0 100644
+--- a/src/login/logind-user-dbus.c
++++ b/src/login/logind-user-dbus.c
+@@ -242,7 +242,7 @@ static DBusHandlerResult user_message_dispatch(
+ 
+         if (dbus_message_is_method_call(message, "org.freedesktop.login1.User", "Terminate")) {
+ 
+-                r = user_stop(u);
++                r = user_stop(u, true);
+                 if (r < 0)
+                         return bus_send_error_reply(connection, message, NULL, r);
+ 
+diff --git a/src/login/logind-user.c b/src/login/logind-user.c
+index 653574e..6ddda54 100644
+--- a/src/login/logind-user.c
++++ b/src/login/logind-user.c
+@@ -466,13 +466,13 @@ static int user_remove_runtime_path(User *u) {
+         return r;
+ }
+ 
+-int user_stop(User *u) {
++int user_stop(User *u, bool force) {
+         Session *s;
+         int r = 0, k;
+         assert(u);
+ 
+         LIST_FOREACH(sessions_by_user, s, u->sessions) {
+-                k = session_stop(s);
++                k = session_stop(s, force);
+                 if (k < 0)
+                         r = k;
+         }
+diff --git a/src/login/logind-user.h b/src/login/logind-user.h
+index a12532e..13513fa 100644
+--- a/src/login/logind-user.h
++++ b/src/login/logind-user.h
+@@ -72,7 +72,7 @@ void user_free(User *u);
+ int user_check_gc(User *u, bool drop_not_started);
+ void user_add_to_gc_queue(User *u);
+ int user_start(User *u);
+-int user_stop(User *u);
++int user_stop(User *u, bool force);
+ int user_finalize(User *u);
+ UserState user_get_state(User *u);
+ int user_get_idle_hint(User *u, dual_timestamp *t);
+diff --git a/src/login/logind.c b/src/login/logind.c
+index 5180be7..da3c099 100644
+--- a/src/login/logind.c
++++ b/src/login/logind.c
+@@ -618,14 +618,14 @@ static void manager_dispatch_other(Manager *m, int fd) {
+         if (s) {
+                 assert(s->fifo_fd == fd);
+                 session_remove_fifo(s);
+-                session_stop(s);
++                session_stop(s, false);
+                 return;
+         }
+ 
+         s = hashmap_get(m->timer_fds, INT_TO_PTR(fd + 1));
+         if (s) {
+                 assert(s->timer_fd == fd);
+-                session_stop(s);
++                session_stop(s, false);
+                 return;
+         }
+ 
+@@ -942,7 +942,7 @@ void manager_gc(Manager *m, bool drop_not_started) {
+                 seat->in_gc_queue = false;
+ 
+                 if (seat_check_gc(seat, drop_not_started) == 0) {
+-                        seat_stop(seat);
++                        seat_stop(seat, false);
+                         seat_free(seat);
+                 }
+         }
+@@ -954,7 +954,7 @@ void manager_gc(Manager *m, bool drop_not_started) {
+                 /* First, if we are not closing yet, initiate stopping */
+                 if (!session_check_gc(session, drop_not_started) &&
+                     session_get_state(session) != SESSION_CLOSING)
+-                        session_stop(session);
++                        session_stop(session, false);
+ 
+                 if (!session_check_gc(session, drop_not_started)) {
+                         session_finalize(session);
+@@ -968,7 +968,7 @@ void manager_gc(Manager *m, bool drop_not_started) {
+ 
+                 if (!user_check_gc(user, drop_not_started) &&
+                     user_get_state(user) != USER_CLOSING)
+-                        user_stop(user);
++                        user_stop(user, false);
+ 
+                 if (!user_check_gc(user, drop_not_started)) {
+                         user_finalize(user);
