@@ -11,7 +11,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        16%{?dist}
+Release:        17%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -402,6 +402,8 @@ Patch0368: 0368-selinux-set-selinux-context-applied-on-exec-before-c.patch
 Patch0369: 0369-logind-use-correct-who-enum-values-with-KillUnit.patch
 Patch0370: 0370-logind-always-kill-session-when-termination-is-reque.patch
 Patch0371: 0371-udev-net_id-correctly-name-netdevs-based-on-dev_port.patch
+Patch0372: 0372-udev-net_id-dev_port-is-base-10.patch
+Patch0373: 0373-udev-Fix-parsing-of-udev.event-timeout-kernel-parame.patch
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
 
@@ -1200,6 +1202,10 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Fri Nov 07 2014 Lukas Nykryn <lnykryn@redhat.com> - 208-17
+- udev: net_id dev_port is base 10 (#1155996)
+- udev: Fix parsing of udev.event-timeout kernel parameter (#1154778)
+
 * Thu Oct 30 2014 Lukas Nykryn <lnykryn@redhat.com> - 208-16
 - logind: use correct "who" enum values with KillUnit. (#1155502)
 - logind: always kill session when termination is requested (#1155502)

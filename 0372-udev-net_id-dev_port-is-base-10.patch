@@ -1,0 +1,23 @@
+From 6aba16d2932457f516a3153d85b147f3d962f4a2 Mon Sep 17 00:00:00 2001
+From: Lukas Nykryn <lnykryn@redhat.com>
+Date: Tue, 4 Nov 2014 17:59:28 +0100
+Subject: [PATCH] udev: net_id dev_port is base 10
+
+Related: #1155996
+---
+ src/udev/udev-builtin-net_id.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/udev/udev-builtin-net_id.c b/src/udev/udev-builtin-net_id.c
+index b5b5909..4e6ca96 100644
+--- a/src/udev/udev-builtin-net_id.c
++++ b/src/udev/udev-builtin-net_id.c
+@@ -190,7 +190,7 @@ static int dev_pci_slot(struct udev_device *dev, struct netnames *names) {
+                 if (dev_id == 0) {
+                         attr = udev_device_get_sysattr_value(dev, "dev_port");
+                         if (attr)
+-                                dev_id = strtol(attr, NULL, 16);
++                                dev_id = strtol(attr, NULL, 10);
+                 }
+         }
+ 

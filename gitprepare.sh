@@ -68,7 +68,7 @@ MSG_HEAD=$(echo "* $(date +"%a %b %d %Y") $(git config user.name) <$(git config 
 
 
 for COMMIT in $(git rev-list --reverse ${REMOTE_BRANCH} ${OLD_TAG}..${NEW_TAG}); do
-        RESOLVES=$(git show ${COMMIT} | grep '^\s*Resolves:\s*#' | awk '{print $2}')
+        RESOLVES=$(git show ${COMMIT} | grep '^\s*\(Resolves\)\|\(Related\):\s*#' | awk '{print $2}')
         if [ -n "${RESOLVES}" ]; then
                 CHANGELOG="${CHANGELOG}- $(git log --format=%s -n 1 ${COMMIT} ) (${RESOLVES})\n"
                 echo ${BUGLIST} | grep -q ${RESOLVES} && continue
