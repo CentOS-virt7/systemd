@@ -11,7 +11,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        17%{?dist}
+Release:        18%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -404,6 +404,7 @@ Patch0370: 0370-logind-always-kill-session-when-termination-is-reque.patch
 Patch0371: 0371-udev-net_id-correctly-name-netdevs-based-on-dev_port.patch
 Patch0372: 0372-udev-net_id-dev_port-is-base-10.patch
 Patch0373: 0373-udev-Fix-parsing-of-udev.event-timeout-kernel-parame.patch
+Patch0374: 0374-login-rerun-vconsole-setup-when-switching-from-vgaco.patch
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
 
@@ -1202,6 +1203,9 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Mon Nov 10 2014 Lukas Nykryn <lnykryn@redhat.com> - 208-18
+- login: rerun vconsole-setup when switching from vgacon to fbcon (#1002450)
+
 * Fri Nov 07 2014 Lukas Nykryn <lnykryn@redhat.com> - 208-17
 - udev: net_id dev_port is base 10 (#1155996)
 - udev: Fix parsing of udev.event-timeout kernel parameter (#1154778)
