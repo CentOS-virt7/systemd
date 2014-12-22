@@ -1,0 +1,44 @@
+From ebbcce68c7383217ad93537ef023e85b913d0478 Mon Sep 17 00:00:00 2001
+From: Chris Leech <cleech@redhat.com>
+Date: Sun, 23 Nov 2014 20:33:40 -0800
+Subject: [PATCH] mount: add remote-fs dependencies if needed after change
+
+This is an attempt to add it the remote-fs dependencies to a mount unit
+if the options change, like when the utab options are picked up after
+mountinfo has already been processed.  It just adds the remote-fs
+dependencies, leaving the local-fs ones in place.
+
+With this change I always get mount units with proper remote-fs
+dependencies when mounted with the _netdev option.
+
+(cherry-picked from a6d305f91d722e136c29222070efed5c5d8b120b)
+
+Resolves: #1161417
+---
+ src/core/mount.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/src/core/mount.c b/src/core/mount.c
+index efa46da..a7987bf 100644
+--- a/src/core/mount.c
++++ b/src/core/mount.c
+@@ -1499,6 +1499,19 @@ static int mount_add_one(
+                         }
+                 }
+ 
++                if (m->running_as == SYSTEMD_SYSTEM) {
++                        const char* target;
++
++                        target = mount_needs_network(options, fstype) ?  SPECIAL_REMOTE_FS_TARGET : NULL;
++                        /* _netdev option may have shown up late, or on a
++                         * remount. Add remote-fs dependencies, even though
++                         * local-fs ones may already be there */
++                        if (target) {
++                                unit_add_dependency_by_name(u, UNIT_BEFORE, target, NULL, true);
++                                load_extras = true;
++                        }
++                }
++
+                 if (u->load_state == UNIT_NOT_FOUND) {
+                         u->load_state = UNIT_LOADED;
+                         u->load_error = 0;

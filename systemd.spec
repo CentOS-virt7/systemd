@@ -11,7 +11,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        208
-Release:        19%{?dist}
+Release:        20%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -406,6 +406,13 @@ Patch0372: 0372-udev-net_id-dev_port-is-base-10.patch
 Patch0373: 0373-udev-Fix-parsing-of-udev.event-timeout-kernel-parame.patch
 Patch0374: 0374-login-rerun-vconsole-setup-when-switching-from-vgaco.patch
 Patch0375: 0375-cgroups-agent-really-down-grade-log-level.patch
+Patch0376: 0376-core-introduce-new-Delegate-yes-no-property-controll.patch
+Patch0377: 0377-core-don-t-migrate-PIDs-for-units-that-may-contain-s.patch
+Patch0378: 0378-mount-use-libmount-to-enumerate-proc-self-mountinfo.patch
+Patch0379: 0379-mount-monitor-for-utab-changes-with-inotify.patch
+Patch0380: 0380-mount-add-remote-fs-dependencies-if-needed-after-cha.patch
+Patch0381: 0381-mount-check-options-as-well-as-fstype-for-network-mo.patch
+Patch0382: 0382-rules-don-t-enable-usb-pm-for-Avocent-devices.patch
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
 
@@ -437,6 +444,7 @@ BuildRequires:  automake
 BuildRequires:  autoconf
 BuildRequires:  libtool
 BuildRequires:  git
+BuildRequires:  libmount-devel
 
 Requires(post): coreutils
 Requires(post): gawk
@@ -601,6 +609,7 @@ git am \
     --exclude test/.gitignore \
     --exclude units/.gitignore \
     --exclude units/user/.gitignore \
+    --exclude .travis.yml \
     %{patches}
 
 
@@ -1204,6 +1213,15 @@ getent passwd systemd-journal-gateway >/dev/null 2>&1 || useradd -r -l -u 191 -g
 %{_datadir}/systemd/gatewayd
 
 %changelog
+* Mon Dec 22 2014 Lukas Nykryn <lnykryn@redhat.com> - 208-20
+- core: introduce new Delegate=yes/no property controlling creation of cgroup subhierarchies (#1139223)
+- core: don't migrate PIDs for units that may contain subcgroups, do this only for leaf units (#1139223)
+- mount: use libmount to enumerate /proc/self/mountinfo (#1161417)
+- mount: monitor for utab changes with inotify (#1161417)
+- mount: add remote-fs dependencies if needed after change (#1161417)
+- mount: check options as well as fstype for network mounts (#1161417)
+- rules: don't enable usb pm for Avocent devices (#1155370)
+
 * Mon Nov 10 2014 Lukas Nykryn <lnykryn@redhat.com> - 208-19
 - cgroups-agent: really down-grade log level (#1044386)
 

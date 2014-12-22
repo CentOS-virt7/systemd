@@ -1,0 +1,87 @@
+From 4971e2c8438da1a95cdc306e01e9a3c2349342ad Mon Sep 17 00:00:00 2001
+From: Chris Leech <cleech@redhat.com>
+Date: Sun, 23 Nov 2014 20:33:38 -0800
+Subject: [PATCH] mount: check options as well as fstype for network mounts
+
+When creating a new mount unit after an event on /proc/self/mountinfo,
+check the mount options as well as the fstype to determine if this is a
+remote mount that requires network access.
+
+Conflicts:
+	src/core/mount.c
+
+(cherry-picked from affc3d834347076e8616948978e70ed1fca84db4)
+
+Resolves: #1161417
+---
+ src/core/mount.c | 33 ++++++++++++++++++++-------------
+ 1 file changed, 20 insertions(+), 13 deletions(-)
+
+diff --git a/src/core/mount.c b/src/core/mount.c
+index a7987bf..6c3c7be 100644
+--- a/src/core/mount.c
++++ b/src/core/mount.c
+@@ -75,18 +75,22 @@ static char* mount_test_option(const char *haystack, const char *needle) {
+         return hasmntopt(&me, needle);
+ }
+ 
+-static bool mount_is_network(MountParameters *p) {
+-        assert(p);
+-
+-        if (mount_test_option(p->options, "_netdev"))
++static bool mount_needs_network(const char *options, const char *fstype) {
++        if (mount_test_option(options, "_netdev"))
+                 return true;
+ 
+-        if (p->fstype && fstype_is_network(p->fstype))
++        if (fstype && fstype_is_network(fstype))
+                 return true;
+ 
+         return false;
+ }
+ 
++static bool mount_is_network(MountParameters *p) {
++        assert(p);
++
++        return mount_needs_network(p->options, p->fstype);
++}
++
+ static bool mount_is_bind(MountParameters *p) {
+         assert(p);
+ 
+@@ -1446,9 +1450,6 @@ static int mount_add_one(
+ 
+         u = manager_get_unit(m, e);
+         if (!u) {
+-                const char* const target =
+-                        fstype_is_network(fstype) ? SPECIAL_REMOTE_FS_TARGET : SPECIAL_LOCAL_FS_TARGET;
+-
+                 delete = true;
+ 
+                 u = unit_new(m, sizeof(Mount));
+@@ -1475,14 +1476,20 @@ static int mount_add_one(
+                         goto fail;
+                 }
+ 
+-                r = unit_add_dependency_by_name(u, UNIT_BEFORE, target, NULL, true);
+-                if (r < 0)
+-                        goto fail;
+ 
+-                if (should_umount(MOUNT(u))) {
+-                        r = unit_add_dependency_by_name(u, UNIT_CONFLICTS, SPECIAL_UMOUNT_TARGET, NULL, true);
++                if (m->running_as == SYSTEMD_SYSTEM) {
++                        const char* target;
++
++                        target = mount_needs_network(options, fstype) ?  SPECIAL_REMOTE_FS_TARGET : SPECIAL_LOCAL_FS_TARGET;
++                        r = unit_add_dependency_by_name(u, UNIT_BEFORE, target, NULL, true);
+                         if (r < 0)
+                                 goto fail;
++
++                        if (should_umount(MOUNT(u))) {
++                                r = unit_add_dependency_by_name(u, UNIT_CONFLICTS, SPECIAL_UMOUNT_TARGET, NULL, true);
++                                if (r < 0)
++                                        goto fail;
++                        }
+                 }
+ 
+                 unit_add_to_load_queue(u);

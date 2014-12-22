@@ -1,0 +1,385 @@
+From 310c5654023cd224f4c016872e39335b1b3ac603 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 13 Nov 2014 14:34:42 +0100
+Subject: [PATCH] core: introduce new Delegate=yes/no property controlling
+ creation of cgroup subhierarchies
+
+For priviliged units this resource control property ensures that the
+processes have all controllers systemd manages enabled.
+
+For unpriviliged services (those with User= set) this ensures that
+access rights to the service cgroup is granted to the user in question,
+to create further subgroups. Note that this only applies to the
+name=systemd hierarchy though, as access to other controllers is not
+safe for unpriviliged processes.
+
+Delegate=yes should be set for container scopes where a systemd instance
+inside the container shall manage the hierarchies below its own cgroup
+and have access to all controllers.
+
+Delegate=yes should also be set for user@.service, so that systemd
+--user can run, controlling its own cgroup tree.
+
+This commit changes machined, systemd-nspawn@.service and user@.service
+to set this boolean, in order to ensure that container management will
+just work, and the user systemd instance can run fine.
+
+(cherry picked from a931ad47a8623163a29d898224d8a8c1177ffdaf)
+
+Resolves: #1139223
+---
+ man/systemd.resource-control.xml      | 14 ++++++++++++
+ src/core/cgroup.c                     | 19 +++++++++++++++--
+ src/core/cgroup.h                     |  2 ++
+ src/core/dbus-cgroup.c                | 40 +++++++++++++++++++++++++++++++++++
+ src/core/execute.c                    | 23 +++++++++++++++++---
+ src/core/execute.h                    |  2 ++
+ src/core/load-fragment-gperf.gperf.m4 |  3 ++-
+ src/core/mount.c                      |  1 +
+ src/core/service.c                    |  1 +
+ src/core/socket.c                     |  1 +
+ src/core/swap.c                       |  1 +
+ src/machine/machined-dbus.c           | 10 +++++++++
+ src/shared/cgroup-util.h              |  3 ++-
+ units/systemd-nspawn@.service.in      |  1 +
+ 14 files changed, 114 insertions(+), 7 deletions(-)
+
+diff --git a/man/systemd.resource-control.xml b/man/systemd.resource-control.xml
+index 8688905..3748c0c 100644
+--- a/man/systemd.resource-control.xml
++++ b/man/systemd.resource-control.xml
+@@ -327,6 +327,20 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
+         </listitem>
+       </varlistentry>
+ 
++      <varlistentry>
++        <term><varname>Delegate=</varname></term>
++
++        <listitem>
++          <para>Turns on delegation of further resource control
++          partitioning to processes of the unit. For unpriviliged
++          services (i.e. those using the <varname>User=</varname>
++          setting) this allows processes to create a subhierarchy
++          beneath its control group path. For priviliged services and
++          scopes this ensures the processes will have all control
++          group controllers enabled.</para>
++        </listitem>
++      </varlistentry>
++
+     </variablelist>
+   </refsect1>
+ 
+diff --git a/src/core/cgroup.c b/src/core/cgroup.c
+index c215a86..443937b 100644
+--- a/src/core/cgroup.c
++++ b/src/core/cgroup.c
+@@ -94,14 +94,16 @@ void cgroup_context_dump(CGroupContext *c, FILE* f, const char *prefix) {
+                 "%sCPUShares=%lu\n"
+                 "%sBlockIOWeight=%lu\n"
+                 "%sMemoryLimit=%" PRIu64 "\n"
+-                "%sDevicePolicy=%s\n",
++                "%sDevicePolicy=%s\n"
++                "%sDelegate=%s\n",
+                 prefix, yes_no(c->cpu_accounting),
+                 prefix, yes_no(c->blockio_accounting),
+                 prefix, yes_no(c->memory_accounting),
+                 prefix, c->cpu_shares,
+                 prefix, c->blockio_weight,
+                 prefix, c->memory_limit,
+-                prefix, cgroup_device_policy_to_string(c->device_policy));
++                prefix, cgroup_device_policy_to_string(c->device_policy),
++                prefix, yes_no(c->delegate));
+ 
+         LIST_FOREACH(device_allow, a, c->device_allow)
+                 fprintf(f,
+@@ -342,6 +344,19 @@ static CGroupControllerMask unit_get_cgroup_mask(Unit *u) {
+         if (!c)
+                 return 0;
+ 
++        /* If delegation is turned on, then turn on all cgroups,
++         * unless the process we fork into it is known to drop
++         * privileges anyway, and shouldn't get access to the
++         * controllers anyway. */
++
++        if (c->delegate) {
++                ExecContext *e;
++
++                e = unit_get_exec_context(u);
++                if (!e || exec_context_maintains_privileges(e))
++                        return _CGROUP_CONTROLLER_MASK_ALL;
++        }
++
+         return cgroup_context_get_mask(c);
+ }
+ 
+diff --git a/src/core/cgroup.h b/src/core/cgroup.h
+index 0a079e9..d00bcac 100644
+--- a/src/core/cgroup.h
++++ b/src/core/cgroup.h
+@@ -80,6 +80,8 @@ struct CGroupContext {
+ 
+         CGroupDevicePolicy device_policy;
+         LIST_HEAD(CGroupDeviceAllow, device_allow);
++
++        bool delegate;
+ };
+ 
+ #include "unit.h"
+diff --git a/src/core/dbus-cgroup.c b/src/core/dbus-cgroup.c
+index 9ebcad9..a13c869 100644
+--- a/src/core/dbus-cgroup.c
++++ b/src/core/dbus-cgroup.c
+@@ -124,6 +124,7 @@ static int bus_cgroup_append_device_allow(DBusMessageIter *i, const char *proper
+ }
+ 
+ const BusProperty bus_cgroup_context_properties[] = {
++        { "Delegate",                bus_property_append_bool,            "b",     offsetof(CGroupContext, delegate)           },
+         { "CPUAccounting",           bus_property_append_bool,            "b",     offsetof(CGroupContext, cpu_accounting)     },
+         { "CPUShares",               bus_property_append_ul,              "t",     offsetof(CGroupContext, cpu_shares)         },
+         { "BlockIOAccounting",       bus_property_append_bool,            "b",     offsetof(CGroupContext, blockio_accounting) },
+@@ -138,6 +139,38 @@ const BusProperty bus_cgroup_context_properties[] = {
+         {}
+ };
+ 
++static int bus_cgroup_set_transient_property(
++                Unit *u,
++                CGroupContext *c,
++                const char *name,
++                DBusMessageIter *i,
++                UnitSetPropertiesMode mode,
++                DBusError *error) {
++
++        assert(u);
++        assert(c);
++        assert(name);
++        assert(i);
++
++        if (streq(name, "Delegate")) {
++
++                if (dbus_message_iter_get_arg_type(i) != DBUS_TYPE_BOOLEAN)
++                        return -EINVAL;
++
++                if (mode != UNIT_CHECK) {
++                        dbus_bool_t b;
++
++                        dbus_message_iter_get_basic(i, &b);
++                        c->delegate = b;
++                        unit_write_drop_in_private(u, mode, name, b ? "Delegate=yes" : "Delegate=no");
++                }
++
++                return 1;
++        }
++
++        return 0;
++}
++
+ int bus_cgroup_set_property(
+                 Unit *u,
+                 CGroupContext *c,
+@@ -550,5 +583,12 @@ int bus_cgroup_set_property(
+                 return 1;
+         }
+ 
++        if (u->transient && u->load_state == UNIT_STUB) {
++                int r;
++                r = bus_cgroup_set_transient_property(u, c, name, i, mode, error);
++                if (r != 0)
++                        return r;
++        }
++
+         return 0;
+ }
+diff --git a/src/core/execute.c b/src/core/execute.c
+index 06713cc..d814c39 100644
+--- a/src/core/execute.c
++++ b/src/core/execute.c
+@@ -1042,6 +1042,7 @@ int exec_spawn(ExecCommand *command,
+                bool selinux_context_net,
+                CGroupControllerMask cgroup_supported,
+                const char *cgroup_path,
++               bool cgroup_delegate,
+                const char *unit_id,
+                int idle_pipe[4],
+                pid_t *ret) {
+@@ -1306,8 +1307,10 @@ int exec_spawn(ExecCommand *command,
+                         }
+                 }
+ 
+-#ifdef HAVE_PAM
+-                if (cgroup_path && context->user && context->pam_name) {
++                /* If delegation is enabled we'll pass ownership of the cgroup
++                 * (but only in systemd's own controller hierarchy!) to the
++                 * user of the new process. */
++               if (cgroup_path && context->user && cgroup_delegate) {
+                         err = cg_set_task_access(SYSTEMD_CGROUP_CONTROLLER, cgroup_path, 0644, uid, gid);
+                         if (err < 0) {
+                                 r = EXIT_CGROUP;
+@@ -1321,7 +1324,6 @@ int exec_spawn(ExecCommand *command,
+                                 goto fail_child;
+                         }
+                 }
+-#endif
+ 
+                 if (apply_permissions) {
+                         err = enforce_groups(context, username, gid);
+@@ -2116,6 +2118,21 @@ void exec_context_dump(ExecContext *c, FILE* f, const char *prefix) {
+ 
+ }
+ 
++bool exec_context_maintains_privileges(ExecContext *c) {
++        assert(c);
++
++        /* Returns true if the process forked off would run under
++         * an unchanged UID or as root. */
++
++        if (!c->user)
++                return true;
++
++        if (streq(c->user, "root") || streq(c->user, "0"))
++                return true;
++
++        return false;
++}
++
+ void exec_status_start(ExecStatus *s, pid_t pid) {
+         assert(s);
+ 
+diff --git a/src/core/execute.h b/src/core/execute.h
+index b66bd5f..03afdf3 100644
+--- a/src/core/execute.h
++++ b/src/core/execute.h
+@@ -177,6 +177,7 @@ int exec_spawn(ExecCommand *command,
+                bool selinux_context_net,
+                CGroupControllerMask cgroup_mask,
+                const char *cgroup_path,
++               bool cgroup_delegate,
+                const char *unit_id,
+                int pipe_fd[2],
+                pid_t *ret);
+@@ -203,6 +204,7 @@ void exec_context_tty_reset(const ExecContext *context);
+ int exec_context_load_environment(const ExecContext *c, const char *unit_id, char ***l);
+ 
+ bool exec_context_may_touch_console(ExecContext *c);
++bool exec_context_maintains_privileges(ExecContext *c);
+ void exec_context_serialize(const ExecContext *c, Unit *u, FILE *f);
+ 
+ void exec_status_start(ExecStatus *s, pid_t pid);
+diff --git a/src/core/load-fragment-gperf.gperf.m4 b/src/core/load-fragment-gperf.gperf.m4
+index ee7cd5d..c6eb757 100644
+--- a/src/core/load-fragment-gperf.gperf.m4
++++ b/src/core/load-fragment-gperf.gperf.m4
+@@ -96,7 +96,8 @@ $1.BlockIOAccounting,            config_parse_bool,                  0,
+ $1.BlockIOWeight,                config_parse_blockio_weight,        0,                             offsetof($1, cgroup_context)
+ $1.BlockIODeviceWeight,          config_parse_blockio_device_weight, 0,                             offsetof($1, cgroup_context)
+ $1.BlockIOReadBandwidth,         config_parse_blockio_bandwidth,     0,                             offsetof($1, cgroup_context)
+-$1.BlockIOWriteBandwidth,        config_parse_blockio_bandwidth,     0,                             offsetof($1, cgroup_context)'
++$1.BlockIOWriteBandwidth,        config_parse_blockio_bandwidth,     0,                             offsetof($1, cgroup_context)
++$1.Delegate,                     config_parse_bool,                  0,                             offsetof($1, cgroup_context.delegate)'
+ )m4_dnl
+ Unit.Description,                config_parse_unit_string_printf,    0,                             offsetof(Unit, description)
+ Unit.Documentation,              config_parse_documentation,         0,                             offsetof(Unit, documentation)
+diff --git a/src/core/mount.c b/src/core/mount.c
+index bbceb92..a9cd28b 100644
+--- a/src/core/mount.c
++++ b/src/core/mount.c
+@@ -794,6 +794,7 @@ static int mount_spawn(Mount *m, ExecCommand *c, pid_t *_pid) {
+                        false,
+                        UNIT(m)->manager->cgroup_supported,
+                        UNIT(m)->cgroup_path,
++                       m->cgroup_context.delegate,
+                        UNIT(m)->id,
+                        NULL,
+                        &pid);
+diff --git a/src/core/service.c b/src/core/service.c
+index 635a953..5fd69cf 100644
+--- a/src/core/service.c
++++ b/src/core/service.c
+@@ -1870,6 +1870,7 @@ static int service_spawn(
+                        s->socket_fd_selinux_context_net,
+                        UNIT(s)->manager->cgroup_supported,
+                        path,
++                       s->cgroup_context.delegate,
+                        UNIT(s)->id,
+                        s->type == SERVICE_IDLE ? UNIT(s)->manager->idle_pipe : NULL,
+                        &pid);
+diff --git a/src/core/socket.c b/src/core/socket.c
+index 1a91700..f7fffbe 100644
+--- a/src/core/socket.c
++++ b/src/core/socket.c
+@@ -1237,6 +1237,7 @@ static int socket_spawn(Socket *s, ExecCommand *c, pid_t *_pid) {
+                        false,
+                        UNIT(s)->manager->cgroup_supported,
+                        UNIT(s)->cgroup_path,
++                       s->cgroup_context.delegate,
+                        UNIT(s)->id,
+                        NULL,
+                        &pid);
+diff --git a/src/core/swap.c b/src/core/swap.c
+index 36ef88b..152a080 100644
+--- a/src/core/swap.c
++++ b/src/core/swap.c
+@@ -592,6 +592,7 @@ static int swap_spawn(Swap *s, ExecCommand *c, pid_t *_pid) {
+                        false,
+                        UNIT(s)->manager->cgroup_supported,
+                        UNIT(s)->cgroup_path,
++                       s->cgroup_context.delegate,
+                        UNIT(s)->id,
+                        NULL,
+                        &pid);
+diff --git a/src/machine/machined-dbus.c b/src/machine/machined-dbus.c
+index 22caadf..0cebdc5 100644
+--- a/src/machine/machined-dbus.c
++++ b/src/machine/machined-dbus.c
+@@ -739,9 +739,11 @@ int manager_start_scope(
+         DBusMessageIter iter, sub, sub2, sub3, sub4;
+         const char *timeout_stop_property = "TimeoutStopUSec";
+         const char *pids_property = "PIDs";
++        const char *delegate_property = "Delegate";
+         uint64_t timeout = 500 * USEC_PER_MSEC;
+         const char *fail = "fail";
+         uint32_t u;
++        dbus_bool_t b = 1;
+         int r;
+ 
+         assert(manager);
+@@ -814,6 +816,14 @@ int manager_start_scope(
+             !dbus_message_iter_close_container(&sub, &sub2))
+                 return log_oom();
+ 
++        if (!dbus_message_iter_open_container(&sub, DBUS_TYPE_STRUCT, NULL, &sub2) ||
++            !dbus_message_iter_append_basic(&sub2, DBUS_TYPE_STRING, &delegate_property) ||
++            !dbus_message_iter_open_container(&sub2, DBUS_TYPE_VARIANT, "b", &sub3) ||
++            !dbus_message_iter_append_basic(&sub3, DBUS_TYPE_BOOLEAN, &b) ||
++            !dbus_message_iter_close_container(&sub2, &sub3) ||
++            !dbus_message_iter_close_container(&sub, &sub2))
++                return log_oom();
++
+         if (more_properties) {
+                 r = copy_many_fields(&sub, more_properties);
+                 if (r < 0)
+diff --git a/src/shared/cgroup-util.h b/src/shared/cgroup-util.h
+index 0963450..0608b9a 100644
+--- a/src/shared/cgroup-util.h
++++ b/src/shared/cgroup-util.h
+@@ -34,7 +34,8 @@ typedef enum CGroupControllerMask {
+         CGROUP_CPUACCT = 2,
+         CGROUP_BLKIO = 4,
+         CGROUP_MEMORY = 8,
+-        CGROUP_DEVICE = 16
++        CGROUP_DEVICE = 16,
++        _CGROUP_CONTROLLER_MASK_ALL = 31
+ } CGroupControllerMask;
+ 
+ /*
+diff --git a/units/systemd-nspawn@.service.in b/units/systemd-nspawn@.service.in
+index 8e00736..bdfa89f 100644
+--- a/units/systemd-nspawn@.service.in
++++ b/units/systemd-nspawn@.service.in
+@@ -12,6 +12,7 @@ Documentation=man:systemd-nspawn(1)
+ [Service]
+ ExecStart=@bindir@/systemd-nspawn -bjD /var/lib/container/%i
+ Type=notify
++Delegate=yes
+ 
+ [Install]
+ WantedBy=multi-user.target

@@ -1,0 +1,209 @@
+From 3c567125dd6e3f0f3a460d79701554ea4198c07b Mon Sep 17 00:00:00 2001
+From: Lukas Nykryn <lnykryn@redhat.com>
+Date: Thu, 18 Dec 2014 14:13:26 +0100
+Subject: [PATCH] mount: monitor for utab changes with inotify
+
+Parsing the mount table with libmount races against the mount command,
+which will handle the actual mounting before updating utab.  This means
+the poll event on /proc/self/mountinfo can kick of a reparse in systemd
+before the utab information is available.
+
+This change adds in an additional event source using inotify to watch
+for changes to utab.  It only watches for IN_MOVED_TO events, matching
+libmount behavior of always overwriting this file using rename(2).
+
+This does add a second pass through the mount table parsing when utab is
+updated.
+
+(based-on befb6d54948480f836d53d633bef27e3505818c1)
+
+Related: #1161417
+---
+ src/core/manager.c |  3 ++-
+ src/core/manager.h |  2 ++
+ src/core/mount.c   | 79 +++++++++++++++++++++++++++++++++++++++++++++++++++---
+ src/core/mount.h   |  2 +-
+ src/shared/util.h  |  7 +++++
+ 5 files changed, 88 insertions(+), 5 deletions(-)
+
+diff --git a/src/core/manager.c b/src/core/manager.c
+index e48ea36..b0772ba 100644
+--- a/src/core/manager.c
++++ b/src/core/manager.c
+@@ -1732,8 +1732,9 @@ static int process_event(Manager *m, struct epoll_event *ev) {
+         }
+ 
+         case WATCH_MOUNT:
++        case WATCH_MOUNT_UTAB:
+                 /* Some mount table change, intended for the mount subsystem */
+-                mount_fd_event(m, ev->events);
++                mount_fd_event(m, w, ev->events);
+                 break;
+ 
+         case WATCH_SWAP:
+diff --git a/src/core/manager.h b/src/core/manager.h
+index 0133ea5..af66598 100644
+--- a/src/core/manager.h
++++ b/src/core/manager.h
+@@ -58,6 +58,7 @@ enum WatchType {
+         WATCH_UNIT_TIMER,
+         WATCH_JOB_TIMER,
+         WATCH_MOUNT,
++        WATCH_MOUNT_UTAB,
+         WATCH_SWAP,
+         WATCH_UDEV,
+         WATCH_DBUS_WATCH,
+@@ -178,6 +179,7 @@ struct Manager {
+         /* Data specific to the mount subsystem */
+         FILE *proc_self_mountinfo;
+         Watch mount_watch;
++        Watch mount_watch_utab;
+ 
+         /* Data specific to the swap filesystem */
+         FILE *proc_swaps;
+diff --git a/src/core/mount.c b/src/core/mount.c
+index d78269c..efa46da 100644
+--- a/src/core/mount.c
++++ b/src/core/mount.c
+@@ -25,6 +25,7 @@
+ #include <sys/epoll.h>
+ #include <signal.h>
+ #include <libmount.h>
++#include <sys/inotify.h>
+ 
+ #include "manager.h"
+ #include "unit.h"
+@@ -1619,6 +1620,11 @@ static void mount_shutdown(Manager *m) {
+                 fclose(m->proc_self_mountinfo);
+                 m->proc_self_mountinfo = NULL;
+         }
++
++        if (m->mount_watch_utab.fd) {
++                close_nointr(m->mount_watch_utab.fd);
++                m->mount_watch_utab.fd=0;
++        }
+ }
+ 
+ static int mount_enumerate(Manager *m) {
+@@ -1644,6 +1650,35 @@ static int mount_enumerate(Manager *m) {
+                         return -errno;
+         }
+ 
++        if (!m->mount_watch_utab.fd) {
++
++                struct epoll_event ev = {
++                        .events = EPOLLIN,
++                        .data.ptr = &m->mount_watch_utab,
++                };
++
++                m->mount_watch_utab.fd = inotify_init1(IN_NONBLOCK|IN_CLOEXEC);
++                if (m->mount_watch_utab.fd < 0) {
++                        r = -errno;
++                        goto fail;
++                }
++
++                (void) mkdir_p_label("/run/mount", 0755);
++
++                r = inotify_add_watch(m->mount_watch_utab.fd, "/run/mount", IN_MOVED_TO);
++                if (r < 0) {
++                        r = -errno;
++                        goto fail;
++                }
++
++                m->mount_watch_utab.type = WATCH_MOUNT_UTAB;
++
++                if (epoll_ctl(m->epoll_fd, EPOLL_CTL_ADD, m->mount_watch_utab.fd, &ev) < 0) {
++                        r = -errno;
++                        goto fail;
++                }
++        }
++
+         r = mount_load_proc_self_mountinfo(m, false);
+         if (r < 0)
+                 goto fail;
+@@ -1655,16 +1690,54 @@ fail:
+         return r;
+ }
+ 
+-void mount_fd_event(Manager *m, int events) {
++void mount_fd_event(Manager *m, Watch *w, int events) {
+         Unit *u;
+         int r;
+ 
+         assert(m);
+-        assert(events & EPOLLPRI);
++        assert(w);
++        assert(events & (EPOLLPRI|EPOLLIN));
+ 
+         /* The manager calls this for every fd event happening on the
+          * /proc/self/mountinfo file, which informs us about mounting
+-         * table changes */
++         * table changes
++         * This may also be called for /run/mount events */
++
++        if (w->type == WATCH_MOUNT_UTAB) {
++                bool rescan = false;
++
++                /* FIXME: We *really* need to replace this with
++                 * libmount's own API for this, we should not hardcode
++                 * internal behaviour of libmount here. */
++
++                for (;;) {
++                        uint8_t buffer[INOTIFY_EVENT_MAX] _alignas_(struct inotify_event);
++                        struct inotify_event *e;
++                        ssize_t l;
++
++                        l = read(w->fd, buffer, sizeof(buffer));
++                        if (l < 0) {
++                                if (errno == EAGAIN || errno == EINTR)
++                                        break;
++
++                                log_error("Failed to read utab inotify: %s", strerror(errno));
++                                break;
++                        }
++
++                        FOREACH_INOTIFY_EVENT(e, buffer, l) {
++                                /* Only care about changes to utab,
++                                 * but we have to monitor the
++                                 * directory to reliably get
++                                 * notifications about when utab is
++                                 * replaced using rename(2) */
++                                if ((e->mask & IN_Q_OVERFLOW) || streq(e->name, "utab"))
++                                        rescan = true;
++                        }
++                }
++
++                if (!rescan)
++                        return;
++        }
+ 
+         r = mount_load_proc_self_mountinfo(m, true);
+         if (r < 0) {
+diff --git a/src/core/mount.h b/src/core/mount.h
+index 7cd4320..df0e541 100644
+--- a/src/core/mount.h
++++ b/src/core/mount.h
+@@ -113,7 +113,7 @@ struct Mount {
+ 
+ extern const UnitVTable mount_vtable;
+ 
+-void mount_fd_event(Manager *m, int events);
++void mount_fd_event(Manager *m, Watch *w, int events);
+ 
+ const char* mount_state_to_string(MountState i) _const_;
+ MountState mount_state_from_string(const char *s) _pure_;
+diff --git a/src/shared/util.h b/src/shared/util.h
+index d68f385..c5ef8b6 100644
+--- a/src/shared/util.h
++++ b/src/shared/util.h
+@@ -791,3 +791,10 @@ static inline void qsort_safe(void *base, size_t nmemb, size_t size,
+                 qsort(base, nmemb, size, compar);
+         }
+ }
++
++#define INOTIFY_EVENT_MAX (sizeof(struct inotify_event) + NAME_MAX + 1)
++
++#define FOREACH_INOTIFY_EVENT(e, buffer, sz) \
++        for ((e) = (struct inotify_event*) (buffer);    \
++             (uint8_t*) (e) < (uint8_t*) (buffer) + (sz); \
++             (e) = (struct inotify_event*) ((uint8_t*) (e) + sizeof(struct inotify_event) + (e)->len))
