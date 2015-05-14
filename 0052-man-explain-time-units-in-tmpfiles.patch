@@ -1,7 +1,7 @@
 From 6995221c988db99faa5de5ed948466e1982d9d9d Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Mon, 23 Feb 2015 18:59:17 -0500
-Subject: [PATCH 052/134] man: explain time units in tmpfiles
+Subject: [PATCH] man: explain time units in tmpfiles
 
 https://bugzilla.redhat.com/show_bug.cgi?id=1195294
 (cherry picked from commit 00c53f4283ca41878a84b370840a84760b00d46e)
@@ -51,6 +51,3 @@ index 8815bf9..4bd0fcf 100644
        </para>
  
        <para>When the age is set to zero, the files are cleaned
--- 
-1.8.3.1
-

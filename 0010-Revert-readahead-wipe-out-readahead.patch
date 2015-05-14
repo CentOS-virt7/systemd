@@ -1,7 +1,7 @@
 From fff80c5a2aba519d1c58a1bfc7c0fa96b1e4c30c Mon Sep 17 00:00:00 2001
 From: Lukas Nykryn <lnykryn@redhat.com>
 Date: Wed, 19 Nov 2014 12:17:19 +0100
-Subject: [PATCH 010/134] Revert "readahead: wipe out readahead"
+Subject: [PATCH] Revert "readahead: wipe out readahead"
 
 This reverts commit d6bc8348d5be8576a475ac8ced2b0146e60fb71f.
 
@@ -3374,6 +3374,3 @@ index 6160361..18faa63 100644
  Before=sysinit.target shutdown.target
  ConditionPathExists=/dev/tty0
  
--- 
-1.8.3.1
-

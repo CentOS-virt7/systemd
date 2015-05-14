@@ -1,7 +1,7 @@
 From fc9d7a3891dc293cccd4e127cfb1e2355f4e93da Mon Sep 17 00:00:00 2001
 From: Tom Gundersen <teg@jklm.no>
 Date: Fri, 13 Mar 2015 15:49:07 +0100
-Subject: [PATCH 100/134] sd-rtnl: never set serial to 0
+Subject: [PATCH] sd-rtnl: never set serial to 0
 
 In the unlikely event that we wrap the counter, skip 0 as this is used
 for broadcasts.
@@ -26,6 +26,3 @@ index 7cdcc5d..5df39e1 100644
  
          rtnl_message_seal(m);
  
--- 
-1.8.3.1
-

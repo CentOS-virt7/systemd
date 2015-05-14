@@ -1,7 +1,7 @@
 From a0def1365a2c50f7e1d4ec14c104bfe5cbd8bf8a Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Fri, 13 Mar 2015 21:22:39 -0500
-Subject: [PATCH 102/134] man: fix a bunch of links
+Subject: [PATCH] man: fix a bunch of links
 
 All hail linkchecker!
 
@@ -180,7 +180,7 @@ index aeacc57..3e249ad 100644
        <citerefentry project='man-pages'><refentrytitle>mke2fs</refentrytitle><manvolnum>8</manvolnum></citerefentry>
      </para>
 diff --git a/man/file-hierarchy.xml b/man/file-hierarchy.xml
-index e9c894f..364e1307 100644
+index e9c894f..364e130 100644
 --- a/man/file-hierarchy.xml
 +++ b/man/file-hierarchy.xml
 @@ -397,7 +397,7 @@
@@ -1451,6 +1451,3 @@ index 17bea8b..27196d4 100644
          <citerefentry><refentrytitle>systemd-localed.service</refentrytitle><manvolnum>8</manvolnum></citerefentry>
        </para>
    </refsect1>
--- 
-1.8.3.1
-

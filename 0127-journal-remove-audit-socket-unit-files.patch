@@ -1,7 +1,7 @@
 From c45af40e61ab34508862f9e668f47cc6eb2f6d45 Mon Sep 17 00:00:00 2001
 From: Lukas Nykryn <lnykryn@redhat.com>
 Date: Thu, 16 Apr 2015 10:50:10 +0200
-Subject: [PATCH 127/134] journal: remove audit socket unit-files
+Subject: [PATCH] journal: remove audit socket unit-files
 
 ---
  Makefile.am                         |  6 ++----
@@ -78,6 +78,3 @@ index 87704bb..1bcc290 100644
  ExecStart=@rootlibexecdir@/systemd-journald
  Restart=always
  RestartSec=0
--- 
-1.8.3.1
-

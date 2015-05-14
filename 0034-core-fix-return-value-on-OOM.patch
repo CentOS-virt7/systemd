@@ -1,7 +1,7 @@
 From 8cbaef2f9e08dc14e827445de76072e31aa6cce7 Mon Sep 17 00:00:00 2001
 From: Thomas Hindoe Paaboel Andersen <phomes@gmail.com>
 Date: Sat, 28 Feb 2015 23:39:55 +0100
-Subject: [PATCH 034/134] core: fix return value on OOM
+Subject: [PATCH] core: fix return value on OOM
 
 (cherry picked from commit c43b2132f37264600cc26e07c8d85dfdd6c969f0)
 ---
@@ -21,6 +21,3 @@ index 75b9a46..1cc103c 100644
                  } else
                          r = unit_set_description(u, model);
          } else
--- 
-1.8.3.1
-

@@ -1,7 +1,7 @@
 From fb1115e5738b798bb99e5a699838395ca463e29d Mon Sep 17 00:00:00 2001
 From: Michal Schmidt <mschmidt@redhat.com>
 Date: Tue, 17 Feb 2015 10:33:01 +0100
-Subject: [PATCH 017/134] journal-remote: fix certificate status memory leak
+Subject: [PATCH] journal-remote: fix certificate status memory leak
 
 The output of gnutls_certificate_verification_status_print() needs to be
 freed.
@@ -26,6 +26,3 @@ index 34d9337..de9c6ab 100644
  
          return status == 0 ? 0 : -EPERM;
  }
--- 
-1.8.3.1
-

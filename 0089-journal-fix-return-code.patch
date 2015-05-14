@@ -1,7 +1,7 @@
 From 185e6b251907bdf6adc63866f38722e9fb3d3715 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Mon, 9 Mar 2015 17:46:30 -0400
-Subject: [PATCH 089/134] journal: fix return code
+Subject: [PATCH] journal: fix return code
 
 Introduced in fa6ac76083b8ff.
 
@@ -29,6 +29,3 @@ index 24c49b9..f500568 100644
  
          f->header = h;
  
--- 
-1.8.3.1
-

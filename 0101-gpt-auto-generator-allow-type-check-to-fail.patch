@@ -1,7 +1,7 @@
 From e2353e7c13808e47efb844f8fb10b7aa2142e619 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Fri, 13 Mar 2015 21:10:13 -0500
-Subject: [PATCH 101/134] gpt-auto-generator: allow type check to fail
+Subject: [PATCH] gpt-auto-generator: allow type check to fail
 
 add_mount() is OK with unknow file type, but we have to initalize
 the variable to NULL not to pass garbage on error.
@@ -43,6 +43,3 @@ index cceeeb8..00a2141 100644
  
          return add_mount(
                          id,
--- 
-1.8.3.1
-

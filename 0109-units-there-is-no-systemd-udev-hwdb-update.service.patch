@@ -1,7 +1,7 @@
 From e2d3644c855b9262508448abc5044e3e21103680 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Sat, 14 Mar 2015 17:56:13 -0400
-Subject: [PATCH 109/134] units: there is no systemd-udev-hwdb-update.service
+Subject: [PATCH] units: there is no systemd-udev-hwdb-update.service
 
 (cherry picked from commit d99ce93383028f08470b6d334bc1a31ca8d16b22)
 ---
@@ -21,6 +21,3 @@ index f6acd6f..2791f73 100644
  Before=sysinit.target
  ConditionPathIsReadWrite=/sys
  
--- 
-1.8.3.1
-

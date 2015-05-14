@@ -1,8 +1,7 @@
 From 0dd3b68d80bd32ecc5db65d634072390dad581aa Mon Sep 17 00:00:00 2001
 From: Richard Maw <richard.maw@codethink.co.uk>
 Date: Thu, 12 Mar 2015 18:14:58 +0000
-Subject: [PATCH 095/134] networkd: Begin with serial number 1 for netlink
- requests
+Subject: [PATCH] networkd: Begin with serial number 1 for netlink requests
 
 "Notifications are of informal nature and no reply is expected, therefore the
 sequence number is typically set to 0."[1]
@@ -44,6 +43,3 @@ index ae49c77..7cdcc5d 100644
          *ret = rtnl;
          rtnl = NULL;
  
--- 
-1.8.3.1
-

@@ -1,8 +1,7 @@
 From d7ca3b22fce0f97fe10a7abe6e0edc5de785ef98 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Sat, 21 Mar 2015 17:40:20 -0400
-Subject: [PATCH 129/134] timedated: flip internal status after executing
- operation
+Subject: [PATCH] timedated: flip internal status after executing operation
 
 timedated would set the internal status before calling out to systemd to do
 the actual change. When the operation was refused because of a SELinux denial,
@@ -37,6 +36,3 @@ index 66097ef..c3113b0 100644
          log_info("Set NTP to %s", c->use_ntp ? "enabled" : "disabled");
  
          sd_bus_emit_properties_changed(bus, "/org/freedesktop/timedate1", "org.freedesktop.timedate1", "NTP", NULL);
--- 
-1.8.3.1
-

@@ -1,7 +1,7 @@
 From ec79f8b26d793d2e2ee1705ca86437049e0153c6 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Fri, 13 Mar 2015 21:24:30 -0500
-Subject: [PATCH 103/134] man: link to fd.o for dbus stuff
+Subject: [PATCH] man: link to fd.o for dbus stuff
 
 (cherry picked from commit 3b5cfcdb580f5b766ff7fb1a2839bd37d74a98de)
 ---
@@ -88,6 +88,3 @@ index 22bad3e..182717f 100644
        <citerefentry><refentrytitle>systemd-firstboot</refentrytitle><manvolnum>1</manvolnum></citerefentry>
      </para>
    </refsect1>
--- 
-1.8.3.1
-

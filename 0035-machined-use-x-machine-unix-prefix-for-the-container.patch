@@ -1,8 +1,8 @@
 From e02e6845a4c4abe7d79df4305810703af5e6ec21 Mon Sep 17 00:00:00 2001
 From: Benjamin Franzke <benjaminfranzke@googlemail.com>
 Date: Thu, 19 Feb 2015 20:47:28 +0100
-Subject: [PATCH 035/134] machined: use x-machine-unix prefix for the container
- bus on dbus1
+Subject: [PATCH] machined: use x-machine-unix prefix for the container bus on
+ dbus1
 
 This fixes "machinectl login" on systems configured with --disable-kdbus.
 
@@ -28,6 +28,3 @@ index b46f0a8..b0f0f66 100644
  #endif
          if (!container_bus->address)
                  return -ENOMEM;
--- 
-1.8.3.1
-

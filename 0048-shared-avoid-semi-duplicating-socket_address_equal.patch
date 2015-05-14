@@ -1,7 +1,7 @@
 From ea81ddfdc0eadfb62e28ed998d33c5e1d3b3abab Mon Sep 17 00:00:00 2001
 From: Michal Schmidt <mschmidt@redhat.com>
 Date: Fri, 20 Feb 2015 02:13:03 +0100
-Subject: [PATCH 048/134] shared: avoid semi-duplicating socket_address_equal()
+Subject: [PATCH] shared: avoid semi-duplicating socket_address_equal()
 
 Just call socket_address_equal() from socket_address_matches_fd()
 instead of implementing similar comparing of addresses.
@@ -40,6 +40,3 @@ index c31f60e..deecce8 100644
  }
  
  int sockaddr_pretty(const struct sockaddr *_sa, socklen_t salen, bool translate_ipv6, char **ret) {
--- 
-1.8.3.1
-

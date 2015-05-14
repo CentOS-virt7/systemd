@@ -1,8 +1,7 @@
 From e411ef694a09d001cdb97e139af6884b01be4aba Mon Sep 17 00:00:00 2001
 From: Benjamin Franzke <benjaminfranzke@googlemail.com>
 Date: Thu, 19 Feb 2015 13:10:18 +0100
-Subject: [PATCH 045/134] man: add newlines to the pull-raw example in
- machinectl(1)
+Subject: [PATCH] man: add newlines to the pull-raw example in machinectl(1)
 
 They were removed in commit 798d3a52 ("Reindent man pages to 2ch").
 
@@ -33,6 +32,3 @@ index 9b07af4..640cb8b 100644
  
        <para>This downloads the specified <filename>.raw</filename>
        image with verification disabled. Then a shell is opened in it
--- 
-1.8.3.1
-

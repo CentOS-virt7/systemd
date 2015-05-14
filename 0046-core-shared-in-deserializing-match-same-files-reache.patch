@@ -1,8 +1,8 @@
 From 5d66d4942090a971de8df2c3de9ce143a208eb37 Mon Sep 17 00:00:00 2001
 From: Michal Schmidt <mschmidt@redhat.com>
 Date: Thu, 19 Feb 2015 23:12:38 +0100
-Subject: [PATCH 046/134] core, shared: in deserializing, match same files
- reached via different paths
+Subject: [PATCH] core, shared: in deserializing, match same files reached via
+ different paths
 
 When dbus.socket is updated like this:
 -ListenStream=/var/run/dbus/system_bus_socket
@@ -131,6 +131,3 @@ index c6f6487..c278d6f 100644
                  if (a->protocol != b->protocol)
                          return false;
  
--- 
-1.8.3.1
-

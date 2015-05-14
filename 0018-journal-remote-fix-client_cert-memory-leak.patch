@@ -1,7 +1,7 @@
 From 0488761858a3bfbf06a25fbf3bc0e28fdfc28234 Mon Sep 17 00:00:00 2001
 From: Michal Schmidt <mschmidt@redhat.com>
 Date: Tue, 17 Feb 2015 10:36:57 +0100
-Subject: [PATCH 018/134] journal-remote: fix client_cert memory leak
+Subject: [PATCH] journal-remote: fix client_cert memory leak
 
 Found by Valgrind while testing the previous memory leak fix.
 
@@ -30,6 +30,3 @@ index de9c6ab..a95fff1 100644
          _cleanup_free_ char *buf = NULL;
          int r;
  
--- 
-1.8.3.1
-

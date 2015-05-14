@@ -1,8 +1,8 @@
 From 91cb89c1b79ef3c475d91319edb0c052cb9f2724 Mon Sep 17 00:00:00 2001
 From: Lukas Nykryn <lnykryn@redhat.com>
 Date: Wed, 15 Apr 2015 13:52:02 +0200
-Subject: [PATCH 125/134] Revert "journald: allow restarting journald without
- losing stream connections"
+Subject: [PATCH] Revert "journald: allow restarting journald without losing
+ stream connections"
 
 This reverts commit 13790add4bf648fed816361794d8277a75253410.
 ---
@@ -562,6 +562,3 @@ index a3540c6..87704bb 100644
  
  # Increase the default a bit in order to allow many simultaneous
  # services being run since we keep one fd open per service. Also, when
--- 
-1.8.3.1
-

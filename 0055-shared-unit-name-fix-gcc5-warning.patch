@@ -1,7 +1,7 @@
 From 10cfa6f617fdc2b9d85823163b4445f5ae9058c5 Mon Sep 17 00:00:00 2001
 From: Daniel Mack <daniel@zonque.org>
 Date: Tue, 24 Feb 2015 16:18:43 +0100
-Subject: [PATCH 055/134] shared/unit-name: fix gcc5 warning
+Subject: [PATCH] shared/unit-name: fix gcc5 warning
 
 Fix the following gcc5 warning:
 
@@ -29,6 +29,3 @@ index 21b6691..f728af4 100644
                          return false;
          }
  
--- 
-1.8.3.1
-

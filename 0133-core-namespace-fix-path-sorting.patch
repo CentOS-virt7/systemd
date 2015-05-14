@@ -1,7 +1,7 @@
 From 0881ff2b6842798836faef3a55a04a3e6e0cbb66 Mon Sep 17 00:00:00 2001
 From: Michal Schmidt <mschmidt@redhat.com>
 Date: Mon, 16 Mar 2015 22:04:21 +0100
-Subject: [PATCH 133/134] core/namespace: fix path sorting
+Subject: [PATCH] core/namespace: fix path sorting
 
 The comparison function we use for qsorting paths is overly indifferent.
 Consider these 3 paths for sorting:
@@ -56,6 +56,3 @@ index 4fecd32..d4f1c86 100644
  }
  
  static void drop_duplicates(BindMount *m, unsigned *n) {
--- 
-1.8.3.1
-

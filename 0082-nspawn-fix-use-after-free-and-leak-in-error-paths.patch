@@ -1,7 +1,7 @@
 From 28b5692e9ab3dbb07e4d6b8e44b370637c04ba86 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Sat, 7 Mar 2015 14:19:20 -0500
-Subject: [PATCH 082/134] nspawn: fix use-after-free and leak in error paths
+Subject: [PATCH] nspawn: fix use-after-free and leak in error paths
 
 CID #1257765.
 
@@ -38,6 +38,3 @@ index 7724df9..78bd584 100644
  
                          remove_subvol = true;
  
--- 
-1.8.3.1
-

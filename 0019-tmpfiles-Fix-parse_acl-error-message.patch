@@ -1,7 +1,7 @@
 From 3d9f88326fefe4bf8f5ed4b1210c6b563a3eecff Mon Sep 17 00:00:00 2001
 From: Martin Pitt <martin.pitt@ubuntu.com>
 Date: Tue, 17 Feb 2015 12:47:51 +0100
-Subject: [PATCH 019/134] tmpfiles: Fix parse_acl error message
+Subject: [PATCH] tmpfiles: Fix parse_acl error message
 
 parse_acl() returns the error instead of setting errno.
 
@@ -23,6 +23,3 @@ index c948d4d..88ba7e4 100644
                                    item->argument);
  #else
          log_warning_errno(ENOSYS, "ACLs are not supported. Ignoring");
--- 
-1.8.3.1
-

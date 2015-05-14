@@ -1,7 +1,7 @@
 From b72201257216f687bf3462ad7539612cccbbce75 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Tue, 3 Mar 2015 19:10:21 -0500
-Subject: [PATCH 067/134] Do not advertise .d snippets over main config file
+Subject: [PATCH] Do not advertise .d snippets over main config file
 
 For daemons which have a main configuration file, there's
 little reason for the administrator to use configuration snippets.
@@ -331,6 +331,3 @@ index fc3c6c4..b6a2ada 100644
  
  [Time]
  #NTP=
--- 
-1.8.3.1
-

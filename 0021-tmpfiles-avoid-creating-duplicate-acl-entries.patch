@@ -1,7 +1,7 @@
 From c7d4f7a5a6cef5a46f905141e2ac27da3c96d2b7 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Mon, 23 Feb 2015 23:19:54 -0500
-Subject: [PATCH 021/134] tmpfiles: avoid creating duplicate acl entries
+Subject: [PATCH] tmpfiles: avoid creating duplicate acl entries
 
 https://bugs.freedesktop.org/show_bug.cgi?id=89202
 https://bugs.debian.org/778656
@@ -126,6 +126,3 @@ index 90e88ff..fdb9006 100644
 +DEFINE_TRIVIAL_CLEANUP_FUNC(gid_t*, acl_free_gid_tp);
  
  #endif
--- 
-1.8.3.1
-

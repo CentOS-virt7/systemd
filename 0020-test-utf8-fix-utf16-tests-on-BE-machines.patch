@@ -1,7 +1,7 @@
 From c49cced2ef923522398695531363de2eb3940273 Mon Sep 17 00:00:00 2001
 From: Tom Gundersen <teg@jklm.no>
 Date: Wed, 18 Feb 2015 14:33:50 +0100
-Subject: [PATCH 020/134] test: utf8 - fix utf16 tests on BE machines
+Subject: [PATCH] test: utf8 - fix utf16 tests on BE machines
 
 (cherry picked from commit 502184de0f95d3a124d4d4c77ae7a88747a0fac2)
 ---
@@ -21,6 +21,3 @@ index befa385..346f852 100644
          const char utf8[] = { 'a', 'b', 'c', 0xf0, 0x90, 0x90, 0xb7, 0 };
  
          a = utf16_to_utf8(utf16, 14);
--- 
-1.8.3.1
-

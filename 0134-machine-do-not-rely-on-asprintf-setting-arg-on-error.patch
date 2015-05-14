@@ -1,7 +1,7 @@
 From 4e78db7126779a9f6432ead9a73cdab1087405bc Mon Sep 17 00:00:00 2001
 From: Lukas Nykryn <lnykryn@redhat.com>
 Date: Fri, 17 Apr 2015 15:12:00 +0200
-Subject: [PATCH 134/134] machine: do not rely on asprintf setting arg on error
+Subject: [PATCH] machine: do not rely on asprintf setting arg on error
 
 Strictly speaking, the output variable is undefined if asprintf fails.
 We use the return value not the arg everywhere, and should we do here.
@@ -42,6 +42,3 @@ index b0f0f66..624a99f 100644
          container_bus->bus_client = true;
          container_bus->trusted = false;
          container_bus->is_system = true;
--- 
-1.8.3.1
-

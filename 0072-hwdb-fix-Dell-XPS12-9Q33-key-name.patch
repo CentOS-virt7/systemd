@@ -1,7 +1,7 @@
 From e43361ab55a61ebfaf16e1c78be1bce1fdf84c67 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Wed, 4 Mar 2015 20:25:04 -0500
-Subject: [PATCH 072/134] hwdb: fix Dell XPS12 9Q33 key name
+Subject: [PATCH] hwdb: fix Dell XPS12 9Q33 key name
 
 https://bugs.freedesktop.org/show_bug.cgi?id=84437
 (cherry picked from commit 4f70555d76c90ffdc5a5e4f75bbc08b38022c911)
@@ -22,6 +22,3 @@ index 2cb9769..8890665 100644
  
  # Dell Latitude microphone mute
  keyboard:name:Dell WMI hotkeys:dmi:bvn*:bvr*:bd*:svnDell*:pnLatitude*
--- 
-1.8.3.1
-

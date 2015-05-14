@@ -1,7 +1,7 @@
 From e819659256d139cd5faebb5c0ca3ad4ad95ccb27 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Sat, 21 Mar 2015 11:31:16 -0400
-Subject: [PATCH 121/134] fstab-generator: ignore invalid swap priority
+Subject: [PATCH] fstab-generator: ignore invalid swap priority
 
 A failed priority is not something worth stopping boot over. Most people
 have only one swap device, in which case priority is irrelevant, and even
@@ -73,6 +73,3 @@ index 5662b5f..8e2f522 100644
          if (r < 0)
                  return r;
  
--- 
-1.8.3.1
-

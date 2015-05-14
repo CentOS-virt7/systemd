@@ -1,7 +1,7 @@
 From 434e13b009b4bd829c4ac827bdb53e3df61e5a6f Mon Sep 17 00:00:00 2001
 From: Lukas Nykryn <lnykryn@redhat.com>
 Date: Tue, 14 Apr 2015 17:11:48 +0200
-Subject: [PATCH 124/134] rules: bring back 80-net-name-slot.rules
+Subject: [PATCH] rules: bring back 80-net-name-slot.rules
 
 ---
  Makefile.am                  |  3 ++-
@@ -43,6 +43,3 @@ index 0000000..c5f1b38
 +NAME=="", ENV{ID_NET_NAME_PATH}!="", NAME="$env{ID_NET_NAME_PATH}"
 +
 +LABEL="net_name_slot_end"
--- 
-1.8.3.1
-

@@ -1,8 +1,8 @@
 From f1faa24b260222e70d38492e5e3f126700dbd9f8 Mon Sep 17 00:00:00 2001
 From: Lukas Nykryn <lnykryn@redhat.com>
 Date: Wed, 4 Mar 2015 16:10:36 +0100
-Subject: [PATCH 013/134] Revert "blkid: Warn when rejecting a superblock with
- a bad csum"
+Subject: [PATCH] Revert "blkid: Warn when rejecting a superblock with a bad
+ csum"
 
 This reverts commit d47f6ca5f9b7a0b400d8bdb050151a0284fb4bdb.
 ---
@@ -75,6 +75,3 @@ index 03e3dc2..8999583 100644
  
          /* If we are a partition then our parent passed on the root
           * partition UUID to us */
--- 
-1.8.3.1
-

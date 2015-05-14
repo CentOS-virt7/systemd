@@ -1,7 +1,7 @@
 From 31eb7c2966a9a52b57cc4ac1f678c9149b8e57ed Mon Sep 17 00:00:00 2001
 From: Kay Sievers <kay@vrfy.org>
 Date: Thu, 12 Mar 2015 18:34:23 +0100
-Subject: [PATCH 094/134] hwdb: update
+Subject: [PATCH] hwdb: update
 
 (cherry picked from commit b83cbcb7d95482baa588706227f01bbbe44b9d12)
 ---
@@ -3154,6 +3154,3 @@ index 94e0269..8867531 100644
  usb:v2C02*
   ID_VENDOR_FROM_DATABASE=Planex Communications
  
--- 
-1.8.3.1
-

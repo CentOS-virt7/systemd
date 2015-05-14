@@ -1,7 +1,7 @@
 From 467145adad739b0426501d2fd7ce1c0afe977e67 Mon Sep 17 00:00:00 2001
 From: Lukas Nykryn <lnykryn@redhat.com>
 Date: Thu, 16 Apr 2015 15:22:57 +0200
-Subject: [PATCH 130/134] timedated: fix enable/disable reversal
+Subject: [PATCH] timedated: fix enable/disable reversal
 
 The state was flipped later,
 but the enable/disable routine made use of the state to decide
@@ -128,6 +128,3 @@ index c3113b0..f875149 100644
  
          log_info("Set NTP to %s", c->use_ntp ? "enabled" : "disabled");
  
--- 
-1.8.3.1
-

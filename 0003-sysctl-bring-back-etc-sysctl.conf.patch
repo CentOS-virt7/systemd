@@ -1,7 +1,7 @@
 From d2deeea1d5aa1d13139b9e9f70c6655abb589530 Mon Sep 17 00:00:00 2001
 From: Harald Hoyer <harald@redhat.com>
 Date: Mon, 11 Nov 2013 11:17:57 +0100
-Subject: [PATCH 003/134] sysctl: bring back /etc/sysctl.conf
+Subject: [PATCH] sysctl: bring back /etc/sysctl.conf
 
 Read /etc/sysctl.conf as the last file, overwriting everything.
 ---
@@ -23,6 +23,3 @@ index 275a5b7..d007c93 100644
          }
  
          k = apply_all(sysctl_options);
--- 
-1.8.3.1
-

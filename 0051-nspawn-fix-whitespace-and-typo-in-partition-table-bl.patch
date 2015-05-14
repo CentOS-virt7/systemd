@@ -1,8 +1,7 @@
 From 3af8c723aebecb5d220fdb5b1fb80a097c366db1 Mon Sep 17 00:00:00 2001
 From: Jan Synacek <jsynacek@redhat.com>
 Date: Mon, 23 Feb 2015 15:22:40 +0100
-Subject: [PATCH 051/134] nspawn: fix whitespace and typo in partition table
- blurb
+Subject: [PATCH] nspawn: fix whitespace and typo in partition table blurb
 
 (cherry picked from commit 4aab5d0cbd979b2cccb88534f118bceaa86466d8)
 ---
@@ -22,6 +21,3 @@ index fb67251..7724df9 100644
          "0FC63DAF-8483-4772-8E79-3D69D8477DE4 or follow\n" \
          "    http://www.freedesktop.org/wiki/Specifications/DiscoverablePartitionsSpec/\n" \
          "to be bootable with systemd-nspawn."
--- 
-1.8.3.1
-

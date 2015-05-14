@@ -1,8 +1,8 @@
 From 9b5e05005e534fc7fb6dc56c94e3296bb17fe122 Mon Sep 17 00:00:00 2001
 From: Lukas Nykryn <lnykryn@redhat.com>
 Date: Fri, 6 Mar 2015 12:41:20 +0100
-Subject: [PATCH 014/134] journald-audit: exit gracefully in the case we can't
- join audit multicast group
+Subject: [PATCH] journald-audit: exit gracefully in the case we can't join
+ audit multicast group
 
 ---
  src/journal/journald-audit.c | 6 ++++--
@@ -25,6 +25,3 @@ index c2f1545..151097a 100644
          } else
                  fd_nonblock(s->audit_fd, 1);
  
--- 
-1.8.3.1
-

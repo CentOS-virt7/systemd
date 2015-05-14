@@ -1,7 +1,7 @@
 From 21511551c7d49424a202b25ffe76cf1371dfc0c1 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Sun, 1 Mar 2015 22:46:43 -0500
-Subject: [PATCH 062/134] build-sys: allow lto and FORTIFY_SOURCE with -O[sz]
+Subject: [PATCH] build-sys: allow lto and FORTIFY_SOURCE with -O[sz]
 
 https://bugs.freedesktop.org/show_bug.cgi?id=89382
 (cherry picked from commit 0289f2fb2a64df53b589b771f69c43126b029590)
@@ -29,6 +29,3 @@ index 9c25c3c..3201428 100644
          [CC_CHECK_FLAGS_APPEND([with_cppflags], [CPPFLAGS], [\
                 -Wp,-D_FORTIFY_SOURCE=2])],
          [AC_MSG_RESULT([skipping -D_FORTIFY_SOURCE, optimization not enabled])])
--- 
-1.8.3.1
-

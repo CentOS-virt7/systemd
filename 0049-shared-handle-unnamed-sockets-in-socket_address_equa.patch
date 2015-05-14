@@ -1,8 +1,7 @@
 From 394185c013c15e47ffa1bdc5948ac6010c329728 Mon Sep 17 00:00:00 2001
 From: Michal Schmidt <mschmidt@redhat.com>
 Date: Fri, 20 Feb 2015 02:25:16 +0100
-Subject: [PATCH 049/134] shared: handle unnamed sockets in
- socket_address_equal()
+Subject: [PATCH] shared: handle unnamed sockets in socket_address_equal()
 
 Make sure we don't inspect sun_path of unnamed sockets.
 Since we cannot know if two unnamed sockets' adresses refer to the same
@@ -28,6 +27,3 @@ index deecce8..a4e26b1 100644
                  if ((a->sockaddr.un.sun_path[0] == 0) != (b->sockaddr.un.sun_path[0] == 0))
                          return false;
  
--- 
-1.8.3.1
-

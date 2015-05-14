@@ -1,7 +1,7 @@
 From b4ea0d8280135b7eabb1bb70e24d62c86e065db3 Mon Sep 17 00:00:00 2001
 From: Hannes Reinecke <hare@suse.de>
 Date: Wed, 4 Mar 2015 16:32:17 +0100
-Subject: [PATCH 074/134] Allow up to 4096 simultaneous connections
+Subject: [PATCH] Allow up to 4096 simultaneous connections
 
 On large system we hit the limit on 512 simultaneous dbus
 connections, resulting in tons of annoying messages:
@@ -28,6 +28,3 @@ index 260775c..85b5174 100644
  
  static void destroy_bus(Manager *m, sd_bus **bus);
  
--- 
-1.8.3.1
-

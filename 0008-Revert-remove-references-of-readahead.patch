@@ -1,7 +1,7 @@
 From 1b83fbe90a241c6d5c4ab0dc8a3f97215fb277bf Mon Sep 17 00:00:00 2001
 From: Lukas Nykryn <lnykryn@redhat.com>
 Date: Wed, 19 Nov 2014 12:14:00 +0100
-Subject: [PATCH 008/134] Revert "remove references of readahead"
+Subject: [PATCH] Revert "remove references of readahead"
 
 This reverts commit 3b71c18d3e3906f8606c66bea98b327684394e61.
 ---
@@ -52,6 +52,3 @@ index 255a4f2..90b2c4b 100644
  * GC unreferenced jobs (such as .device jobs)
  
  * write blog stories about:
--- 
-1.8.3.1
-

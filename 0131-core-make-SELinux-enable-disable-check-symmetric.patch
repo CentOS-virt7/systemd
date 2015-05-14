@@ -1,7 +1,7 @@
 From bfd900a5a995e3bc342acd50ac816df6da37bf62 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Sat, 21 Mar 2015 18:50:10 -0400
-Subject: [PATCH 131/134] core: make SELinux enable/disable check symmetric
+Subject: [PATCH] core: make SELinux enable/disable check symmetric
 
 We'd use the generic check for disable, and a unit-file-specific one for enable.
 Use the more specific one both ways.
@@ -41,6 +41,3 @@ index 8ba665d..2bc37ba 100644
          if (r < 0)
                  return r;
  
--- 
-1.8.3.1
-

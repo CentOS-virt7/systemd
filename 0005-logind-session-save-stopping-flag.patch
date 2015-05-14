@@ -1,7 +1,7 @@
 From 932ae09a155ef463d99d4b4e7cf04aafbcd78a19 Mon Sep 17 00:00:00 2001
 From: Lukas Nykryn <lnykryn@redhat.com>
 Date: Wed, 2 Apr 2014 14:41:26 +0200
-Subject: [PATCH 005/134] logind-session: save stopping flag
+Subject: [PATCH] logind-session: save stopping flag
 
 Conflicts:
 	src/login/logind-session.c
@@ -61,6 +61,3 @@ index a02a537..d2e7b40 100644
          return r;
  }
  
--- 
-1.8.3.1
-

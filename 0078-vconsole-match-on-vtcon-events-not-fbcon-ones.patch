@@ -1,7 +1,7 @@
 From 5e6503d0d2efb5cbff945df42423640ffb138073 Mon Sep 17 00:00:00 2001
 From: Jan Engelhardt <jengelh@inai.de>
 Date: Tue, 24 Feb 2015 17:49:02 +0100
-Subject: [PATCH 078/134] vconsole: match on vtcon events, not fbcon ones
+Subject: [PATCH] vconsole: match on vtcon events, not fbcon ones
 
 I observe that upon loading of framebuffer drivers, I do not get the
 desired system font, but the kernel-level defaults (usually
@@ -37,6 +37,3 @@ index 0620096..35b9ad5 100644
 +# Each vtcon keeps its own state of fonts.
 +#
 +ACTION=="add", SUBSYSTEM=="vtconsole", KERNEL=="vtcon*", RUN+="@rootlibexecdir@/systemd-vconsole-setup"
--- 
-1.8.3.1
-

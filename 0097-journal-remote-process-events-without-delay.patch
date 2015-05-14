@@ -1,7 +1,7 @@
 From 47ac92420da9ecbffaf3aa0046d170be358639a2 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Fri, 13 Mar 2015 00:02:28 -0400
-Subject: [PATCH 097/134] journal-remote: process events without delay
+Subject: [PATCH] journal-remote: process events without delay
 
 journal-remote buffers input, and then parses it handling one journal entry at a time.
 It was possible for useful data to be left in the buffer after some entries were
@@ -154,6 +154,3 @@ index d1486e7..b7cc6d7 100644
  }
  
  static int accept_connection(const char* type, int fd,
--- 
-1.8.3.1
-

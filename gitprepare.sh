@@ -40,7 +40,7 @@ function brew-download-scratch {
 
 REMOTE_BRANCH="systemd-rhel/master"
 REMOTE="systemd-rhel"
-REMOTE_URL="http://10.3.11.34/msekleta/systemd-rhel.git"
+REMOTE_URL="https://github.com/lnykryn/systemd-rhel.git"
 
 BRANCH="master"
 NEW_TAG=""
@@ -54,6 +54,7 @@ LOGIN=$(whoami)
 ARCHES=""
 Z_STREAM="false"
 DISTGIT=$(git rev-parse --abbrev-ref HEAD)
+BASE_VERSION="v219"
 
 [ -e gitprepare.config ] && . ./gitprepare.config
 
@@ -194,7 +195,7 @@ for COMMIT in $(git rev-list --reverse ${REMOTE_BRANCH} ${OLD_TAG}..${NEW_TAG});
 done
 
 git rm -f [0-9][0-9][0-9][0-9]*.patch
-git format-patch -M -N --no-signature v208..${REMOTE_BRANCH}
+git format-patch -M -N --no-signature ${BASE_VERSION}..${REMOTE_BRANCH}
 
 for i in [0-9][0-9][0-9][0-9]*.patch; do
         [ -f "$i" ] || continue

@@ -1,7 +1,7 @@
 From 61d5dff976f33ec7189eae58641c49088e166479 Mon Sep 17 00:00:00 2001
 From: Lubomir Rintel <lkundrak@v3.sk>
 Date: Wed, 18 Feb 2015 21:02:01 +0100
-Subject: [PATCH 044/134] hwdb: fix ThinkPad X* Tablet special keys
+Subject: [PATCH] hwdb: fix ThinkPad X* Tablet special keys
 
 ThinkPad tablet firmware has DMI product name and version reversed:
 
@@ -42,6 +42,3 @@ index 1b7d871..2cb9769 100644
   KEYBOARD_KEY_6c=direction                              # rotate
   KEYBOARD_KEY_68=leftmeta                               # toolbox
   KEYBOARD_KEY_6b=esc                                    # escape
--- 
-1.8.3.1
-

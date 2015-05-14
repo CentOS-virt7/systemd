@@ -1,7 +1,7 @@
 From 4581f8d1cde9b6fac4320e5cdf5234c96bbd60ae Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Tue, 24 Feb 2015 10:10:04 -0500
-Subject: [PATCH 025/134] systemctl: bump NOFILE only for systemctl_main
+Subject: [PATCH] systemctl: bump NOFILE only for systemctl_main
 
 It is not necessary when running as telinit, etc.
 
@@ -39,6 +39,3 @@ index 21cb898..6b93ec8 100644
          if (!avoid_bus())
                  r = bus_open_transport_systemd(arg_transport, arg_host, arg_scope != UNIT_FILE_SYSTEM, &bus);
  
--- 
-1.8.3.1
-

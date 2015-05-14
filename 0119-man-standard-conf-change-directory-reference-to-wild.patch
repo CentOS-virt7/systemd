@@ -1,8 +1,7 @@
 From 6cf5c5d46e6eb06411dd8b180d3f1b3de1f93652 Mon Sep 17 00:00:00 2001
 From: Alison Chaiken <alison_chaiken@mentor.com>
 Date: Sun, 15 Mar 2015 16:26:14 -0700
-Subject: [PATCH 119/134] man: standard-conf: change directory reference to
- wildcard
+Subject: [PATCH] man: standard-conf: change directory reference to wildcard
 
 (cherry picked from commit 1d940aa32913c108e0282ebd359b2eb999ffeadf)
 ---
@@ -22,6 +21,3 @@ index 36af459..004f53f 100644
      are sorted by their filename in lexicographic order, regardless of
      which of the subdirectories they reside in. If multiple files
      specify the same option, the entry in the file with the
--- 
-1.8.3.1
-

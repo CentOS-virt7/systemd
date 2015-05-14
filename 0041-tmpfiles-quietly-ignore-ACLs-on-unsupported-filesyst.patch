@@ -1,8 +1,7 @@
 From 6ad61c838992d17f5faa94faa8f17967083a4226 Mon Sep 17 00:00:00 2001
 From: Hans-Peter Deifel <hpd@hpdeifel.de>
 Date: Tue, 3 Mar 2015 00:35:08 +0100
-Subject: [PATCH 041/134] tmpfiles: quietly ignore ACLs on unsupported
- filesystems
+Subject: [PATCH] tmpfiles: quietly ignore ACLs on unsupported filesystems
 
 A warning is printed if ACLs cannot be retrieved for any reason other
 than -ENOSYS. For -ENOSYS, debug log is printed.
@@ -79,6 +78,3 @@ index 88ba7e4..187997e 100644
  }
  
  static int write_one_file(Item *i, const char *path) {
--- 
-1.8.3.1
-

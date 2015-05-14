@@ -1,7 +1,7 @@
 From 66d069acb953ed8f2bfc6d76561d594520b5c67b Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Thu, 26 Feb 2015 19:05:51 -0500
-Subject: [PATCH 032/134] sysctl: add some hints how to override settings
+Subject: [PATCH] sysctl: add some hints how to override settings
 
 Also a link to decent documentation for sysrq keys. It is surprising
 hard to find.
@@ -34,6 +34,3 @@ index f189233..def151b 100644
  kernel.sysrq = 16
  
  # Append the PID to the core filename
--- 
-1.8.3.1
-

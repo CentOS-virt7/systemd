@@ -1,8 +1,8 @@
 From 1a3dd33f98312421e0f3d654e8f5d56554557a8c Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Fri, 3 Oct 2014 21:34:14 -0400
-Subject: [PATCH 016/134] Revert "timedated: manage systemd-timesyncd directly
- instead of lists of alternatives"
+Subject: [PATCH] Revert "timedated: manage systemd-timesyncd directly instead
+ of lists of alternatives"
 
 This reverts commit b72ddf0f4f552dd53d6404b6ddbc9f17d02b8e12.
 
@@ -356,6 +356,3 @@ index 753c3d1..66097ef 100644
  }
  
  static int property_get_rtc_time(
--- 
-1.8.3.1
-

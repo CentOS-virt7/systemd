@@ -1,8 +1,8 @@
 From 7c1b21bad54714f04d0d2a8c77008408affe7067 Mon Sep 17 00:00:00 2001
 From: Michael Biebl <biebl@debian.org>
 Date: Sat, 14 Mar 2015 16:48:54 +0100
-Subject: [PATCH 106/134] service: don't add After= dependencies on .busname
- units if kdbus support is disabled
+Subject: [PATCH] service: don't add After= dependencies on .busname units if
+ kdbus support is disabled
 
 (cherry picked from commit 6962fd3bd28cb5d3aaff69c1e3b6cc006e7c8426)
 ---
@@ -33,6 +33,3 @@ index 7781b4e..ae5e610 100644
                  if (r < 0)
                          return r;
          }
--- 
-1.8.3.1
-

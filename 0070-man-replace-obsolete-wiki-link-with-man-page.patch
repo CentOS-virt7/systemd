@@ -1,7 +1,7 @@
 From d3a45e70ee215646cdfbe19f514be08ae95e12eb Mon Sep 17 00:00:00 2001
 From: Zachary Cook <zachcook1991@gmail.com>
 Date: Wed, 4 Mar 2015 18:43:20 -0500
-Subject: [PATCH 070/134] man: replace obsolete wiki link with man page
+Subject: [PATCH] man: replace obsolete wiki link with man page
 
 (cherry picked from commit b1c1a51944e8e11545ae2a230d674f5145595192)
 ---
@@ -179,6 +179,3 @@ index 80591dc..9b92140 100644
  
      <para>Systems which invoke systemd in a container or initrd
      environment should implement the
--- 
-1.8.3.1
-

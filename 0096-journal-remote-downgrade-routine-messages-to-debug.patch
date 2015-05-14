@@ -1,7 +1,7 @@
 From c546fffcff0d2e3522738aac30391d5996bdf4a6 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Thu, 12 Mar 2015 21:29:28 -0400
-Subject: [PATCH 096/134] journal-remote: downgrade routine messages to debug
+Subject: [PATCH] journal-remote: downgrade routine messages to debug
 
 https://bugs.freedesktop.org/show_bug.cgi?id=89486
 (cherry picked from commit 0e72da6fe8671d49b4d458519f5ac7600fd04f03)
@@ -177,6 +177,3 @@ index a95fff1..b45c38d 100644
  
          if (hostname) {
                  *hostname = buf;
--- 
-1.8.3.1
-

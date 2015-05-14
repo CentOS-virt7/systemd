@@ -1,7 +1,7 @@
 From 4c6c21f92a8204abf031e42bb4949a0ecf039f7a Mon Sep 17 00:00:00 2001
 From: David Herrmann <dh.herrmann@gmail.com>
 Date: Wed, 11 Mar 2015 13:53:21 +0100
-Subject: [PATCH 091/134] bus-proxy: complain only once about queue overflows
+Subject: [PATCH] bus-proxy: complain only once about queue overflows
 
 If the local peer does not dispatch its incoming queue, the bus-proxy will
 slowly fill its outgoing queue. Once its full, it will continously
@@ -70,6 +70,3 @@ index 913d470..782c4e6 100644
  };
  
  int proxy_new(Proxy **out, int in_fd, int out_fd, const char *dest);
--- 
-1.8.3.1
-

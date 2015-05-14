@@ -1,7 +1,7 @@
 From 2ee0903b0a00dd4a13af8a26ee5fb435c9895568 Mon Sep 17 00:00:00 2001
 From: Daniel Mack <daniel@zonque.org>
 Date: Fri, 27 Feb 2015 20:05:26 +0100
-Subject: [PATCH 060/134] shared/condition: fix gcc5 warning
+Subject: [PATCH] shared/condition: fix gcc5 warning
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -40,6 +40,3 @@ index da7560f..796cc52 100644
  
          c = new0(Condition, 1);
          if (!c)
--- 
-1.8.3.1
-

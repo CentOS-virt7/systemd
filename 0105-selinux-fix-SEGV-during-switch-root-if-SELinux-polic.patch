@@ -1,8 +1,7 @@
 From 3a82f8be03b07b84fa470c6e42cd87865aeaf701 Mon Sep 17 00:00:00 2001
 From: Will Woods <wwoods@redhat.com>
 Date: Fri, 13 Mar 2015 17:24:46 -0400
-Subject: [PATCH 105/134] selinux: fix SEGV during switch-root if SELinux
- policy loaded
+Subject: [PATCH] selinux: fix SEGV during switch-root if SELinux policy loaded
 
 If you've got SELinux policy loaded, label_hnd is your labeling handle.
 When systemd is shutting down, we free that handle via mac_selinux_finish().
@@ -36,6 +35,3 @@ index a2233e0..a46ddf8 100644
  #endif
  }
  
--- 
-1.8.3.1
-

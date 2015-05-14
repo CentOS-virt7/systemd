@@ -1,7 +1,7 @@
 From 3f4c4af890ff655bf409875d0775f436e6d63353 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Tue, 3 Mar 2015 00:11:51 +0100
-Subject: [PATCH 063/134] man: fix typo
+Subject: [PATCH] man: fix typo
 
 (cherry picked from commit a68188812290cb9ec9f3f8a17b65e64549a4fd65)
 ---
@@ -21,6 +21,3 @@ index 4480e19..ef58887 100644
  
            <row><entry><varname>dummy</varname></entry>
            <entry>A dummy device drops all packets sent to it.</entry></row>
--- 
-1.8.3.1
-

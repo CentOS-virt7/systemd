@@ -1,8 +1,7 @@
 From 8e184ad6e23a8248e149cd5bf4f9bf56089a6dd1 Mon Sep 17 00:00:00 2001
 From: Martin Pitt <martin.pitt@ubuntu.com>
 Date: Fri, 13 Mar 2015 08:35:59 +0100
-Subject: [PATCH 120/134] core: don't change removed devices to state
- "tentative"
+Subject: [PATCH] core: don't change removed devices to state "tentative"
 
 Commit 628c89c introduced the "tentative" device state, which caused
 devices to go from "plugged" to "tentative" on a remove uevent. This
@@ -32,6 +31,3 @@ index 4ff8827..cc4ebd2 100644
                          device_set_state(d, DEVICE_TENTATIVE);
                  else
                          device_set_state(d, DEVICE_DEAD);
--- 
-1.8.3.1
-

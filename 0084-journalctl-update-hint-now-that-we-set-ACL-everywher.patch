@@ -1,8 +1,7 @@
 From cf04c51fb2d5ce08a8b8aafec999e2007ef53c83 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Sun, 8 Mar 2015 11:04:59 -0400
-Subject: [PATCH 084/134] journalctl: update hint now that we set ACL
- everywhere
+Subject: [PATCH] journalctl: update hint now that we set ACL everywhere
 
 (cherry picked from commit 05c1853093d8c4e4aa16876b5129b65dac5abd01)
 ---
@@ -62,6 +61,3 @@ index 55c7786..12c869f 100644
                  if (!arg_quiet && geteuid() != 0) {
                          r = access_check_var_log_journal(j);
                          if (r < 0)
--- 
-1.8.3.1
-

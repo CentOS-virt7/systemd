@@ -1,8 +1,7 @@
 From 529c94b47f886f99796cff0f5827d6c2ebdcea19 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Mon, 2 Mar 2015 20:55:38 +0100
-Subject: [PATCH 040/134] sd-daemon: replace VLA with alloca(), to make llvm
- happy
+Subject: [PATCH] sd-daemon: replace VLA with alloca(), to make llvm happy
 
 https://bugs.freedesktop.org/show_bug.cgi?id=89379
 (cherry picked from commit d4a144fadf89bca681724c6c9a65b4a165fa0f90)
@@ -48,6 +47,3 @@ index 028c2a7..22a3a53 100644
                  msghdr.msg_controllen += CMSG_LEN(sizeof(struct ucred));
  
                  if (cmsg)
--- 
-1.8.3.1
-

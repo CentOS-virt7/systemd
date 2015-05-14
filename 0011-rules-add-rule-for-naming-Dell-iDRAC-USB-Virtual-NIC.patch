@@ -1,8 +1,8 @@
 From 2411be37e26457c5e6734dbf08feb4b8375c13a2 Mon Sep 17 00:00:00 2001
 From: Michal Sekletar <msekleta@redhat.com>
 Date: Mon, 22 Sep 2014 07:53:52 +0200
-Subject: [PATCH 011/134] rules: add rule for naming Dell iDRAC USB Virtual NIC
- as 'idrac'
+Subject: [PATCH] rules: add rule for naming Dell iDRAC USB Virtual NIC as
+ 'idrac'
 
 RHEL-only patch
 
@@ -39,6 +39,3 @@ index 0000000..d67fc42
 +# with terminates in the iDRAC. Help identify this with 'idrac'
 +
 +ACTION=="add", SUBSYSTEM=="net", SUBSYSTEMS=="usb", ATTRS{idVendor}=="413c", ATTRS{idProduct}=="a102", NAME="idrac"
--- 
-1.8.3.1
-

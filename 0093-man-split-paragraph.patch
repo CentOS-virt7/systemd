@@ -1,7 +1,7 @@
 From 682a699e71147673f8de5fa12dbec8f2a4c28d9c Mon Sep 17 00:00:00 2001
 From: David Herrmann <dh.herrmann@gmail.com>
 Date: Thu, 12 Mar 2015 12:46:46 +0100
-Subject: [PATCH 093/134] man: split paragraph
+Subject: [PATCH] man: split paragraph
 
 Explicitly put the "multiple EnvironmentFile=" description into its own
 paragraph to make it much easier to find.
@@ -26,6 +26,3 @@ index 11b160e..fdb1578 100644
          files override settings made with
          <varname>Environment=</varname>. If the same variable is set
          twice from these files, the files will be read in the order
--- 
-1.8.3.1
-

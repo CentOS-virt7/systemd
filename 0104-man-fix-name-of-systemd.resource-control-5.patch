@@ -1,7 +1,7 @@
 From 28dd732dd917b9832c4c39b7fd44a566516815db Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Fri, 13 Mar 2015 21:25:37 -0500
-Subject: [PATCH 104/134] man: fix name of systemd.resource-control(5)
+Subject: [PATCH] man: fix name of systemd.resource-control(5)
 
 (cherry picked from commit ee41f6028189819c728316e917ca09b9eb0a7850)
 ---
@@ -21,6 +21,3 @@ index 07eb431..3c4c9cb 100644
        <citerefentry><refentrytitle>systemd.special</refentrytitle><manvolnum>7</manvolnum></citerefentry>,
        <citerefentry project='man-pages'><refentrytitle>wall</refentrytitle><manvolnum>1</manvolnum></citerefentry>,
        <citerefentry><refentrytitle>systemd.preset</refentrytitle><manvolnum>5</manvolnum></citerefentry>,
--- 
-1.8.3.1
-

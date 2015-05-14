@@ -1,7 +1,7 @@
 From 46392c1d8f433ee44fc5bacb085879779a662468 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Cristian=20Rodr=C3=ADguez?= <crrodriguez@opensuse.org>
 Date: Fri, 20 Feb 2015 15:35:11 -0300
-Subject: [PATCH 036/134] shared: AFS is also a network filesystem
+Subject: [PATCH] shared: AFS is also a network filesystem
 
 (cherry picked from commit ba89821c104d959082aad6f3f0e05a8afd575023)
 ---
@@ -20,6 +20,3 @@ index ba035ca..f24b5b4 100644
                  "cifs\0"
                  "smbfs\0"
                  "sshfs\0"
--- 
-1.8.3.1
-

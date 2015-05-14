@@ -1,7 +1,7 @@
 From 2d5ee8de927f69784d8380c24ca5505b3f6e7672 Mon Sep 17 00:00:00 2001
 From: systemd team <systemd-maint@redhat.com>
 Date: Tue, 14 Apr 2015 15:00:06 +0200
-Subject: [PATCH 123/134] build-sys: add configure option to disableLTO/gold
+Subject: [PATCH] build-sys: add configure option to disableLTO/gold
 
 ---
  configure.ac | 15 ++++++++++-----
@@ -40,6 +40,3 @@ index 081ed0f..9103f9b 100644
  AC_SUBST([OUR_LDFLAGS], "$with_ldflags $sanitizer_ldflags")
  
  AC_CHECK_SIZEOF(pid_t)
--- 
-1.8.3.1
-

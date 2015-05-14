@@ -1,7 +1,7 @@
 From 30ced6a8c742e1c798fff439b28a9800ca43f3e7 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Fri, 27 Feb 2015 21:55:08 +0100
-Subject: [PATCH 033/134] core: rework device state logic
+Subject: [PATCH] core: rework device state logic
 
 This change introduces a new state "tentative" for device units. Device
 units are considered "plugged" when udev announced them, "dead" when
@@ -907,6 +907,3 @@ index 563f6fe..a6558ee 100644
          if (r < 0)
                  return r;
  
--- 
-1.8.3.1
-

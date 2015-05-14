@@ -1,8 +1,8 @@
 From a2911c593e9d69a2aa01d89d876e313f90e7db17 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Tue, 3 Mar 2015 19:07:28 -0500
-Subject: [PATCH 042/134] shared/util: assume ac when /sys/class/power_supply
- is missing
+Subject: [PATCH] shared/util: assume ac when /sys/class/power_supply is
+ missing
 
 On s390 (at least) /sys/class/power_supply is not present. We should
 treat this like if this directory was empty, and not an error.
@@ -25,6 +25,3 @@ index f24b5b4..8548723 100644
  
          for (;;) {
                  struct dirent *de;
--- 
-1.8.3.1
-

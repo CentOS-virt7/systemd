@@ -1,7 +1,7 @@
 From b1e53a9d3cc7c6fbe4447e201c8f6348ffcd7b6a Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Tue, 3 Mar 2015 09:00:39 -0500
-Subject: [PATCH 066/134] README: mention ACLs more
+Subject: [PATCH] README: mention ACLs more
 
 They are now useful for any fs used for journal storage.
 
@@ -24,6 +24,3 @@ index ac2a81c..ffc2cf9 100644
            CONFIG_SECCOMP
  
          Required for CPUShares in resource control unit settings
--- 
-1.8.3.1
-

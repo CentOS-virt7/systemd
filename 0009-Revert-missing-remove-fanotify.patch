@@ -1,7 +1,7 @@
 From 66d06bd0a577ddb2461e8d1e5c8c2fbf6845227d Mon Sep 17 00:00:00 2001
 From: Lukas Nykryn <lnykryn@redhat.com>
 Date: Wed, 19 Nov 2014 12:14:13 +0100
-Subject: [PATCH 009/134] Revert "missing: remove fanotify"
+Subject: [PATCH] Revert "missing: remove fanotify"
 
 This reverts commit c7e4a7bece7a5c4484d229dd5e8ff01a5d49c62e.
 
@@ -218,6 +218,3 @@ index b33a70c..06a5576 100644
  #ifndef HAVE_MEMFD_CREATE
  static inline int memfd_create(const char *name, unsigned int flags) {
          return syscall(__NR_memfd_create, name, flags);
--- 
-1.8.3.1
-

@@ -1,8 +1,7 @@
 From 331328223912b66dd25d5cb6ed250d67419d54de Mon Sep 17 00:00:00 2001
 From: Michal Schmidt <mschmidt@redhat.com>
 Date: Mon, 16 Mar 2015 21:58:35 +0100
-Subject: [PATCH 132/134] shared: add path_compare(), an ordering path
- comparison
+Subject: [PATCH] shared: add path_compare(), an ordering path comparison
 
 ... and make path_equal() a simple wrapper around it.
 
@@ -148,6 +147,3 @@ index 11aa52a..6396fcb 100644
  
          assert_se(path_is_absolute("/"));
          assert_se(!path_is_absolute("./"));
--- 
-1.8.3.1
-

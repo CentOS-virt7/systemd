@@ -1,8 +1,8 @@
 From 74b66951fcd54e6ab51023f60cc021fe355be1a8 Mon Sep 17 00:00:00 2001
 From: Tom Gundersen <teg@jklm.no>
 Date: Sat, 25 Oct 2014 17:10:11 +0200
-Subject: [PATCH 012/134] udev: net_id - correctly name netdevs based on
- dev_port when set
+Subject: [PATCH] udev: net_id - correctly name netdevs based on dev_port when
+ set
 
 Upstream, dev_id was replaced by dev_port, and the same happened for some kernel
 drivers. This logic is not in the RHEL7 kernel, except for one new driver which
@@ -89,6 +89,3 @@ index 37ff1b8..99caa0a 100644
                  if (l == 0)
                          names->pci_path[0] = '\0';
          }
--- 
-1.8.3.1
-

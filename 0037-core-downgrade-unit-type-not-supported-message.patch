@@ -1,7 +1,7 @@
 From 0b78cbf29f02adc3cc490bf2b4e9365057ed7d7b Mon Sep 17 00:00:00 2001
 From: Umut Tezduyar Lindskog <umut.tezduyar@axis.com>
 Date: Fri, 20 Feb 2015 10:53:28 +0100
-Subject: [PATCH 037/134] core: downgrade unit type not supported message
+Subject: [PATCH] core: downgrade unit type not supported message
 
 Otherwise every daemon reload prints out warnings like:
 
@@ -26,6 +26,3 @@ index 4775219..bc9b7ec 100644
                          continue;
                  }
  
--- 
-1.8.3.1
-

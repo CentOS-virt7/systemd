@@ -1,8 +1,7 @@
 From 73cbcbaf7e04d42816ada8ee44b5fbc6b7f0bdb4 Mon Sep 17 00:00:00 2001
 From: Michal Schmidt <mschmidt@redhat.com>
 Date: Fri, 20 Feb 2015 02:04:05 +0100
-Subject: [PATCH 047/134] shared: use SocketAddress in
- socket_address_matches_fd()
+Subject: [PATCH] shared: use SocketAddress in socket_address_matches_fd()
 
 Cleanup. No behavior change.
 
@@ -82,6 +81,3 @@ index c278d6f..c31f60e 100644
  
          }
  
--- 
-1.8.3.1
-

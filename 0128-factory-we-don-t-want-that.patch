@@ -1,7 +1,7 @@
 From c5177fff7f87e08175f6a5c9dba204ea31bfd13a Mon Sep 17 00:00:00 2001
 From: Lukas Nykryn <lnykryn@redhat.com>
 Date: Thu, 16 Apr 2015 11:53:05 +0200
-Subject: [PATCH 128/134] factory: we don't want that
+Subject: [PATCH] factory: we don't want that
 
 ---
  Makefile.am            | 16 ++++++++--------
@@ -45,6 +45,3 @@ index 125d6e0..4937719 100644
  L+ /etc/mtab - - - - ../proc/self/mounts
 -C /etc/nsswitch.conf - - - -
 -C /etc/pam.d - - - -
--- 
-1.8.3.1
-

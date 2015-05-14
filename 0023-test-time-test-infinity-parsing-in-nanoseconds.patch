@@ -1,7 +1,7 @@
 From 33d01e64bc4e286e4eb772de8b3781686c2d3a3a Mon Sep 17 00:00:00 2001
 From: Daniel Mack <daniel@zonque.org>
 Date: Tue, 24 Feb 2015 13:27:10 +0100
-Subject: [PATCH 023/134] test-time: test "infinity" parsing in nanoseconds
+Subject: [PATCH] test-time: test "infinity" parsing in nanoseconds
 
 (cherry picked from commit fdd30a1530810b659345c565e97beef06b7af2fd)
 ---
@@ -31,6 +31,3 @@ index 8cfc4cc..3840fff 100644
  }
  
  static void test_format_timespan_one(usec_t x, usec_t accuracy) {
--- 
-1.8.3.1
-

@@ -1,7 +1,7 @@
 From 597856130181473bff35f225d87b05c5825b1670 Mon Sep 17 00:00:00 2001
 From: Lukas Nykryn <lnykryn@redhat.com>
 Date: Wed, 15 Apr 2015 14:04:52 +0200
-Subject: [PATCH 126/134] Revert "man: switch yum to dnf for Fedora"
+Subject: [PATCH] Revert "man: switch yum to dnf for Fedora"
 
 This reverts commit 74a6d87d0cd1f2213869e168b6ca55eded6f4ae8.
 
@@ -64,6 +64,3 @@ index 65b4c2f..cbd44d4 100644
        <citerefentry project='die-net'><refentrytitle>yum</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
        <citerefentry project='die-net'><refentrytitle>debootstrap</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
        <citerefentry project='archlinux'><refentrytitle>pacman</refentrytitle><manvolnum>8</manvolnum></citerefentry>,
--- 
-1.8.3.1
-

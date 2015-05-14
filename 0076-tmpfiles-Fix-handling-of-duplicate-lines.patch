@@ -1,7 +1,7 @@
 From 339b62c8f336bb51dc7a925062abeb3ce76145e6 Mon Sep 17 00:00:00 2001
 From: Martin Pitt <martin.pitt@ubuntu.com>
 Date: Thu, 5 Mar 2015 14:58:56 +0100
-Subject: [PATCH 076/134] tmpfiles: Fix handling of duplicate lines
+Subject: [PATCH] tmpfiles: Fix handling of duplicate lines
 
 Commit 3f93da987 accidentally dropped the "return 0" after detection of a
 duplicate line. Put it back, to get back the documented and intended "first
@@ -30,6 +30,3 @@ index 187997e..1e10968 100644
                  }
          } else {
                  existing = new0(ItemArray, 1);
--- 
-1.8.3.1
-

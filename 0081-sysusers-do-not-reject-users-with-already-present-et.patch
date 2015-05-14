@@ -1,7 +1,7 @@
 From 169e74d772eac561a24f461ac65118d3d83a5980 Mon Sep 17 00:00:00 2001
 From: Ivan Shapovalov <intelfx100@gmail.com>
 Date: Sat, 7 Mar 2015 18:11:32 +0300
-Subject: [PATCH 081/134] sysusers: do not reject users with already present
+Subject: [PATCH] sysusers: do not reject users with already present
  /etc/shadow entries
 
 This is needed to interoperate firstboot and sysusers. The former one is started
@@ -75,6 +75,3 @@ index e47bcb4..76b5962 100644
          }
  
          /* Try to use the suggested numeric uid */
--- 
-1.8.3.1
-

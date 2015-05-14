@@ -1,7 +1,7 @@
 From b9de0cce0292983b62842990b9ce71c99b1bc434 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Sat, 14 Mar 2015 20:24:47 -0400
-Subject: [PATCH 111/134] tmpfiles: remove redundant debug message
+Subject: [PATCH] tmpfiles: remove redundant debug message
 
 Mar 13 19:48:30 adam.happyassassin.net systemd-tmpfiles[970]: "/var/lib/machines" has right mode 40700
 Mar 13 19:48:30 adam.happyassassin.net systemd-tmpfiles[970]: /var/lib/machines created successfully.
@@ -24,6 +24,3 @@ index 1e10968..73a9c9d 100644
          return 0;
  }
  
--- 
-1.8.3.1
-

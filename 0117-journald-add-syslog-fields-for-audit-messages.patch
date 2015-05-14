@@ -1,7 +1,7 @@
 From 5e565da856cf4cf919ed1045b01ab461c586395a Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Wed, 4 Mar 2015 10:31:42 -0500
-Subject: [PATCH 117/134] journald: add syslog fields for audit messages
+Subject: [PATCH] journald: add syslog fields for audit messages
 
 Audit messages would be displayed as "unknown[1]".
 
@@ -37,6 +37,3 @@ index 151097a..77abe2e 100644
          m = alloca(strlen("MESSAGE=<audit-") + DECIMAL_STR_MAX(int) + strlen("> ") + strlen(p) + 1);
          sprintf(m, "MESSAGE=<audit-%i> %s", type, p);
          IOVEC_SET_STRING(iov[n_iov++], m);
--- 
-1.8.3.1
-

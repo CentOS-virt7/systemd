@@ -1,8 +1,8 @@
 From 1c0e8e9ce84cd74a20a60b98ab3a39d75d05b45f Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Wed, 25 Feb 2015 22:05:14 +0100
-Subject: [PATCH 029/134] unit: use weaker dependencies between mount and
- device units in --user mode
+Subject: [PATCH] unit: use weaker dependencies between mount and device units
+ in --user mode
 
 When running in user mode unmounting of mount units when a device
 vanishes is unlikely to work, and even if it would work is already done
@@ -28,6 +28,3 @@ index ee8e607..9f1e55e 100644
          if (r < 0)
                  return r;
  
--- 
-1.8.3.1
-

@@ -1,7 +1,7 @@
 From 15bfa13aa624e1f2a15571ad5278acec643c0489 Mon Sep 17 00:00:00 2001
 From: Daniel Mack <daniel@zonque.org>
 Date: Tue, 24 Feb 2015 13:26:09 +0100
-Subject: [PATCH 022/134] shared/time-util: fix gcc5 warning
+Subject: [PATCH] shared/time-util: fix gcc5 warning
 
   CC       src/shared/libsystemd_shared_la-time-util.lo
 src/shared/time-util.c: In function 'parse_nsec':
@@ -27,6 +27,3 @@ index 947ac1f..1c36c57 100644
                          return -EINVAL;
  
                  *nsec = NSEC_INFINITY;
--- 
-1.8.3.1
-

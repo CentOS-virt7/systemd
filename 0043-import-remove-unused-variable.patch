@@ -1,7 +1,7 @@
 From 2bbdb63f7e5f125e1259b0fcfcea8226c5ae4e58 Mon Sep 17 00:00:00 2001
 From: Thomas Hindoe Paaboel Andersen <phomes@gmail.com>
 Date: Tue, 17 Feb 2015 20:06:13 +0100
-Subject: [PATCH 043/134] import: remove unused variable
+Subject: [PATCH] import: remove unused variable
 
 (cherry picked from commit b89c454b37a23433f8fd6ad7b93f5a6190930aa4)
 ---
@@ -20,6 +20,3 @@ index 999aa8a..493252a 100644
          TarImport *i;
          int r;
  
--- 
-1.8.3.1
-

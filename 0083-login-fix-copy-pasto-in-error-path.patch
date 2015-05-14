@@ -1,7 +1,7 @@
 From d67968957aece7a1d4da581d86ad719c9a7fad21 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Sat, 7 Mar 2015 14:23:38 -0500
-Subject: [PATCH 083/134] login: fix copy-pasto in error path
+Subject: [PATCH] login: fix copy-pasto in error path
 
 CID #1256583.
 
@@ -23,6 +23,3 @@ index 44bda34..88af23e 100644
                          return EXIT_FAILURE;
                  }
  
--- 
-1.8.3.1
-

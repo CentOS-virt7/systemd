@@ -1,7 +1,7 @@
 From a4409b8ae6b80acffc9a4f89df2d06c498b8c8f9 Mon Sep 17 00:00:00 2001
 From: Daniel Mack <daniel@zonque.org>
 Date: Tue, 24 Feb 2015 16:24:14 +0100
-Subject: [PATCH 056/134] test-hashmap: fix gcc5 warning
+Subject: [PATCH] test-hashmap: fix gcc5 warning
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -30,6 +30,3 @@ index 6900da9..351563b 100644
          assert_se(string_compare_func("fred", "fred") == 0);
  }
  
--- 
-1.8.3.1
-

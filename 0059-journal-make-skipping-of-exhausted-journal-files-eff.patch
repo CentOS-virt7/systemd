@@ -1,8 +1,8 @@
 From 0ad01db952718d3437fa8f077a065d17efe5279b Mon Sep 17 00:00:00 2001
 From: Michal Schmidt <mschmidt@redhat.com>
 Date: Tue, 24 Feb 2015 19:45:17 +0100
-Subject: [PATCH 059/134] journal: make skipping of exhausted journal files
- effective again
+Subject: [PATCH] journal: make skipping of exhausted journal files effective
+ again
 
 Commit 668c965af "journal: skipping of exhausted journal files is bad if
 direction changed" fixed a correctness issue, but it also significantly
@@ -112,6 +112,3 @@ index 94891cd..9b57e59 100644
          }
  }
  
--- 
-1.8.3.1
-

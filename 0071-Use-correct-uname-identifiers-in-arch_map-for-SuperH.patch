@@ -1,7 +1,7 @@
 From 3df99b05df12b73e4d081ee223f9b35ed33f47ca Mon Sep 17 00:00:00 2001
 From: John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
 Date: Thu, 5 Mar 2015 00:07:33 +0100
-Subject: [PATCH 071/134] Use correct uname identifiers in arch_map for SuperH
+Subject: [PATCH] Use correct uname identifiers in arch_map for SuperH
  architecture
 
 https://bugs.freedesktop.org/show_bug.cgi?id=89421
@@ -29,6 +29,3 @@ index 34c5a53..884abdd 100644
  #elif defined(__m68k__)
                  { "m68k",       ARCHITECTURE_M68K     },
  #elif defined(__tilegx__)
--- 
-1.8.3.1
-

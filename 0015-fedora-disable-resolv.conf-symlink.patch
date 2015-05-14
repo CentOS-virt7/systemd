@@ -1,7 +1,7 @@
 From 634aa6447d365af61b6cd78651eb80c32da966dc Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Fri, 3 Oct 2014 21:34:14 -0400
-Subject: [PATCH 015/134] fedora: disable resolv.conf symlink
+Subject: [PATCH] fedora: disable resolv.conf symlink
 
 Conflicts:
 	tmpfiles.d/etc.conf.m4
@@ -22,6 +22,3 @@ index 9b0e080..125d6e0 100644
 -)m4_dnl
  C /etc/nsswitch.conf - - - -
  C /etc/pam.d - - - -
--- 
-1.8.3.1
-

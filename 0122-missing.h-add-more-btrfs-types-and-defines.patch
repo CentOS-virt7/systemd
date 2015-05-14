@@ -1,7 +1,7 @@
 From cb18a928a4db39a0eac1ab1fda1c80fd4cc4e22b Mon Sep 17 00:00:00 2001
 From: Michael Olbrich <m.olbrich@pengutronix.de>
 Date: Wed, 18 Mar 2015 14:04:55 +0100
-Subject: [PATCH 122/134] missing.h: add more btrfs types and defines
+Subject: [PATCH] missing.h: add more btrfs types and defines
 
 (cherry picked from commit 8e8ba79229bb82248a568f5929143a66f4be45b7)
 ---
@@ -190,6 +190,3 @@ index 6ef4dbd..4b36a9c 100644
  #ifndef BTRFS_IOC_DEV_INFO
  #define BTRFS_IOC_DEV_INFO _IOWR(BTRFS_IOCTL_MAGIC, 30, \
                                   struct btrfs_ioctl_dev_info_args)
--- 
-1.8.3.1
-

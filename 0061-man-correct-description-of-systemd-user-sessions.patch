@@ -1,7 +1,7 @@
 From 3104b6659b1405d25cdb5cad68e2bb2c9f8b5980 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Fri, 27 Feb 2015 17:26:42 -0500
-Subject: [PATCH 061/134] man: correct description of systemd-user-sessions
+Subject: [PATCH] man: correct description of systemd-user-sessions
 
 That part of functionality was removed in 7fb3ee51c1b377.
 
@@ -32,6 +32,3 @@ index 9d796b1..e75ef11 100644
    </refsect1>
  
    <refsect1>
--- 
-1.8.3.1
-

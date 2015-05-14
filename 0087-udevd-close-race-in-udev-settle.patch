@@ -1,7 +1,7 @@
 From 175c446fc5ca6adbeeb25dfe0ef725e2f1914259 Mon Sep 17 00:00:00 2001
 From: Tom Gundersen <teg@jklm.no>
 Date: Mon, 9 Mar 2015 16:16:23 +0100
-Subject: [PATCH 087/134] udevd: close race in udev settle
+Subject: [PATCH] udevd: close race in udev settle
 
 The udev-settle guarantees that udevd is no longer processing any of the
 events casued by udev-trigger. The way this works is that it sends a
@@ -83,6 +83,3 @@ index 99d4c89..e98c1fd 100644
                  /*
                   * This needs to be after the inotify handling, to make sure,
                   * that the ping is send back after the possibly generated
--- 
-1.8.3.1
-

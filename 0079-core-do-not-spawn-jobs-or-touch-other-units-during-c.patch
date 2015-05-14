@@ -1,7 +1,7 @@
 From f997080b4d17a40b59b398e4354b6368d9c85f69 Mon Sep 17 00:00:00 2001
 From: Ivan Shapovalov <intelfx100@gmail.com>
 Date: Sat, 7 Mar 2015 08:44:52 -0500
-Subject: [PATCH 079/134] core: do not spawn jobs or touch other units during
+Subject: [PATCH] core: do not spawn jobs or touch other units during
  coldplugging
 
 Because the order of coldplugging is not defined, we can reference a
@@ -373,6 +373,3 @@ index 291bc77..7ebc489 100644
  
  void unit_status_printf(Unit *u, const char *status, const char *unit_status_msg_format) _printf_(3, 0);
  
--- 
-1.8.3.1
-

@@ -7,7 +7,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        219
-Release:        1%{?dist}
+Release:        2%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -162,6 +162,21 @@ Patch0131: 0131-core-make-SELinux-enable-disable-check-symmetric.patch
 Patch0132: 0132-shared-add-path_compare-an-ordering-path-comparison.patch
 Patch0133: 0133-core-namespace-fix-path-sorting.patch
 Patch0134: 0134-machine-do-not-rely-on-asprintf-setting-arg-on-error.patch
+Patch0135: 0135-some-compilators-don-t-support-__INCLUDE_LEVEL__.patch
+Patch0136: 0136-udev-net_id-support-multi-port-enpo-device-names.patch
+Patch0137: 0137-udev-net_id-improve-comments.patch
+Patch0138: 0138-udev-restore-udevadm-settle-timeout.patch
+Patch0139: 0139-udev-settle-should-return-immediately-when-timeout-i.patch
+Patch0140: 0140-udev-Fix-ping-timeout-when-settle-timeout-is-0.patch
+Patch0141: 0141-detect-virt-use-proc-device-tree.patch
+Patch0142: 0142-ARM-detect-virt-detect-Xen.patch
+Patch0143: 0143-ARM-detect-virt-detect-QEMU-KVM.patch
+Patch0144: 0144-Persistent-by_path-links-for-ata-devices.patch
+Patch0145: 0145-man-document-forwarding-to-syslog-better.patch
+Patch0146: 0146-man-fix-typos-in-previous-comimt.patch
+Patch0147: 0147-LSB-always-add-network-online.target-to-services-wit.patch
+Patch0148: 0148-rules-enable-memory-hotplug.patch
+Patch0149: 0149-rules-reload-sysctl-settings-when-the-bridge-module-.patch
 
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
@@ -393,11 +408,6 @@ git am \
 %{patches}
 %endif
 
-%ifarch ppc ppc64 ppc64le
-# Disable link warnings, somehow they cause the link to fail.
-sed -r -i 's/\blibsystemd-(login|journal|id128|daemon).c \\/\\/' Makefile.am
-%endif
-
 %build
 autoreconf -i
 
@@ -412,7 +422,7 @@ CONFIGURE_OPTS=(
 --enable-gtk-doc
 --enable-compat-libs
 --disable-sysusers
-%ifarch s390 s390x ppc ppc64
+%ifarch s390 s390x ppc %{power64} aarch64
 --disable-lto
 %endif
 )
@@ -1124,6 +1134,20 @@ getent passwd systemd-resolve >/dev/null 2>&1 || useradd -r -l -g systemd-resolv
 %{_mandir}/man8/systemd-resolved.*
 
 %changelog
+* Thu May 14 2015 Lukas Nykryn <lnykryn@redhat.com> - 219-2
+- udev: restore udevadm settle timeout (#1210981)
+- udev: settle should return immediately when timeout is 0 (#1210981)
+- udev: Fix ping timeout when settle timeout is 0 (#1210981)
+- detect-virt: use /proc/device-tree (#1207773)
+- ARM: detect-virt: detect Xen (#1207773)
+- ARM: detect-virt: detect QEMU/KVM (#1207773)
+- Persistent by_path links for ata devices (#1045498)
+- man: document forwarding to syslog better (#1177336)
+- man: fix typos in previous comimt (#1177336)
+- LSB: always add network-online.target to services with priority over 10 (#1189253)
+- rules: enable memory hotplug (#1105020)
+- rules: reload sysctl settings when the bridge module is loaded (#1182105)
+
 * Tue Apr 14 2015 Lukáš Nykrýn <lnykryn@redhat.com> - 219-1
 - workaround build issues on ppc and s390
 - some more patches

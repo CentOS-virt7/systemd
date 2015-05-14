@@ -1,7 +1,7 @@
 From 608259be892c532d0afaeb81de3a5ee578d7658a Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Mon, 2 Mar 2015 10:34:51 -0500
-Subject: [PATCH 038/134] journal-remote: fix saving of binary fields
+Subject: [PATCH] journal-remote: fix saving of binary fields
 
 Binary fields were not processed properly, and resulting journal files
 were non-conforming, resulting in an error ("Invalid field.") when reading.
@@ -92,6 +92,3 @@ index 8499f4e..22db550 100644
  
          struct iovec_wrapper iovw;
  
--- 
-1.8.3.1
-

@@ -1,7 +1,7 @@
 From d65ce525915a604d31cda80b5d7a8d639fb5cbb9 Mon Sep 17 00:00:00 2001
 From: Chris Morin <chris.morin2@gmail.com>
 Date: Wed, 4 Feb 2015 14:54:34 -0500
-Subject: [PATCH 050/134] man: make bootup graph consistent
+Subject: [PATCH] man: make bootup graph consistent
 
 (cherry picked from commit b44787bd437f4051660272b37bd6f75392f17931)
 ---
@@ -21,6 +21,3 @@ index d97d550..b92057a 100644
                                                \|/
                                                 v
                                           basic.target
--- 
-1.8.3.1
-

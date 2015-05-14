@@ -1,7 +1,7 @@
 From 139d2c57d86203e421b17a4b6ec168c49fcb9893 Mon Sep 17 00:00:00 2001
 From: Harald Hoyer <harald@redhat.com>
 Date: Tue, 14 Jan 2014 17:48:08 -0500
-Subject: [PATCH 001/134] kernel-install: add fedora specific callouts to
+Subject: [PATCH] kernel-install: add fedora specific callouts to
  new-kernel-pkg
 
 ---
@@ -58,6 +58,3 @@ index 3ae1d77..f1c74de
  if [[ -f /etc/machine-id ]]; then
      read MACHINE_ID < /etc/machine-id
  fi
--- 
-1.8.3.1
-

@@ -1,7 +1,7 @@
 From 131de4184e86e7096d987973d7c4918f8303fa4b Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Fri, 13 Mar 2015 00:25:31 -0400
-Subject: [PATCH 098/134] man: update example 2 in systemd.network(5)
+Subject: [PATCH] man: update example 2 in systemd.network(5)
 
 none/both/v4/v6 are deprecated in favour of no/yes/ipv4/ipv6.
 
@@ -24,6 +24,3 @@ index 485876b..24f8416 100644
      </example>
  
      <example>
--- 
-1.8.3.1
-

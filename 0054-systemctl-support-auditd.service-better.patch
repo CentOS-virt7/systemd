@@ -1,7 +1,7 @@
 From 98d1fe84e1eac91563bff326539465cd34e971c0 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Sat, 7 Feb 2015 11:35:37 -0500
-Subject: [PATCH 054/134] systemctl: support auditd.service better
+Subject: [PATCH] systemctl: support auditd.service better
 
 We would print the filename header before trying to open the file. But since
 the header was printed to stdout, and the error to stderr, the error would appear
@@ -83,6 +83,3 @@ index 3da4d3d..4ec0cff 100644
                  }
          }
  
--- 
-1.8.3.1
-

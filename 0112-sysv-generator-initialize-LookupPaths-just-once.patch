@@ -1,7 +1,7 @@
 From f8fd91c9f0f1f7feabf8567bdad61f57fe922011 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Sat, 14 Mar 2015 21:46:59 -0400
-Subject: [PATCH 112/134] sysv-generator: initialize LookupPaths just once
+Subject: [PATCH] sysv-generator: initialize LookupPaths just once
 
 With debugging on, sysv-generator would print the full set of
 lookup paths for *every* sysv script.
@@ -273,6 +273,3 @@ index 6e39b44..0125ca2 100644
          if (r < 0) {
                  log_error("Failed to read runlevels from rcnd links.");
                  return EXIT_FAILURE;
--- 
-1.8.3.1
-

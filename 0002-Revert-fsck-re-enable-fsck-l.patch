@@ -1,7 +1,7 @@
 From 42026958cced6fe111bbaccad04d24d8ca3d6c55 Mon Sep 17 00:00:00 2001
 From: Lukas Nykryn <lnykryn@redhat.com>
 Date: Fri, 14 Nov 2014 17:07:57 +0100
-Subject: [PATCH 002/134] Revert "fsck: re-enable fsck -l"
+Subject: [PATCH] Revert "fsck: re-enable fsck -l"
 
 This reverts commit 48d3e8d07f2978f001cc85b2dddb7f8ec9d07006.
 
@@ -53,6 +53,3 @@ index 78ceeb6..d897680 100644
  
          if (!root_directory)
                  cmdline[i++] = "-M";
--- 
-1.8.3.1
-

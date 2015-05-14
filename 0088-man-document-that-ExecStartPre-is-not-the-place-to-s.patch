@@ -1,8 +1,8 @@
 From 1c8b76caab7d5164ac2d0d09aff9e4ffecdf205e Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Mon, 9 Mar 2015 18:01:47 +0100
-Subject: [PATCH 088/134] man: document that ExecStartPre= is not the place to
- start long-running processes
+Subject: [PATCH] man: document that ExecStartPre= is not the place to start
+ long-running processes
 
 (cherry picked from commit b481de3b22fcd838a8f059aed8745375afdb9eca)
 ---
@@ -25,6 +25,3 @@ index c03b4e8..f598705 100644
          </listitem>
        </varlistentry>
  
--- 
-1.8.3.1
-

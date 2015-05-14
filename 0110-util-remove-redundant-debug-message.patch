@@ -1,7 +1,7 @@
 From 5ad9a98a4c77949fd3519e11b44b8e0564dfc3a6 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Sat, 14 Mar 2015 20:14:39 -0400
-Subject: [PATCH 110/134] util: remove redundant debug message
+Subject: [PATCH] util: remove redundant debug message
 
 mar 14 20:05:34 fedora22 systemd[4058]: /usr/lib/systemd/system-generators/kdump-dep-generator.sh will be executed.
 mar 14 20:05:34 fedora22 systemd[4058]: Spawned /usr/lib/systemd/system-generators/kdump-dep-generator.sh as 4059.
@@ -27,6 +27,3 @@ index 8548723..1e1bf94 100644
  
                          pid = fork();
                          if (pid < 0) {
--- 
-1.8.3.1
-

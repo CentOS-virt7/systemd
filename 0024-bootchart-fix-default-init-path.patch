@@ -1,7 +1,7 @@
 From 685ddafd9e3c5f548e02e38633f366ff453f918b Mon Sep 17 00:00:00 2001
 From: Martin Pitt <martin.pitt@ubuntu.com>
 Date: Tue, 24 Feb 2015 14:30:10 +0100
-Subject: [PATCH 024/134] bootchart: fix default init path
+Subject: [PATCH] bootchart: fix default init path
 
 Commit 6e1bf7ab99 used the wrong directory; we need rootlibexecdir, not
 rootlibdir, as the latter is something like /lib/x86_64-linux-gnu/ on
@@ -39,6 +39,3 @@ index 64a384b..175be68 100644
  #define DEFAULT_OUTPUT "/run/log"
  
  /* graph defaults */
--- 
-1.8.3.1
-
