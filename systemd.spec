@@ -7,7 +7,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        219
-Release:        2%{?dist}
+Release:        3%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -177,6 +177,35 @@ Patch0146: 0146-man-fix-typos-in-previous-comimt.patch
 Patch0147: 0147-LSB-always-add-network-online.target-to-services-wit.patch
 Patch0148: 0148-rules-enable-memory-hotplug.patch
 Patch0149: 0149-rules-reload-sysctl-settings-when-the-bridge-module-.patch
+Patch0150: 0150-console-getty.service-don-t-start-when-dev-console-i.patch
+Patch0151: 0151-resolved-Do-not-add-.busname-dependencies-when-compi.patch
+Patch0152: 0152-man-add-journal-remote.conf-5.patch
+Patch0153: 0153-mount-don-t-run-quotaon-only-for-network-filesystems.patch
+Patch0154: 0154-mount-fix-up-wording-in-the-comment.patch
+Patch0155: 0155-udev-net_id-fix-copy-paste-error.patch
+Patch0156: 0156-man-don-t-mention-journalctl-dev-sda.patch
+Patch0157: 0157-units-move-After-systemd-hwdb-update.service-depende.patch
+Patch0158: 0158-units-explicitly-order-systemd-user-sessions.service.patch
+Patch0159: 0159-zsh-completion-update-loginctl.patch
+Patch0160: 0160-zsh-completion-add-missing-M-completion-for-journalc.patch
+Patch0161: 0161-zsh-completion-update-hostnamectl.patch
+Patch0162: 0162-shell-completion-systemctl-switch-root-verb.patch
+Patch0163: 0163-core-automount-beef-up-error-message.patch
+Patch0164: 0164-man-remove-fs-from-rootfsflags.patch
+Patch0165: 0165-shared-fix-memleak.patch
+Patch0166: 0166-udevd-fix-synchronization-with-settle-when-handling-.patch
+Patch0167: 0167-python-systemd-fix-is_socket_inet-to-cope-with-ports.patch
+Patch0168: 0168-man-fix-examples-indentation-in-tmpfiles.d-5.patch
+Patch0169: 0169-systemctl-avoid-bumping-NOFILE-rlimit-unless-needed.patch
+Patch0170: 0170-exit-status-Fix-NOTINSSTALLED-typo.patch
+Patch0171: 0171-tmpfiles-there-s-no-systemd-forbid-user-logins.servi.patch
+Patch0172: 0172-kmod-setup-load-ip_tables-kmod-at-boot.patch
+Patch0173: 0173-util-Fix-assertion-in-split-on-missing.patch
+Patch0174: 0174-units-set-KillMode-mixed-for-our-daemons-that-fork-w.patch
+Patch0175: 0175-unit-don-t-add-automatic-dependencies-on-device-unit.patch
+Patch0176: 0176-update-done-ignore-nanosecond-file-timestamp-compone.patch
+Patch0177: 0177-sd-daemon-simplify-sd_pid_notify_with_fds.patch
+Patch0178: 0178-fstab-generator-add-x-systemd.requires-and-x-systemd.patch
 
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
@@ -581,6 +610,8 @@ getent group floppy >/dev/null 2>&1 || groupadd -r -g 19 floppy >/dev/null 2>&1 
 getent group systemd-journal >/dev/null 2>&1 || groupadd -r -g 190 systemd-journal 2>&1 || :
 getent group systemd-bus-proxy >/dev/null 2>&1 || groupadd -r systemd-bus-proxy 2>&1 || :
 getent passwd systemd-bus-proxy >/dev/null 2>&1 || useradd -r -l -g systemd-bus-proxy -d / -s /sbin/nologin -c "systemd Bus Proxy" systemd-bus-proxy >/dev/null 2>&1 || :
+getent group systemd-network >/dev/null 2>&1 || groupadd -r systemd-network 2>&1 || :
+getent passwd systemd-network >/dev/null 2>&1 || useradd -r -l -g systemd-network -d / -s /sbin/nologin -c "systemd Network Management" systemd-network >/dev/null 2>&1 || :
 
 systemctl stop systemd-udevd-control.socket systemd-udevd-kernel.socket systemd-udevd.service >/dev/null 2>&1 || :
 
@@ -811,10 +842,6 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 %systemd_postun_with_restart systemd-journal-gatewayd.service
 %systemd_postun_with_restart systemd-journal-remote.service
 %systemd_postun_with_restart systemd-journal-upload.service
-
-%pre networkd
-getent group systemd-network >/dev/null 2>&1 || groupadd -r systemd-network 2>&1 || :
-getent passwd systemd-network >/dev/null 2>&1 || useradd -r -l -g systemd-network -d / -s /sbin/nologin -c "systemd Network Management" systemd-network >/dev/null 2>&1 || :
 
 %post networkd
 %systemd_post systemd-networkd.service systemd-networkd-wait-online.service
@@ -1134,6 +1161,37 @@ getent passwd systemd-resolve >/dev/null 2>&1 || useradd -r -l -g systemd-resolv
 %{_mandir}/man8/systemd-resolved.*
 
 %changelog
+* Mon May 18 2015 Lukas Nykryn <lnykryn@redhat.com> - 219-3
+- console-getty.service: don't start when /dev/console is missing (#1222517)
+- resolved: Do not add .busname dependencies, when compiling without kdbus. (#1222517)
+- man: add journal-remote.conf(5) (#1222517)
+- mount: don't run quotaon only for network filesystems (#1222517)
+- mount: fix up wording in the comment (#1222517)
+- udev: net_id - fix copy-paste error (#1222517)
+- man: don't mention "journalctl /dev/sda" (#1222517)
+- units: move After=systemd-hwdb-update.service dependency from udev to udev-trigger (#1222517)
+- units: explicitly order systemd-user-sessions.service after nss-user-lookup.target (#1222517)
+- zsh-completion: update loginctl (#1222517)
+- zsh-completion: add missing -M completion for journalctl (#1222517)
+- zsh-completion: update hostnamectl (#1222517)
+- shell-completion: systemctl switch-root verb (#1222517)
+- core/automount: beef up error message (#1222517)
+- man: remove 'fs' from 'rootfsflags' (#1222517)
+- shared: fix memleak (#1222517)
+- udevd: fix synchronization with settle when handling inotify events (#1222517)
+- python-systemd: fix is_socket_inet to cope with ports (#1222517)
+- man: fix examples indentation in tmpfiles.d(5) (#1222517)
+- systemctl: avoid bumping NOFILE rlimit unless needed (#1222517)
+- exit-status: Fix "NOTINSSTALLED" typo (#1222517)
+- tmpfiles: there's no systemd-forbid-user-logins.service service (#1222517)
+- kmod-setup: load ip_tables kmod at boot (#1222517)
+- util: Fix assertion in split() on missing ' (#1222517)
+- units: set KillMode=mixed for our daemons that fork worker processes (#1222517)
+- unit: don't add automatic dependencies on device units if they aren't supported (#1222517)
+- update-done: ignore nanosecond file timestamp components, they are not reliable (#1222517)
+- sd-daemon: simplify sd_pid_notify_with_fds (#1222517)
+- fstab-generator: add x-systemd.requires and x-systemd.requires-mounts-for (#1164334)
+
 * Thu May 14 2015 Lukas Nykryn <lnykryn@redhat.com> - 219-2
 - udev: restore udevadm settle timeout (#1210981)
 - udev: settle should return immediately when timeout is 0 (#1210981)
