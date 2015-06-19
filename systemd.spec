@@ -7,7 +7,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        219
-Release:        3%{?dist}
+Release:        4%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -206,6 +206,15 @@ Patch0175: 0175-unit-don-t-add-automatic-dependencies-on-device-unit.patch
 Patch0176: 0176-update-done-ignore-nanosecond-file-timestamp-compone.patch
 Patch0177: 0177-sd-daemon-simplify-sd_pid_notify_with_fds.patch
 Patch0178: 0178-fstab-generator-add-x-systemd.requires-and-x-systemd.patch
+Patch0179: 0179-core-Fix-assertion-with-empty-Exec-paths.patch
+Patch0180: 0180-rules-load-sg-module.patch
+Patch0181: 0181-util-add-shell_maybe_quote-call-for-preparing-a-stri.patch
+Patch0182: 0182-bus-util-be-more-verbose-if-dbus-job-fails.patch
+Patch0183: 0183-notify-fix-badly-backported-help-message.patch
+Patch0184: 0184-cryptsetup-craft-a-unique-ID-with-the-source-device.patch
+Patch0185: 0185-systemctl-introduce-now-for-enable-disable-and-mask.patch
+Patch0186: 0186-udev-also-create-old-sas-paths.patch
+Patch0187: 0187-journald-do-not-strip-leading-whitespace-from-messag.patch
 
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
@@ -1161,6 +1170,17 @@ getent passwd systemd-resolve >/dev/null 2>&1 || useradd -r -l -g systemd-resolv
 %{_mandir}/man8/systemd-resolved.*
 
 %changelog
+* Fri Jun 19 2015 Lukas Nykryn <lnykryn@redhat.com> - 219-4
+- core: Fix assertion with empty Exec*= paths (#1222517)
+- rules: load sg module (#1186462)
+- util: add shell_maybe_quote() call for preparing a string for shell cmdline inclusion (#1016680)
+- bus-util: be more verbose if dbus job fails (#1016680)
+- notify: fix badly backported help message (#1199644)
+- cryptsetup: craft a unique ID with the source device (#1226333)
+- systemctl: introduce --now for enable, disable and mask (#1233081)
+- udev: also create old sas paths (#957112)
+- journald: do not strip leading whitespace from messages (#1227396)
+
 * Mon May 18 2015 Lukas Nykryn <lnykryn@redhat.com> - 219-3
 - console-getty.service: don't start when /dev/console is missing (#1222517)
 - resolved: Do not add .busname dependencies, when compiling without kdbus. (#1222517)
