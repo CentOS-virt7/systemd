@@ -7,7 +7,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        219
-Release:        4%{?dist}
+Release:        5%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -215,6 +215,12 @@ Patch0184: 0184-cryptsetup-craft-a-unique-ID-with-the-source-device.patch
 Patch0185: 0185-systemctl-introduce-now-for-enable-disable-and-mask.patch
 Patch0186: 0186-udev-also-create-old-sas-paths.patch
 Patch0187: 0187-journald-do-not-strip-leading-whitespace-from-messag.patch
+Patch0188: 0188-Revert-core-one-step-back-again-for-nspawn-we-actual.patch
+Patch0189: 0189-bus-creds-always-set-SD_BUS_CREDS_PID-when-we-set-pi.patch
+Patch0190: 0190-sd-bus-do-not-use-per-datagram-auxiliary-information.patch
+Patch0191: 0191-sd-bus-store-selinux-context-at-connection-time.patch
+Patch0192: 0192-journald-simplify-context-handling.patch
+Patch0193: 0193-bash-completion-add-verb-set-property.patch
 
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
@@ -288,7 +294,7 @@ Obsoletes:      upstart-sysvinit < 1.2-3
 Conflicts:      upstart-sysvinit
 Obsoletes:      hal
 Obsoletes:      ConsoleKit
-Conflicts:      dracut < dracut-033-243
+Conflicts:      dracut < 033-243
 
 %description
 systemd is a system and service manager for Linux, compatible with
@@ -998,6 +1004,7 @@ getent passwd systemd-resolve >/dev/null 2>&1 || useradd -r -l -g systemd-resolv
 %exclude %{_prefix}/lib/systemd/systemd-journal-upload
 %{_prefix}/lib/systemd/systemd-*
 %{_prefix}/lib/udev
+%exclude  %{_sysconfdir}/udev/rules.d/80-net-setup-link.rules
 %{_prefix}/lib/tmpfiles.d/systemd.conf
 %{_prefix}/lib/tmpfiles.d/systemd-nologin.conf
 %{_prefix}/lib/tmpfiles.d/x11.conf
@@ -1156,6 +1163,7 @@ getent passwd systemd-resolve >/dev/null 2>&1 || useradd -r -l -g systemd-resolv
 %config(noreplace) %{_sysconfdir}/dbus-1/system.d/org.freedesktop.network1.conf
 %{_datadir}/dbus-1/system-services/org.freedesktop.network1.service
 #%{_datadir}/polkit-1/actions/org.freedesktop.network1.policy
+%{_prefix}/lib/udev/rules.d/80-net-setup-link.rules
 
 %files resolved
 %{_prefix}/lib/systemd/systemd-resolved
@@ -1170,6 +1178,14 @@ getent passwd systemd-resolve >/dev/null 2>&1 || useradd -r -l -g systemd-resolv
 %{_mandir}/man8/systemd-resolved.*
 
 %changelog
+* Tue Jun 30 2015 Lukas Nykryn <lnykryn@redhat.com> - 219-5
+- Revert "core: one step back again, for nspawn we actually can't wait for cgroups running empty since systemd will get exactly zero notifications about it" (#1199644)
+- bus-creds: always set SD_BUS_CREDS_PID when we set pid in the mask (#1230190)
+- sd-bus: do not use per-datagram auxiliary information (#1230190)
+- sd-bus: store selinux context at connection time (#1230190)
+- journald: simplify context handling (#1230190)
+- bash-completion: add verb set-property (#1235635)
+
 * Fri Jun 19 2015 Lukas Nykryn <lnykryn@redhat.com> - 219-4
 - core: Fix assertion with empty Exec*= paths (#1222517)
 - rules: load sg module (#1186462)
