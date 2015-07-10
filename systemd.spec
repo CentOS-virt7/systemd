@@ -7,7 +7,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        219
-Release:        5%{?dist}
+Release:        6%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -221,6 +221,7 @@ Patch0190: 0190-sd-bus-do-not-use-per-datagram-auxiliary-information.patch
 Patch0191: 0191-sd-bus-store-selinux-context-at-connection-time.patch
 Patch0192: 0192-journald-simplify-context-handling.patch
 Patch0193: 0193-bash-completion-add-verb-set-property.patch
+Patch0194: 0194-sd-bus-don-t-inherit-connection-creds-into-message-c.patch
 
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
@@ -1178,6 +1179,9 @@ getent passwd systemd-resolve >/dev/null 2>&1 || useradd -r -l -g systemd-resolv
 %{_mandir}/man8/systemd-resolved.*
 
 %changelog
+* Fri Jul 10 2015 Lukas Nykryn <lnykryn@redhat.com> - 219-6
+- sd-bus: don't inherit connection creds into message creds when we have a direct connection (#1230190)
+
 * Tue Jun 30 2015 Lukas Nykryn <lnykryn@redhat.com> - 219-5
 - Revert "core: one step back again, for nspawn we actually can't wait for cgroups running empty since systemd will get exactly zero notifications about it" (#1199644)
 - bus-creds: always set SD_BUS_CREDS_PID when we set pid in the mask (#1230190)
