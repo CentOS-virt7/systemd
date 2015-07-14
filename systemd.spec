@@ -7,7 +7,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        219
-Release:        6%{?dist}
+Release:        7%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -222,6 +222,7 @@ Patch0191: 0191-sd-bus-store-selinux-context-at-connection-time.patch
 Patch0192: 0192-journald-simplify-context-handling.patch
 Patch0193: 0193-bash-completion-add-verb-set-property.patch
 Patch0194: 0194-sd-bus-don-t-inherit-connection-creds-into-message-c.patch
+Patch0195: 0195-udev-fix-crash-in-path_id-builtin.patch
 
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
@@ -1179,6 +1180,9 @@ getent passwd systemd-resolve >/dev/null 2>&1 || useradd -r -l -g systemd-resolv
 %{_mandir}/man8/systemd-resolved.*
 
 %changelog
+* Tue Jul 14 2015 Lukas Nykryn <lnykryn@redhat.com> - 219-7
+- udev: fix crash in path_id builtin (#957112)
+
 * Fri Jul 10 2015 Lukas Nykryn <lnykryn@redhat.com> - 219-6
 - sd-bus: don't inherit connection creds into message creds when we have a direct connection (#1230190)
 
