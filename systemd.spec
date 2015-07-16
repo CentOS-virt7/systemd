@@ -7,7 +7,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        219
-Release:        7%{?dist}
+Release:        8%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -223,6 +223,45 @@ Patch0192: 0192-journald-simplify-context-handling.patch
 Patch0193: 0193-bash-completion-add-verb-set-property.patch
 Patch0194: 0194-sd-bus-don-t-inherit-connection-creds-into-message-c.patch
 Patch0195: 0195-udev-fix-crash-in-path_id-builtin.patch
+Patch0196: 0196-sysv-generator-test-Fix-assertion.patch
+Patch0197: 0197-man-avoid-line-break-in-url.patch
+Patch0198: 0198-Add-VARIANT-as-a-standard-value-for-etc-os-release.patch
+Patch0199: 0199-Fix-permissions-on-run-systemd-nspawn-locks.patch
+Patch0200: 0200-generators-rename-add_-root-usr-_mount-to-add_-sysro.patch
+Patch0201: 0201-Generate-systemd-fsck-root.service-in-the-initramfs.patch
+Patch0202: 0202-units-fix-typo-in-systemd-resolved.service.patch
+Patch0203: 0203-core-don-t-consider-umask-for-SocketMode.patch
+Patch0204: 0204-timedate-fix-memory-leak-in-timedated.patch
+Patch0205: 0205-coredump-make-sure-we-vacuum-by-default.patch
+Patch0206: 0206-tmpfiles-don-t-fail-if-we-cannot-create-a-subvolume-.patch
+Patch0207: 0207-resolved-fix-crash-when-shutting-down.patch
+Patch0208: 0208-resolved-allow-DnsAnswer-objects-with-no-space-for-R.patch
+Patch0209: 0209-id128-add-new-sd_id128_is_null-call.patch
+Patch0210: 0210-journalctl-Improve-boot-ID-lookup.patch
+Patch0211: 0211-test-hashmap-fix-an-assert.patch
+Patch0212: 0212-units-make-sure-systemd-nspawn-.slice-instances-are-.patch
+Patch0213: 0213-Revert-journald-audit-exit-gracefully-in-the-case-we.patch
+Patch0214: 0214-journald-handle-more-gracefully-when-bind-fails-on-a.patch
+Patch0215: 0215-udev-link-config-fix-corruption.patch
+Patch0216: 0216-udev-net_id-Only-read-the-first-64-bytes-of-PCI-conf.patch
+Patch0217: 0217-shared-generator-correct-path-to-systemd-fsck.patch
+Patch0218: 0218-logind-Save-the-user-s-state-when-a-session-enters-S.patch
+Patch0219: 0219-small-fix-ru-translation.patch
+Patch0220: 0220-kmod-setup-don-t-warn-when-ipv6-can-t-be-loaded.patch
+Patch0221: 0221-Partially-revert-ma-setup-simplify.patch
+Patch0222: 0222-ima-setup-write-policy-one-line-at-a-time.patch
+Patch0223: 0223-ata_id-unbotch-format-specifier.patch
+Patch0224: 0224-install-explicitly-return-0-on-success.patch
+Patch0225: 0225-systemd.service.xml-document-that-systemd-removes-th.patch
+Patch0226: 0226-core-handle-log-target-null-when-calling-systemd-shu.patch
+Patch0227: 0227-man-ProtectHome-protects-root-as-well.patch
+Patch0228: 0228-timedatectl-trim-non-local-RTC-warning-to-80-chars-w.patch
+Patch0229: 0229-escape-fix-exit-code.patch
+Patch0230: 0230-man-information-about-available-properties.patch
+Patch0231: 0231-journal-in-persistent-mode-create-var-log-journal-wi.patch
+Patch0232: 0232-sysv-generator-fix-wrong-Overwriting-existing-symlin.patch
+Patch0233: 0233-mount-don-t-claim-a-device-is-gone-from-proc-self-mo.patch
+Patch0234: 0234-mount-properly-check-for-mounts-currently-in-proc-se.patch
 
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
@@ -1180,6 +1219,47 @@ getent passwd systemd-resolve >/dev/null 2>&1 || useradd -r -l -g systemd-resolv
 %{_mandir}/man8/systemd-resolved.*
 
 %changelog
+* Thu Jul 16 2015 Lukas Nykryn <lnykryn@redhat.com> - 219-8
+- sysv-generator test: Fix assertion (#1222517)
+- man: avoid line break in url (#1222517)
+- Add VARIANT as a standard value for /etc/os-release (#1222517)
+- Fix permissions on /run/systemd/nspawn/locks (#1222517)
+- generators: rename add_{root,usr}_mount to add_{sysroot,sysroot_usr}_mount (#1222517)
+- Generate systemd-fsck-root.service in the initramfs (#1222517)
+- units: fix typo in systemd-resolved.service (#1222517)
+- core: don't consider umask for SocketMode= (#1222517)
+- timedate: fix memory leak in timedated (#1222517)
+- coredump: make sure we vacuum by default (#1222517)
+- tmpfiles: don't fail if we cannot create a subvolume because a file system is read-only but a dir already exists anyway (#1222517)
+- resolved: fix crash when shutting down (#1222517)
+- resolved: allow DnsAnswer objects with no space for RRs (#1222517)
+- id128: add new sd_id128_is_null() call (#1222517)
+- journalctl: Improve boot ID lookup (#1222517)
+- test-hashmap: fix an assert (#1222517)
+- units: make sure systemd-nspawn@.slice instances are actually located in machine.slice (#1222517)
+- Revert "journald-audit: exit gracefully in the case we can't join audit multicast group" (#1222517)
+- journald: handle more gracefully when bind() fails on audit sockets (#1222517)
+- udev: link-config - fix corruption (#1222517)
+- udev/net_id: Only read the first 64 bytes of PCI config space (#1222517)
+- shared: generator - correct path to systemd-fsck (#1222517)
+- logind: Save the user’s state when a session enters SESSION_ACTIVE (#1222517)
+- small fix ru translation (#1222517)
+- kmod-setup: don't warn when ipv6 can't be loaded (#1222517)
+- Partially revert "ma-setup: simplify" (#1222517)
+- ima-setup: write policy one line at a time (#1222517)
+- ata_id: unbotch format specifier (#1222517)
+- install: explicitly return 0 on success (#1222517)
+- systemd.service.xml: document that systemd removes the PIDFile (#1222517)
+- core: handle --log-target=null when calling systemd-shutdown (#1222517)
+- man: ProtectHome= protects /root as well (#1222517)
+- timedatectl: trim non-local RTC warning to 80 chars wide (#1222517)
+- escape: fix exit code (#1222517)
+- man: information about available properties (#1222517)
+- journal: in persistent mode create /var/log/journal, with all parents. (#1222517)
+- sysv-generator: fix wrong "Overwriting existing symlink" warnings (#1222517)
+- mount: don't claim a device is gone from /proc/self/mountinfo before it is gone from *all* lines (#1222517)
+- mount: properly check for mounts currently in /proc/self/mountinfo (#1222517)
+
 * Tue Jul 14 2015 Lukas Nykryn <lnykryn@redhat.com> - 219-7
 - udev: fix crash in path_id builtin (#957112)
 
