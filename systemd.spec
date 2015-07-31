@@ -7,7 +7,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        219
-Release:        8%{?dist}
+Release:        9%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -262,6 +262,9 @@ Patch0231: 0231-journal-in-persistent-mode-create-var-log-journal-wi.patch
 Patch0232: 0232-sysv-generator-fix-wrong-Overwriting-existing-symlin.patch
 Patch0233: 0233-mount-don-t-claim-a-device-is-gone-from-proc-self-mo.patch
 Patch0234: 0234-mount-properly-check-for-mounts-currently-in-proc-se.patch
+Patch0235: 0235-units-add-Install-section-to-tmp.mount.patch
+Patch0236: 0236-bus-util-add-articles-to-explanation-messages.patch
+Patch0237: 0237-bus-util-print-correct-warnings-for-units-that-fail-.patch
 
 
 %global num_patches %{lua: c=0; for i,p in ipairs(patches) do c=c+1; end; print(c);}
@@ -514,8 +517,7 @@ CONFIGURE_OPTS=(
 
 
 %configure "${CONFIGURE_OPTS[@]}"
-make %{?_smp_mflags} 
-#GCC_COLORS="" V=1
+make %{?_smp_mflags} GCC_COLORS="" V=1
 
 %install
 %make_install
@@ -1219,6 +1221,11 @@ getent passwd systemd-resolve >/dev/null 2>&1 || useradd -r -l -g systemd-resolv
 %{_mandir}/man8/systemd-resolved.*
 
 %changelog
+* Fri Jul 31 2015 Lukas Nykryn <lnykryn@redhat.com> - 219-9
+- units: add [Install] section to tmp.mount
+- bus-util: add articles to explanation messages (#1016680)
+- bus-util: print correct warnings for units that fail but for which we have a NULL result only (#1016680)
+
 * Thu Jul 16 2015 Lukas Nykryn <lnykryn@redhat.com> - 219-8
 - sysv-generator test: Fix assertion (#1222517)
 - man: avoid line break in url (#1222517)
