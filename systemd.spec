@@ -2,6 +2,8 @@
 
 %global _hardened_build 1
 
+%global _pkgdocdir %{_docdir}/%{name}
+
 # We ship a .pc file but don't want to have a dep on pkg-config. We
 # strip the automatically generated dep here and instead co-own the
 # directory.
@@ -13,7 +15,7 @@
 Name:           systemd
 Url:            http://www.freedesktop.org/wiki/Software/systemd
 Version:        222
-Release:        2%{?gitcommit:.git%{gitcommit}}%{?dist}
+Release:        3%{?gitcommit:.git%{gitcommit}}%{?dist}
 # For a breakdown of the licensing, see README
 License:        LGPLv2+ and MIT and GPLv2+
 Summary:        A System and Service Manager
@@ -60,7 +62,9 @@ BuildRequires:  libgcrypt-devel
 BuildRequires:  gnutls-devel
 BuildRequires:  qrencode-devel
 BuildRequires:  libmicrohttpd-devel
+%if 0%{?centos}
 BuildRequires:  libxkbcommon-devel
+%endif
 BuildRequires:  iptables-devel
 BuildRequires:  bzip2-devel
 BuildRequires:  libxslt
@@ -69,8 +73,10 @@ BuildRequires:  pkgconfig
 BuildRequires:  intltool
 BuildRequires:  gperf
 BuildRequires:  gawk
+%if ! 0%{?centos}
 BuildRequires:  python3
 BuildRequires:  python3-lxml
+%endif
 BuildRequires:  firewalld-filesystem
 %ifarch %{ix86} x86_64
 BuildRequires:  gnu-efi gnu-efi-devel
@@ -249,9 +255,15 @@ CONFIGURE_OPTS=(
 %configure \
         "${CONFIGURE_OPTS[@]}" \
         --enable-compat-libs \
+%if 0%{?centos}
+        --disable-xkbcommon \
+        --disable-python-devel \
+        PYTHON=%{__python}
+%else
         --enable-xkbcommon \
         --disable-python-devel \
         PYTHON=%{__python3}
+%endif
 make %{?_smp_mflags} GCC_COLORS="" V=1
 
 %install
@@ -767,6 +779,9 @@ getent passwd systemd-journal-upload >/dev/null 2>&1 || useradd -r -l -g systemd
 /usr/lib/firewalld/services/*
 
 %changelog
+* Thu Jun 30 2016 Lokesh Mandvekar <lsm5@fedoraproject.org> - 222-3
+- libxkbcommon and python3 not used for centos
+
 * Thu Jul  9 2015 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 222-2
 - Remove python subpackages (python-systemd in now standalone)
 
